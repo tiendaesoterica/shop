@@ -469,30 +469,46 @@
                                 <p class="text-[9px] text-textMuted mt-1 ml-1">Si dejas este campo en blanco, el artículo siempre estará disponible.</p>
                             </div>
 
+                            <!-- NUEVO SISTEMA DE CARGA DE IMÁGENES EN TARJETAS -->
                             <div>
-                                <label class="admin-label">Imagen del Artefacto (Sube una foto)</label>
-                                <input type="file" id="imageUpload" accept="image/*" class="hidden" @change="handleImageSelection">
-                                <div class="w-full h-40 rounded-lg border-2 border-dashed border-surfaceHighlight hover:border-accent overflow-hidden bg-base shadow-inner flex flex-col items-center justify-center relative cursor-pointer group transition-colors" @click="document.getElementById('imageUpload').click()">
-                                    
-                                    <!-- Previsualización -->
-                                    <template x-if="productForm.image || imagePreviewUrl">
-                                        <img :src="imagePreviewUrl || productForm.image" class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity z-10">
+                                <div class="flex justify-between items-baseline mb-2 ml-1">
+                                    <label class="admin-label !mb-0">Imágenes del Artefacto</label>
+                                    <span class="text-[9px] text-textMuted font-bold uppercase tracking-widest">(Max 3 - Sugerido 1 sola)</span>
+                                </div>
+                                
+                                <div class="grid grid-cols-3 gap-3">
+                                    <!-- Imágenes Existentes (Las que ya están guardadas en la base de datos) -->
+                                    <template x-for="(url, index) in productForm.images" :key="'exist-'+index">
+                                        <div class="relative aspect-[3/4] rounded-lg border border-surfaceHighlight overflow-hidden group bg-base shadow-inner">
+                                            <img :src="url" class="w-full h-full object-cover">
+                                            <!-- Botón X para eliminar -->
+                                            <button type="button" @click="removeExistingImage(index)" class="absolute top-1.5 right-1.5 bg-danger/90 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-danger shadow-md">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                            </button>
+                                        </div>
                                     </template>
-                                    
-                                    <!-- Estado Vacío -->
-                                    <div class="text-center z-20 relative" x-show="!(productForm.image || imagePreviewUrl)">
-                                        <svg class="w-8 h-8 text-surfaceHighlight mx-auto mb-2 group-hover:text-accent transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                                        <span class="text-[10px] text-textMuted font-bold uppercase tracking-widest group-hover:text-accent transition-colors">Subir Imagen</span>
-                                    </div>
 
-                                    <!-- Efecto Hover para cambiar foto existente -->
-                                    <div x-show="productForm.image || imagePreviewUrl" class="absolute inset-0 bg-base/80 opacity-0 group-hover:opacity-100 transition-opacity z-20 flex items-center justify-center backdrop-blur-sm">
-                                        <span class="text-[10px] text-textMain font-bold uppercase tracking-widest flex items-center gap-2">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                                            Cambiar Imagen
-                                        </span>
+                                    <!-- Nuevas Imágenes (Las que el usuario acaba de seleccionar pero aún no guardó) -->
+                                    <template x-for="(preview, index) in newImagePreviews" :key="'new-'+index">
+                                        <div class="relative aspect-[3/4] rounded-lg border border-surfaceHighlight overflow-hidden group bg-base shadow-inner">
+                                            <img :src="preview" class="w-full h-full object-cover opacity-70">
+                                            <span class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-accent text-darkLux text-[8px] font-bold px-2 py-0.5 rounded-full shadow-md">NUEVA</span>
+                                            <!-- Botón X para eliminar -->
+                                            <button type="button" @click="removeNewImage(index)" class="absolute top-1.5 right-1.5 bg-danger/90 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-danger shadow-md">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                            </button>
+                                        </div>
+                                    </template>
+
+                                    <!-- Botón Añadir (Solo visible si hay menos de 3 imágenes en total) -->
+                                    <div x-show="(productForm.images?.length || 0) + newImagePreviews.length < 3" 
+                                         class="aspect-[3/4] rounded-lg border-2 border-dashed border-surfaceHighlight hover:border-accent flex flex-col items-center justify-center cursor-pointer transition-colors group bg-base/30 hover:bg-base/50"
+                                         @click="document.getElementById('imageUpload').click()">
+                                        <svg class="w-6 h-6 text-textMuted group-hover:text-accent transition-colors mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"></path></svg>
+                                        <span class="text-[9px] text-textMuted uppercase font-bold tracking-widest group-hover:text-accent transition-colors text-center px-1">Añadir<br>Imagen</span>
                                     </div>
                                 </div>
+                                <input type="file" id="imageUpload" accept="image/*" multiple class="hidden" @change="handleImageSelection">
                             </div>
                         </div>
 
@@ -701,31 +717,61 @@
 
                 isProductModalOpen: false, 
                 editingProductId: null, 
-                // Añadimos 'stock' y 'display_order' al formulario base
-                productForm: { name: '', categoryId: '', price: null, originalPrice: null, stock: null, display_order: 0, image: '', description: '', fullDescription: '', isFeatured: false, isFlashSale: false },
+                productForm: { name: '', categoryId: '', price: null, originalPrice: null, stock: null, display_order: 0, image: '', images: [], description: '', fullDescription: '', isFeatured: false, isFlashSale: false },
 
-                imagePreviewUrl: null,
-                selectedImageFile: null,
+                newImagePreviews: [],
+                newImageFiles: [],
                 isUploading: false,
 
                 openProductModal(product = null) {
                     this.productModalError = '';
-                    this.imagePreviewUrl = null;
-                    this.selectedImageFile = null;
+                    
+                    // Limpiar memoria de previsualizaciones anteriores
+                    if (this.newImagePreviews) {
+                        this.newImagePreviews.forEach(url => URL.revokeObjectURL(url));
+                    }
+                    this.newImagePreviews = [];
+                    this.newImageFiles = [];
                     
                     if (product) {
-                        this.editingProductId = product.id; this.productForm = { ...product };
+                        this.editingProductId = product.id; 
+                        this.productForm = { ...product };
+                        // Retrocompatibilidad: Si el producto viejo solo tenía 'image', lo metemos en el array 'images'
+                        if (!this.productForm.images || this.productForm.images.length === 0) {
+                            this.productForm.images = this.productForm.image ? [this.productForm.image] : [];
+                        }
                     } else {
-                        this.editingProductId = null; this.productForm = { name: '', categoryId: '', price: null, originalPrice: null, stock: null, display_order: 0, image: '', description: '', fullDescription: '', isFeatured: false, isFlashSale: false };
+                        this.editingProductId = null; 
+                        this.productForm = { name: '', categoryId: '', price: null, originalPrice: null, stock: null, display_order: 0, image: '', images: [], description: '', fullDescription: '', isFeatured: false, isFlashSale: false };
                     }
                     this.isProductModalOpen = true;
                 },
 
                 handleImageSelection(event) {
-                    const file = event.target.files[0];
-                    if (!file) return;
-                    this.imagePreviewUrl = URL.createObjectURL(file);
-                    this.selectedImageFile = file;
+                    const files = Array.from(event.target.files);
+                    if (files.length === 0) return;
+                    
+                    let currentTotal = (this.productForm.images?.length || 0) + this.newImageFiles.length;
+                    
+                    for (let file of files) {
+                        if (currentTotal < 3) {
+                            this.newImageFiles.push(file);
+                            this.newImagePreviews.push(URL.createObjectURL(file));
+                            currentTotal++;
+                        }
+                    }
+                    // Resetear el input para permitir volver a seleccionar el mismo archivo si el usuario se equivoca
+                    event.target.value = '';
+                },
+
+                removeExistingImage(index) {
+                    this.productForm.images.splice(index, 1);
+                },
+
+                removeNewImage(index) {
+                    URL.revokeObjectURL(this.newImagePreviews[index]);
+                    this.newImagePreviews.splice(index, 1);
+                    this.newImageFiles.splice(index, 1);
                 },
 
                 async compressImage(file) {
@@ -762,7 +808,7 @@
                 },
 
                 async uploadImageToSupabase(file) {
-                    const fileName = `public/${file.name}`;
+                    const fileName = `public/${Date.now()}_${file.name}`; 
                     const { data, error } = await supabaseClient.storage.from('productos').upload(fileName, file, { cacheControl: '3600', upsert: false });
                     if (error) throw error;
                     
@@ -781,20 +827,25 @@
                     this.isUploading = true;
 
                     try {
-                        let finalImageUrl = this.productForm.image;
+                        let finalImageUrls = [...(this.productForm.images || [])];
                         
-                        if (this.selectedImageFile) {
-                            const compressedFile = await this.compressImage(this.selectedImageFile);
-                            finalImageUrl = await this.uploadImageToSupabase(compressedFile);
+                        // Subimos solo las imágenes nuevas que el usuario haya agregado
+                        if (this.newImageFiles && this.newImageFiles.length > 0) {
+                            for (let file of this.newImageFiles) {
+                                const compressedFile = await this.compressImage(file);
+                                const url = await this.uploadImageToSupabase(compressedFile);
+                                finalImageUrls.push(url);
+                            }
                         }
 
-                        const productData = { ...this.productForm, image: finalImageUrl };
+                        // Retrocompatibilidad: El campo 'image' siempre guardará la primera foto
+                        let mainImage = finalImageUrls.length > 0 ? finalImageUrls[0] : '';
+
+                        const productData = { ...this.productForm, image: mainImage, images: finalImageUrls };
                         if (!productData.originalPrice) productData.originalPrice = null;
                         
-                        // Validar el stock vacío como infinito (null en DB)
                         if (productData.stock === '' || productData.stock < 0) productData.stock = null;
                         
-                        // Si es un producto nuevo, darle el último puesto en el orden
                         if (!this.editingProductId) {
                             productData.display_order = this.products.length;
                         }
@@ -816,13 +867,9 @@
                             } else {
                                 this.products.push(data[0]);
                             }
-                            // Reordenar visualmente por las dudas
                             this.products.sort((a,b) => (a.display_order || 0) - (b.display_order || 0));
                             
                             this.isProductModalOpen = false;
-                            
-                            const fileInput = document.getElementById('imageUpload');
-                            if(fileInput) fileInput.value = '';
                         } else { throw new Error("Acción bloqueada por permisos."); }
                     } catch (err) { 
                         this.productModalError = "Error al procesar: " + err.message; 
