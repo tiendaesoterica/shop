@@ -112,6 +112,18 @@
 
 <body class="bg-base text-textMuted font-sans antialiased min-h-screen flex flex-col relative selection:bg-accent/30 selection:text-textMain" x-data="esotericStore()">
 
+    <!-- ALERTA DE DIAGNÓSTICO (Visible solo si hay error de conexión) -->
+    <div x-show="dbError" x-cloak class="fixed top-20 left-1/2 -translate-x-1/2 z-[100] w-11/12 max-w-lg bg-danger/90 backdrop-blur-md text-white px-6 py-4 rounded-xl border border-white/20 shadow-2xl flex items-start gap-4">
+        <svg class="w-6 h-6 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        <div>
+            <h4 class="font-bold text-sm uppercase tracking-widest mb-1">Error de Conexión</h4>
+            <p class="text-xs opacity-90 leading-relaxed" x-text="dbError"></p>
+        </div>
+        <button @click="dbError = ''" class="ml-auto opacity-70 hover:opacity-100">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+    </div>
+
     <!-- Navegación Mística -->
     <header class="fixed top-0 w-full z-50 transition-all duration-500" x-data="{ scrolled: false, isMobileMenuOpen: false }" @scroll.window="scrolled = (window.pageYOffset > 20)" :class="scrolled ? 'bg-surface/80 backdrop-blur-md shadow-[0_4px_30px_rgba(0,0,0,0.5)] border-b border-surfaceHighlight py-2' : 'bg-transparent py-5'">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 flex justify-between items-center">
@@ -226,65 +238,101 @@
         </div>
     </section>
 
-    <!-- 1. SECCIÓN: LECTURAS Y DESTACADOS (CARRUSEL TIPO TAROT) -->
-    <section id="destacados" class="bg-base py-20 relative z-20" x-show="featuredProducts.length > 0">
+    <!-- 1. SECCIÓN: LECTURAS Y DESTACADOS (CARRUSEL AUTOMÁTICO) -->
+    <section id="destacados" class="bg-base py-20 relative z-20" x-show="featuredProducts.length > 0"
+        x-data="{
+            timer: null,
+            startTimer() {
+                if (this.timer) clearInterval(this.timer);
+                this.timer = setInterval(() => {
+                    this.scrollNext(true);
+                }, 5000);
+            },
+            stopTimer() {
+                if (this.timer) clearInterval(this.timer);
+                this.timer = null;
+            },
+            scrollNext(auto = false) {
+                let slider = this.$refs.destacadosSlider;
+                if(!slider) return;
+                let maxScroll = slider.scrollWidth - slider.clientWidth;
+                // Si llegamos al final, volvemos a empezar
+                if (slider.scrollLeft >= maxScroll - 10) {
+                    if(auto) slider.scrollTo({ left: 0, behavior: 'smooth' });
+                } else {
+                    slider.scrollBy({ left: slider.clientWidth > 400 ? 340 : 300, behavior: 'smooth' });
+                }
+            },
+            scrollPrev() {
+                let slider = this.$refs.destacadosSlider;
+                if(!slider) return;
+                slider.scrollBy({ left: slider.clientWidth > 400 ? -340 : -300, behavior: 'smooth' });
+            }
+        }"
+        x-init="startTimer()"
+        @mouseenter="stopTimer()"
+        @mouseleave="startTimer()"
+        @touchstart="stopTimer()"
+        @touchend="startTimer()">
+        
         <div class="max-w-7xl mx-auto px-4 sm:px-6 relative">
-            
-            <div class="flex justify-between items-end mb-12">
-                <div class="text-center sm:text-left w-full sm:w-auto">
-                    <span class="text-accent text-[10px] tracking-[0.3em] uppercase font-bold mb-2 block flex items-center justify-center sm:justify-start gap-2">
-                        ✧ Selección Especial ✧
-                    </span>
-                    <h2 class="text-3xl sm:text-4xl font-heading font-bold text-textMain">Destacados</h2>
-                </div>
-                <div class="hidden sm:flex gap-3">
-                    <button @click="$refs.destacadosSlider.scrollBy({left: -320, behavior: 'smooth'})" aria-label="Deslizar izquierda" class="w-10 h-10 rounded-full bg-surface border border-surfaceHighlight hover:border-accent flex items-center justify-center text-textMuted transition-all hover:text-accent hover:shadow-[0_0_15px_rgba(212,175,55,0.2)]">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" /></svg>
-                    </button>
-                    <button @click="$refs.destacadosSlider.scrollBy({left: 320, behavior: 'smooth'})" aria-label="Deslizar derecha" class="w-10 h-10 rounded-full bg-surface border border-surfaceHighlight hover:border-accent flex items-center justify-center text-textMuted transition-all hover:text-accent hover:shadow-[0_0_15px_rgba(212,175,55,0.2)]">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" /></svg>
-                    </button>
-                </div>
+            <div class="text-center sm:text-left w-full sm:w-auto mb-10">
+                <span class="text-accent text-[10px] tracking-[0.3em] uppercase font-bold mb-2 block flex items-center justify-center sm:justify-start gap-2">
+                    ✧ Selección Especial ✧
+                </span>
+                <h2 class="text-3xl sm:text-4xl font-heading font-bold text-textMain">Destacados</h2>
             </div>
             
-            <!-- Carrusel Horizontal Premium (Ahora con Centrado Inteligente) -->
-            <div x-ref="destacadosSlider" class="flex overflow-x-auto snap-x snap-mandatory gap-4 sm:gap-6 pb-12 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide scroll-smooth" :class="featuredProducts.length === 1 ? 'justify-center' : (featuredProducts.length <= 3 ? 'md:justify-center' : '')">
-                <template x-for="product in featuredProducts" :key="product.id">
-                    <!-- Tarjeta Inmersiva con Imagen de Fondo (Ahora con snap-center) -->
-                    <div class="snap-center flex-none w-[80vw] sm:w-[320px] md:w-80 group relative overflow-hidden rounded-2xl cursor-pointer border border-surfaceHighlight shadow-lg hover:shadow-[0_0_30px_rgba(212,175,55,0.15)] transition-all duration-500 aspect-[4/5] sm:aspect-[3/4]" @click="selectedProduct = product">
-                        
-                        <!-- Imagen de Fondo -->
-                        <img :src="product.image" :alt="product.name" class="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-110 group-hover:opacity-100 transition-all duration-700" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1544640808-32ca72ac7f37?w=400&q=80';">
-                        
-                        <!-- Gradiente de Oscurecimiento Inferior para legibilidad -->
-                        <div class="absolute inset-0 bg-gradient-to-t from-base via-base/80 to-transparent opacity-90 group-hover:opacity-95 transition-opacity"></div>
-                        
-                        <!-- Marco interno decorativo -->
-                        <div class="absolute inset-3 border border-accent/20 rounded-xl z-10 pointer-events-none group-hover:border-accent/50 transition-colors"></div>
-                        
-                        <!-- Contenido Flotante -->
-                        <div class="relative z-20 flex flex-col h-full p-6 sm:p-8 justify-end text-center">
-                            <!-- Etiquetas Superiores Flotantes -->
-                            <div class="absolute top-6 w-full left-0 flex justify-center z-20">
-                                <span class="bg-base/80 backdrop-blur-sm text-accent border border-accent/30 text-[9px] font-bold uppercase tracking-[0.2em] px-3 py-1 rounded-full shadow-md" x-text="getCategoryName(product.categoryId)"></span>
-                            </div>
-                            <div class="absolute top-14 w-full left-0 flex justify-center z-20">
-                                <span x-show="product.stock !== null && product.stock <= 5 && product.stock > 0" class="bg-warning/90 backdrop-blur-sm text-darkLux text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-md mt-1">Últimas <span x-text="product.stock"></span></span>
-                                <span x-show="product.stock === 0" class="bg-danger/90 backdrop-blur-sm text-white text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-md mt-1">Agotado</span>
-                            </div>
+            <div class="relative group/slider">
+                <!-- Flecha Izquierda (Flotante) -->
+                <button @click="scrollPrev()" aria-label="Deslizar izquierda" class="absolute left-2 sm:-left-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 border border-surfaceHighlight hover:border-accent rounded-full flex items-center justify-center text-accent bg-base/60 backdrop-blur-md shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-all duration-300 hover:scale-110">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" /></svg>
+                </button>
+
+                <!-- Carrusel Horizontal Premium (Con Auto-Play) -->
+                <div x-ref="destacadosSlider" class="flex overflow-x-auto snap-x snap-mandatory gap-4 sm:gap-6 pb-6 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide scroll-smooth" :class="featuredProducts.length === 1 ? 'justify-center' : (featuredProducts.length <= 3 ? 'md:justify-center' : '')">
+                    <template x-for="product in featuredProducts" :key="product.id">
+                        <!-- Tarjeta Inmersiva con Imagen de Fondo -->
+                        <div class="snap-center flex-none w-[85vw] sm:w-[320px] md:w-80 group relative overflow-hidden rounded-2xl cursor-pointer border border-surfaceHighlight shadow-lg hover:shadow-[0_0_30px_rgba(212,175,55,0.15)] transition-all duration-500 aspect-[4/5] sm:aspect-[3/4]" @click="selectedProduct = product">
                             
-                            <h3 class="text-xl md:text-2xl text-textMain font-heading font-bold mb-2 line-clamp-2 drop-shadow-md group-hover:text-accent transition-colors" x-text="product.name"></h3>
-                            <p class="text-textMuted text-xs leading-relaxed mb-4 line-clamp-2 font-light drop-shadow-md" x-text="product.description"></p>
-                            <span class="text-accent font-sans font-bold text-lg md:text-xl mb-5 drop-shadow-lg" x-text="formatPrice(product.price)"></span>
+                            <!-- Imagen de Fondo -->
+                            <img :src="product.image" :alt="product.name" class="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-110 group-hover:opacity-100 transition-all duration-700" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1544640808-32ca72ac7f37?w=400&q=80';">
                             
-                            <div x-data="{ qty: 1 }">
-                                <button @click.stop="addToCart(product, 1)" :disabled="product.stock === 0" class="w-full bg-accent/10 hover:bg-accent text-accent hover:text-darkLux text-[10px] uppercase tracking-[0.2em] h-11 rounded-full transition-all duration-300 font-bold border border-accent/30 hover:border-accent disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm">
-                                    <span x-text="product.stock === 0 ? 'Agotado' : 'Incorporar'"></span>
-                                </button>
+                            <!-- Gradiente de Oscurecimiento Inferior para legibilidad -->
+                            <div class="absolute inset-0 bg-gradient-to-t from-base via-base/80 to-transparent opacity-90 group-hover:opacity-95 transition-opacity"></div>
+                            
+                            <!-- Marco interno decorativo -->
+                            <div class="absolute inset-3 border border-accent/20 rounded-xl z-10 pointer-events-none group-hover:border-accent/50 transition-colors"></div>
+                            
+                            <!-- Contenido Flotante -->
+                            <div class="relative z-20 flex flex-col h-full p-6 sm:p-8 justify-end text-center">
+                                <!-- Etiquetas Superiores Flotantes -->
+                                <div class="absolute top-6 w-full left-0 flex justify-center z-20">
+                                    <span class="bg-base/80 backdrop-blur-sm text-accent border border-accent/30 text-[9px] font-bold uppercase tracking-[0.2em] px-3 py-1 rounded-full shadow-md" x-text="getCategoryName(product.categoryId)"></span>
+                                </div>
+                                <div class="absolute top-14 w-full left-0 flex justify-center z-20">
+                                    <span x-show="product.stock !== null && product.stock <= 5 && product.stock > 0" class="bg-warning/90 backdrop-blur-sm text-darkLux text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-md mt-1">Últimas <span x-text="product.stock"></span></span>
+                                    <span x-show="product.stock === 0" class="bg-danger/90 backdrop-blur-sm text-white text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-md mt-1">Agotado</span>
+                                </div>
+                                
+                                <h3 class="text-xl md:text-2xl text-textMain font-heading font-bold mb-2 line-clamp-2 drop-shadow-md group-hover:text-accent transition-colors" x-text="product.name"></h3>
+                                <p class="text-textMuted text-xs leading-relaxed mb-4 line-clamp-2 font-light drop-shadow-md" x-text="product.description"></p>
+                                <span class="text-accent font-sans font-bold text-lg md:text-xl mb-5 drop-shadow-lg" x-text="formatPrice(product.price)"></span>
+                                
+                                <div x-data="{ qty: 1 }">
+                                    <button @click.stop="addToCart(product, 1)" :disabled="product.stock === 0" class="w-full bg-accent/10 hover:bg-accent text-accent hover:text-darkLux text-[10px] uppercase tracking-[0.2em] h-11 rounded-full transition-all duration-300 font-bold border border-accent/30 hover:border-accent disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm">
+                                        <span x-text="product.stock === 0 ? 'Agotado' : 'Incorporar'"></span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </template>
+                    </template>
+                </div>
+
+                <!-- Flecha Derecha (Flotante) -->
+                <button @click="scrollNext()" aria-label="Deslizar derecha" class="absolute right-2 sm:-right-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 border border-surfaceHighlight hover:border-accent rounded-full flex items-center justify-center text-accent bg-base/60 backdrop-blur-md shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-all duration-300 hover:scale-110">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" /></svg>
+                </button>
             </div>
         </div>
     </section>
@@ -607,6 +655,7 @@
                 searchQuery: '',
                 selectedCategory: 'todos',
                 categories: [], 
+                dbError: '',
                 
                 products: [
                     { id: 1, name: 'Lectura de Cruz Celta', description: 'Profunda lectura de 10 cartas para entender el panorama completo de tu situación actual.', fullDescription: 'La tirada de la Cruz Celta es una de las más antiguas y completas. Analizaremos tu pasado, tu presente, las influencias ocultas, tus miedos, esperanzas y el resultado probable si continúas en este camino. La lectura se entrega en un PDF detallado con la fotografía de tu tirada.', price: 25000, category: 'lecturas', isFeatured: true, isFlashSale: false, image: 'https://images.unsplash.com/photo-1544640808-32ca72ac7f37?auto=format&fit=crop&w=400&q=80' },
@@ -625,16 +674,25 @@
                                 .select('*')
                                 .order('display_order', { ascending: true, nullsFirst: false })
                                 .order('id', { ascending: true });
+                            
+                            if (prodError && prodError.message && prodError.message.includes('display_order')) {
+                                console.warn("Aviso: Falta ejecutar el SQL de display_order en Supabase. Activando carga de emergencia.");
+                                const fallback = await supabaseClient.from('products').select('*');
+                                prodData = fallback.data;
+                                prodError = fallback.error;
+                            }
+
                             if (prodError) throw prodError;
                             
                             if (prodData && prodData.length > 0) {
                                 this.products = prodData.map(p => ({...p, category: p.categoryId || p.category}));
                             }
                         } catch (err) {
-                            if (err.message.includes('Could not find the table')) {
+                            if (err.message && err.message.includes('Could not find the table')) {
                                 console.warn("Aviso: Cargando datos de demostración.");
                             } else {
                                 console.error("Error conectando con Supabase:", err.message);
+                                this.dbError = "Error conectando con Supabase: " + err.message;
                             }
                         }
                     }
