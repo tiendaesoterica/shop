@@ -93,10 +93,19 @@
 
 <body class="bg-base text-textMuted font-sans antialiased min-h-screen flex selection:bg-accent/30 selection:text-textMain" x-data="adminPanel()">
 
+    <!-- NOTIFICACIÓN GLOBAL FLOTANTE (TOAST) -->
+    <div x-show="settingsMessage" 
+         x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-8" x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-8"
+         class="fixed top-8 left-1/2 -translate-x-1/2 z-[100] bg-success/90 backdrop-blur-md border border-success/30 text-white text-sm px-6 py-3 rounded-full flex items-center gap-3 shadow-[0_15px_40px_rgba(16,185,129,0.3)]" x-cloak>
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        <span x-text="settingsMessage" class="font-bold tracking-wide"></span>
+    </div>
+
     <!-- ========================================== -->
     <!-- PANTALLA DE LOGIN -->
     <!-- ========================================== -->
-    <div x-show="!isAuthenticated" class="fixed inset-0 z-[100] bg-base flex flex-col items-center justify-center p-4">
+    <div x-show="!isAuthenticated" class="fixed inset-0 z-[90] bg-base flex flex-col items-center justify-center p-4">
         <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-surfaceHighlight/30 via-base to-base pointer-events-none"></div>
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] bg-accent/5 rounded-full blur-[80px] pointer-events-none animate-mystic-pulse"></div>
 
@@ -128,7 +137,7 @@
     <!-- ========================================== -->
     <div x-show="isAuthenticated" class="flex w-full h-screen overflow-hidden bg-base" x-cloak>
         
-        <!-- Sidebar / Menú Lateral (Elevado a z-[60] para tapar todo al abrir) -->
+        <!-- Sidebar / Menú Lateral -->
         <aside class="fixed inset-y-0 left-0 z-[60] w-64 bg-surface border-r border-surfaceHighlight transform transition-transform duration-300 md:translate-x-0 md:static md:flex-shrink-0 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.6)]"
                :class="{'translate-x-0': isSidebarOpen, '-translate-x-full': !isSidebarOpen}">
             
@@ -141,7 +150,6 @@
                     </div>
                     <span class="text-sm font-heading font-bold text-textMain tracking-[0.2em] uppercase">NEXUS Admin</span>
                 </a>
-                <!-- Botón de Cerrar Menú en Móvil -->
                 <button @click="isSidebarOpen = false" class="md:hidden text-textMuted hover:text-accent transition-colors p-1">
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
@@ -169,6 +177,13 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
                     <span class="text-[11px] uppercase tracking-[0.2em] font-heading">Categorías</span>
                 </a>
+
+                <a href="#" @click.prevent="currentView = 'settings'; isSidebarOpen = false"
+                   class="flex items-center gap-3 px-4 py-3.5 rounded-lg transition-all duration-300"
+                   :class="currentView === 'settings' ? 'bg-surfaceHighlight text-accent font-bold border border-accent/20 shadow-inner' : 'text-textMuted hover:bg-surfaceHighlight/50 hover:text-textMain font-medium'">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <span class="text-[11px] uppercase tracking-[0.2em] font-heading">Configuración</span>
+                </a>
             </nav>
 
             <div class="p-6 border-t border-surfaceHighlight space-y-3 bg-base/30">
@@ -183,37 +198,30 @@
             </div>
         </aside>
 
-        <!-- Overlay móvil (Capa oscura al abrir menú) -->
+        <!-- Overlay móvil -->
         <div x-show="isSidebarOpen" @click="isSidebarOpen = false" class="md:hidden fixed inset-0 bg-base/80 backdrop-blur-sm z-[50]" x-cloak></div>
 
         <!-- Contenido Principal -->
         <main class="flex-1 flex flex-col h-screen overflow-hidden relative w-full">
             
-            <!-- Header Integrado (Visible tanto en Móvil como PC) -->
             <header class="h-16 md:h-20 bg-surface/80 backdrop-blur-xl border-b border-surfaceHighlight flex items-center justify-between px-4 md:px-10 z-30 sticky top-0 shadow-sm">
-                
                 <div class="flex items-center gap-3">
-                    <!-- Botón Hamburguesa Integrado -->
                     <button @click="isSidebarOpen = true" aria-label="Abrir menú" class="md:hidden text-textMain hover:text-accent p-1.5 -ml-1.5 transition-colors focus:outline-none">
                         <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16" /></svg>
                     </button>
-                    
                     <h2 class="text-lg md:text-xl font-heading font-bold text-textMain tracking-wide" x-text="viewTitles[currentView]"></h2>
                 </div>
                 
-                <!-- Tag del Sistema -->
                 <div class="flex items-center gap-2 bg-success/10 border border-success/20 px-3 md:px-4 py-1.5 md:py-2 rounded-full">
                     <span class="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span>
                     <span class="text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-bold text-success hidden sm:inline-block">Sistema En Línea</span>
                 </div>
             </header>
 
-            <!-- Área de las Vistas (Scroll interno) -->
             <div class="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10">
                 
                 <!-- VISTA: DASHBOARD -->
                 <div x-show="currentView === 'dashboard'" x-transition.opacity x-cloak>
-                    <!-- Los títulos grandes ocultos para móvil se borraron, usamos la barra superior -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-10 md:mb-12 mt-2 md:mt-0">
                         <div class="bg-surface border border-surfaceHighlight p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-accent/40 transition-colors">
                             <div class="absolute -right-4 -top-4 w-24 h-24 bg-accent/5 rounded-full blur-2xl group-hover:bg-accent/10 transition-colors"></div>
@@ -232,7 +240,6 @@
                         </div>
                     </div>
 
-                    <!-- Últimos Movimientos -->
                     <div class="bg-surface border border-surfaceHighlight rounded-2xl shadow-lg overflow-hidden relative">
                         <div class="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-[100px] pointer-events-none"></div>
                         <div class="px-6 md:px-8 py-5 md:py-6 border-b border-surfaceHighlight flex justify-between items-center bg-base/50">
@@ -269,7 +276,6 @@
 
                 <!-- VISTA: GESTIÓN DE PRODUCTOS -->
                 <div x-show="currentView === 'products'" x-transition.opacity x-cloak>
-                    <!-- Botón alineado a la derecha en móvil y escritorio -->
                     <div class="flex justify-end mb-6 mt-2 md:mt-0">
                         <button @click="openProductModal()" class="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -277,9 +283,8 @@
                         </button>
                     </div>
 
-                    <!-- Tabla del Archivo -->
                     <div class="bg-surface border border-surfaceHighlight rounded-2xl shadow-lg overflow-hidden">
-                        <div class="overflow-x-auto custom-scrollbar">
+                        <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse min-w-[800px]">
                                 <thead>
                                     <tr class="border-b border-surfaceHighlight text-[10px] uppercase tracking-[0.2em] text-textMuted font-bold bg-base/50">
@@ -298,7 +303,6 @@
                                     <template x-for="(product, index) in products" :key="product.id">
                                         <tr class="hover:bg-surfaceHighlight/20 transition-colors group cursor-pointer" @click="openProductModal(product)">
                                             
-                                            <!-- Columna de Ordenamiento -->
                                             <td class="px-4 py-4 text-center">
                                                 <div class="flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button @click.stop="moveOrder(index, -1)" x-show="index > 0" class="p-1 text-textMuted hover:text-accent hover:bg-surfaceHighlight/50 rounded transition-colors" title="Subir orden">
@@ -325,7 +329,6 @@
                                             </td>
                                             <td class="px-6 py-4 font-bold text-textMain" x-text="formatPrice(product.price)"></td>
                                             
-                                            <!-- Columna de Stock -->
                                             <td class="px-6 py-4 text-center font-mono">
                                                 <span x-show="product.stock === null || product.stock === ''" class="text-textMuted text-lg font-sans" title="Stock Ilimitado">∞</span>
                                                 <span x-show="product.stock !== null && product.stock !== ''" class="px-2 py-1 rounded bg-base border border-surfaceHighlight text-xs" :class="product.stock <= 5 ? 'text-warning border-warning/30' : 'text-textMain'" x-text="product.stock"></span>
@@ -397,6 +400,118 @@
                     </div>
                 </div>
 
+                <!-- VISTA: CONFIGURACIÓN DEL SITIO -->
+                <div x-show="currentView === 'settings'" x-transition.opacity x-cloak>
+                    <div class="mb-8 mt-2 md:mt-0">
+                        <p class="text-sm text-textMuted font-light">Gestiona la información de contacto, textos principales y portadas de tu tienda digital.</p>
+                    </div>
+
+                    <form @submit.prevent="saveSettings" class="space-y-8 pb-10">
+                        
+                        <!-- Alertas de Error (La de éxito ahora es flotante) -->
+                        <div x-show="settingsError" class="bg-danger/10 border border-danger/30 text-danger text-sm px-4 py-3 rounded-lg flex items-center gap-3 shadow-md" x-cloak>
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span x-text="settingsError" class="font-bold tracking-wide"></span>
+                        </div>
+
+                        <!-- Sección: Contacto -->
+                        <div class="bg-surface border border-surfaceHighlight rounded-2xl p-6 md:p-8 shadow-lg relative overflow-hidden">
+                            <div class="absolute -right-4 -top-4 w-32 h-32 bg-accent/5 rounded-full blur-3xl pointer-events-none"></div>
+                            <h4 class="text-lg font-heading font-bold text-textMain mb-6 border-b border-surfaceHighlight/50 pb-4">Vías de Contacto</h4>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                                <div>
+                                    <label class="admin-label">Número de WhatsApp (Ventas)</label>
+                                    <div class="relative">
+                                        <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                                        <input type="text" x-model="settingsForm.whatsapp" class="admin-input !pl-12 font-mono" placeholder="Ej: 5491123456789">
+                                    </div>
+                                    <p class="text-[9px] text-textMuted mt-1.5 ml-1">Código de país sin el signo '+' (Ej: 54 para Argentina).</p>
+                                </div>
+                                
+                                <div>
+                                    <label class="admin-label">Correo Electrónico (Footer)</label>
+                                    <div class="relative">
+                                        <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-textMuted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                        <input type="email" x-model="settingsForm.email" class="admin-input !pl-12 font-mono" placeholder="contacto@mitienda.com">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección: Textos y Portada -->
+                        <div class="bg-surface border border-surfaceHighlight rounded-2xl p-6 md:p-8 shadow-lg relative overflow-hidden">
+                            <h4 class="text-lg font-heading font-bold text-textMain mb-6 border-b border-surfaceHighlight/50 pb-4">Textos y Portada (Hero)</h4>
+                            
+                            <div class="space-y-6 relative z-10">
+                                <div>
+                                    <label class="admin-label">Título Principal (H1)</label>
+                                    <input type="text" x-model="settingsForm.hero_title" class="admin-input text-lg font-heading font-bold" placeholder="El título gigante al entrar a la web...">
+                                </div>
+                                
+                                <div>
+                                    <label class="admin-label">Subtítulo de la Portada</label>
+                                    <textarea x-model="settingsForm.hero_subtitle" rows="2" class="admin-input font-light resize-none" placeholder="El texto debajo del título gigante..."></textarea>
+                                </div>
+
+                                <div>
+                                    <label class="admin-label">Descripción de la Tienda (Footer)</label>
+                                    <textarea x-model="settingsForm.footer_description" rows="3" class="admin-input font-light resize-none" placeholder="Pequeño resumen sobre qué es la tienda que va al fondo de la web..."></textarea>
+                                </div>
+
+                                <!-- GESTOR DE IMÁGENES DEL HERO -->
+                                <div class="pt-4 border-t border-surfaceHighlight/50">
+                                    <div class="flex justify-between items-baseline mb-3 ml-1">
+                                        <label class="admin-label !mb-0">Imágenes del Carrusel de Portada (Hero)</label>
+                                        <span class="text-[9px] text-textMuted font-bold uppercase tracking-widest">(Max 3 imágenes)</span>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        <!-- Imágenes Existentes -->
+                                        <template x-for="(url, index) in settingsForm.hero_images" :key="'hero-exist-'+index">
+                                            <div class="relative aspect-video sm:aspect-square md:aspect-video rounded-xl border border-surfaceHighlight overflow-hidden group bg-base shadow-inner">
+                                                <img :src="url" class="w-full h-full object-cover">
+                                                <button type="button" @click="removeExistingHeroImage(index)" class="absolute top-2 right-2 bg-danger/90 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-danger shadow-md">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                </button>
+                                            </div>
+                                        </template>
+
+                                        <!-- Imágenes Nuevas -->
+                                        <template x-for="(preview, index) in newHeroImagePreviews" :key="'hero-new-'+index">
+                                            <div class="relative aspect-video sm:aspect-square md:aspect-video rounded-xl border border-surfaceHighlight overflow-hidden group bg-base shadow-inner">
+                                                <img :src="preview" class="w-full h-full object-cover opacity-70">
+                                                <span class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-accent text-darkLux text-[8px] font-bold px-2 py-0.5 rounded-full shadow-md">NUEVA</span>
+                                                <button type="button" @click="removeNewHeroImage(index)" class="absolute top-2 right-2 bg-danger/90 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-danger shadow-md">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                </button>
+                                            </div>
+                                        </template>
+
+                                        <!-- Botón Añadir -->
+                                        <div x-show="(settingsForm.hero_images?.length || 0) + newHeroImagePreviews.length < 3" 
+                                             class="aspect-video sm:aspect-square md:aspect-video rounded-xl border-2 border-dashed border-surfaceHighlight hover:border-accent flex flex-col items-center justify-center cursor-pointer transition-colors group bg-base/30 hover:bg-base/50"
+                                             @click="document.getElementById('heroImageUpload').click()">
+                                            <svg class="w-8 h-8 text-textMuted group-hover:text-accent transition-colors mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                            <span class="text-[10px] text-textMuted uppercase font-bold tracking-widest group-hover:text-accent transition-colors text-center px-2">Añadir Portada</span>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="heroImageUpload" accept="image/*" multiple class="hidden" @change="handleHeroImageSelection">
+                                    <p class="text-[10px] text-textMuted font-light mt-3 ml-1">Sugerimos utilizar imágenes horizontales en alta calidad (ej. 1920x1080px).</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botón de Guardado -->
+                        <div class="flex justify-end pt-4">
+                            <button type="submit" class="btn-primary w-full sm:w-auto flex items-center justify-center gap-3 px-10 py-4 shadow-xl" :disabled="isSavingSettings">
+                                <svg x-show="isSavingSettings" class="animate-spin -ml-1 h-5 w-5 text-darkLux" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                <span x-text="isSavingSettings ? 'Aplicando Configuración...' : 'Guardar Configuración Global'"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
             </div>
         </main>
     </div>
@@ -405,7 +520,7 @@
     <!-- MODALES DE FORMULARIOS -->
     <!-- ============================================== -->
 
-    <!-- Modal: Confirmar Eliminación (Personalizado) -->
+    <!-- Modal: Confirmar Eliminación -->
     <div x-show="isDeleteModalOpen" class="fixed inset-0 z-[100] overflow-y-auto" x-cloak>
         <div x-show="isDeleteModalOpen" x-transition.opacity @click="isDeleteModalOpen = false" class="fixed inset-0 bg-base/95 backdrop-blur-md"></div>
         <div class="flex items-center justify-center min-h-screen px-4 text-center sm:p-0">
@@ -449,7 +564,7 @@
 
                 <div class="px-8 py-6 flex justify-between items-center bg-base/50 border-b border-surfaceHighlight">
                     <h3 class="text-xl font-heading font-bold text-textMain" x-text="editingProductId ? 'Editar Producto' : 'Nuevo Producto'"></h3>
-                    <button @click="isProductModalOpen = false" class="text-textMuted hover:text-danger bg-surface p-2 rounded-lg transition-all"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                    <button type="button" @click="isProductModalOpen = false" class="text-textMuted hover:text-danger bg-surface p-2 rounded-lg transition-all"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
                 </div>
 
                 <form class="p-8">
@@ -493,14 +608,12 @@
                                 </div>
                             </div>
 
-                            <!-- Campo de Stock Añadido -->
                             <div>
                                 <label class="admin-label">Unidades en Stock</label>
                                 <input type="number" x-model.number="productForm.stock" min="0" class="admin-input" placeholder="Ej: 10 (Dejar vacío para ilimitado)">
                                 <p class="text-[9px] text-textMuted mt-1 ml-1">Si dejas este campo en blanco, el artículo siempre estará disponible.</p>
                             </div>
 
-                            <!-- NUEVO SISTEMA DE CARGA DE IMÁGENES EN TARJETAS -->
                             <div>
                                 <div class="flex justify-between items-baseline mb-2 ml-1">
                                     <label class="admin-label !mb-0">Imágenes del Artefacto</label>
@@ -508,7 +621,6 @@
                                 </div>
                                 
                                 <div class="grid grid-cols-3 gap-3">
-                                    <!-- Imágenes Existentes -->
                                     <template x-for="(url, index) in productForm.images" :key="'exist-'+index">
                                         <div class="relative aspect-[3/4] rounded-lg border border-surfaceHighlight overflow-hidden group bg-base shadow-inner">
                                             <img :src="url" class="w-full h-full object-cover">
@@ -518,7 +630,6 @@
                                         </div>
                                     </template>
 
-                                    <!-- Nuevas Imágenes -->
                                     <template x-for="(preview, index) in newImagePreviews" :key="'new-'+index">
                                         <div class="relative aspect-[3/4] rounded-lg border border-surfaceHighlight overflow-hidden group bg-base shadow-inner">
                                             <img :src="preview" class="w-full h-full object-cover opacity-70">
@@ -529,7 +640,6 @@
                                         </div>
                                     </template>
 
-                                    <!-- Botón Añadir -->
                                     <div x-show="(productForm.images?.length || 0) + newImagePreviews.length < 3" 
                                          class="aspect-[3/4] rounded-lg border-2 border-dashed border-surfaceHighlight hover:border-accent flex flex-col items-center justify-center cursor-pointer transition-colors group bg-base/30 hover:bg-base/50"
                                          @click="document.getElementById('imageUpload').click()">
@@ -581,7 +691,6 @@
                     </div>
 
                     <div class="mt-10 flex flex-col-reverse sm:flex-row justify-between items-center border-t border-surfaceHighlight pt-6 gap-4">
-                        <!-- Botón de Eliminar añadido al interior de la ventana de edición -->
                         <div class="w-full sm:w-auto">
                             <button type="button" x-show="editingProductId" @click="confirmDeleteProduct(editingProductId)" class="btn-danger w-full flex items-center justify-center gap-2" :disabled="isUploading">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -589,7 +698,6 @@
                             </button>
                         </div>
                         
-                        <!-- Botones de Acción Principales -->
                         <div class="flex flex-col sm:flex-row w-full sm:w-auto gap-3">
                             <button type="button" @click="isProductModalOpen = false" class="btn-cancel w-full sm:w-auto" :disabled="isUploading">Cancelar</button>
                             <button type="button" @click="saveProduct" class="btn-primary w-full sm:w-auto flex items-center justify-center gap-2" :disabled="isUploading">
@@ -616,7 +724,7 @@
 
                 <div class="px-8 py-6 flex justify-between items-center bg-base/50 border-b border-surfaceHighlight">
                     <h3 class="text-xl font-heading font-bold text-textMain" x-text="editingCategoryId ? 'Editar Categoría' : 'Nueva Categoría'"></h3>
-                    <button @click="isCategoryModalOpen = false" class="text-textMuted hover:text-danger bg-surface p-2 rounded-lg transition-all"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                    <button type="button" @click="isCategoryModalOpen = false" class="text-textMuted hover:text-danger bg-surface p-2 rounded-lg transition-all"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
                 </div>
 
                 <form class="p-8">
@@ -670,16 +778,24 @@
                 viewTitles: {
                     'dashboard': 'Dashboard',
                     'products': 'Productos',
-                    'categories': 'Categorías'
+                    'categories': 'Categorías',
+                    'settings': 'Configuración'
                 },
 
                 categories: [],
                 products: [],
 
+                // ESTADO DE CONFIGURACIÓN DEL SITIO
+                settingsForm: { id: 1, whatsapp: '', email: '', hero_title: '', hero_subtitle: '', footer_description: '', hero_images: [] },
+                newHeroImagePreviews: [],
+                newHeroImageFiles: [],
+                isSavingSettings: false,
+                settingsMessage: '',
+                settingsError: '',
+
                 productModalError: '',
                 categoryModalError: '',
 
-                // Estado para Modal de Eliminación Seguro
                 isDeleteModalOpen: false,
                 productToDeleteId: null,
 
@@ -733,6 +849,15 @@
                 async initData() {
                     if (supabaseClient) {
                         try {
+                            // Cargar Configuración
+                            const { data: setObj, error: setError } = await supabaseClient.from('site_settings').select('*').single();
+                            if (setObj && !setError) {
+                                this.settingsForm = setObj;
+                                if (!this.settingsForm.hero_images) this.settingsForm.hero_images = [];
+                            } else {
+                                console.warn("Aviso configuración:", setError?.message);
+                            }
+
                             const { data: catData } = await supabaseClient.from('categories').select('*');
                             if (catData && catData.length > 0) this.categories = catData;
                             
@@ -743,6 +868,78 @@
                                 
                             if (prodData && prodData.length > 0) this.products = prodData;
                         } catch (err) { console.error(err); }
+                    }
+                },
+
+                // LÓGICA DE CONFIGURACIÓN DEL SITIO
+                handleHeroImageSelection(event) {
+                    const files = Array.from(event.target.files);
+                    if (files.length === 0) return;
+                    
+                    let currentTotal = (this.settingsForm.hero_images?.length || 0) + this.newHeroImageFiles.length;
+                    
+                    for (let file of files) {
+                        if (currentTotal < 3) {
+                            this.newHeroImageFiles.push(file);
+                            this.newHeroImagePreviews.push(URL.createObjectURL(file));
+                            currentTotal++;
+                        }
+                    }
+                    event.target.value = '';
+                },
+
+                removeExistingHeroImage(index) {
+                    this.settingsForm.hero_images.splice(index, 1);
+                },
+
+                removeNewHeroImage(index) {
+                    URL.revokeObjectURL(this.newHeroImagePreviews[index]);
+                    this.newHeroImagePreviews.splice(index, 1);
+                    this.newHeroImageFiles.splice(index, 1);
+                },
+
+                async saveSettings() {
+                    this.settingsMessage = '';
+                    this.settingsError = '';
+                    this.isSavingSettings = true;
+
+                    try {
+                        let finalHeroUrls = [...(this.settingsForm.hero_images || [])];
+                        
+                        if (this.newHeroImageFiles && this.newHeroImageFiles.length > 0) {
+                            for (let file of this.newHeroImageFiles) {
+                                const compressedFile = await this.compressImage(file);
+                                const url = await this.uploadImageToSupabase(compressedFile);
+                                finalHeroUrls.push(url);
+                            }
+                        }
+
+                        const settingsData = { ...this.settingsForm, hero_images: finalHeroUrls };
+                        
+                        // Forzamos actualización por ID en lugar de upsert para evitar errores de conflictos RLS
+                        let response = await supabaseClient.from('site_settings').update(settingsData).eq('id', 1).select();
+                        
+                        if (!response.data || response.data.length === 0) {
+                            settingsData.id = 1;
+                            response = await supabaseClient.from('site_settings').insert([settingsData]).select();
+                        }
+                        
+                        if (response.error) throw new Error(response.error.message);
+                        
+                        if (response.data && response.data.length > 0) {
+                            this.settingsForm = response.data[0];
+                            this.newHeroImageFiles = [];
+                            this.newHeroImagePreviews = [];
+                            this.settingsMessage = 'Configuración global guardada exitosamente.';
+                            setTimeout(() => { this.settingsMessage = ''; }, 4000);
+                        } else {
+                            throw new Error("Bloqueado por permisos de seguridad (RLS) en la base de datos.");
+                        }
+                    } catch (err) {
+                        this.settingsError = 'Error al guardar la configuración: ' + err.message;
+                        console.error(err);
+                    } finally {
+                        this.isSavingSettings = false;
                     }
                 },
 
@@ -814,7 +1011,8 @@
                     this.newImageFiles.splice(index, 1);
                 },
 
-                async compressImage(file) {
+                // SISTEMA DE COMPRESIÓN INTELIGENTE (Adaptable para Productos o Portadas)
+                async compressImage(file, isHero = false) {
                     return new Promise((resolve, reject) => {
                         const reader = new FileReader();
                         reader.readAsDataURL(file);
@@ -823,8 +1021,13 @@
                             img.src = event.target.result;
                             img.onload = () => {
                                 const canvas = document.createElement('canvas');
-                                const MAX_WIDTH = 800; 
-                                const MAX_HEIGHT = 1000;
+                                
+                                // Si es portada (Hero), permitimos formato ancho HD (1920x1080)
+                                // Si es producto, limitamos a formato vertical/tarjeta (800x1000) para ahorrar al máximo
+                                const MAX_WIDTH = isHero ? 1920 : 800; 
+                                const MAX_HEIGHT = isHero ? 1080 : 1000;
+                                const QUALITY = isHero ? 0.85 : 0.8; // Un poco más de calidad para el Hero
+
                                 let width = img.width;
                                 let height = img.height;
 
@@ -837,9 +1040,10 @@
                                 const ctx = canvas.getContext('2d');
                                 ctx.drawImage(img, 0, 0, width, height);
                                 
+                                // Convertimos SIEMPRE a formato WEBP ultraligero
                                 canvas.toBlob((blob) => {
                                     resolve(new File([blob], "nexus_" + Date.now() + ".webp", { type: 'image/webp' }));
-                                }, 'image/webp', 0.8);
+                                }, 'image/webp', QUALITY);
                             };
                             img.onerror = error => reject(error);
                         };
@@ -871,7 +1075,8 @@
                         
                         if (this.newImageFiles && this.newImageFiles.length > 0) {
                             for (let file of this.newImageFiles) {
-                                const compressedFile = await this.compressImage(file);
+                                // Pasamos 'false' para indicar que es un producto normal (se aplasta a 800x1000 max)
+                                const compressedFile = await this.compressImage(file, false);
                                 const url = await this.uploadImageToSupabase(compressedFile);
                                 finalImageUrls.push(url);
                             }
@@ -931,7 +1136,6 @@
                     });
                 },
 
-                // Lógica de Confirmación de Eliminación Personalizada
                 confirmDeleteProduct(id) {
                     this.productToDeleteId = id;
                     this.isDeleteModalOpen = true;
@@ -941,7 +1145,6 @@
                     if (!this.productToDeleteId) return;
                     const id = this.productToDeleteId;
 
-                    // Si estamos eliminando desde el propio modal de edición, lo cerramos
                     if (this.editingProductId === id) {
                         this.isProductModalOpen = false;
                     }
@@ -956,7 +1159,6 @@
                     }
                     this.products = this.products.filter(p => p.id !== id);
                     
-                    // Limpieza
                     this.isDeleteModalOpen = false;
                     this.productToDeleteId = null;
                 },
