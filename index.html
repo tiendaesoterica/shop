@@ -93,6 +93,12 @@
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         
+        /* Scrollbar interno para modales */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #2D1D45; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #D4AF37; }
+
         body {
             background-image: radial-gradient(circle at 50% 0%, #1A112A 0%, transparent 70%);
         }
@@ -113,7 +119,7 @@
 <body class="bg-base text-textMuted font-sans antialiased min-h-screen flex flex-col relative selection:bg-accent/30 selection:text-textMain" x-data="esotericStore()">
 
     <!-- ALERTA DE DIAGNÓSTICO (Visible solo si hay error de conexión) -->
-    <div x-show="dbError" x-cloak class="fixed top-20 left-1/2 -translate-x-1/2 z-[100] w-11/12 max-w-lg bg-danger/90 backdrop-blur-md text-white px-6 py-4 rounded-xl border border-white/20 shadow-2xl flex items-start gap-4">
+    <div x-show="dbError !== ''" x-cloak class="fixed top-20 left-1/2 -translate-x-1/2 z-[100] w-11/12 max-w-lg bg-danger/90 backdrop-blur-md text-white px-6 py-4 rounded-xl border border-white/20 shadow-2xl flex items-start gap-4">
         <svg class="w-6 h-6 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
         <div>
             <h4 class="font-bold text-sm uppercase tracking-widest mb-1">Error de Conexión</h4>
@@ -130,7 +136,6 @@
             
             <a href="#" class="flex items-center gap-3 group">
                 <div class="w-10 h-10 flex items-center justify-center text-accent group-hover:scale-110 transition-transform duration-500">
-                    <!-- Icono místico personalizado (Estrella de 8 puntas) -->
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 2v20M17 5l-10 14M22 12H2M19 17L5 7" />
                     </svg>
@@ -155,12 +160,12 @@
                     </svg>
                 </button>
 
-                <!-- Botón del Carrito (Orbe) -->
+                <!-- Botón del Carrito -->
                 <button @click="isCartOpen = true" aria-label="Abrir carrito" class="relative p-2.5 rounded-full transition-all duration-300 hover:scale-105 border hover:border-accent hover:text-accent" :class="scrolled ? 'bg-surface text-textMuted border-surfaceHighlight' : 'bg-surfaceHighlight/30 text-textMain border-surfaceHighlight/50 backdrop-blur-sm'">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
-                    <!-- Indicador místico -->
+                    <!-- Indicador de carrito -->
                     <span x-show="cartTotalItems > 0" x-text="cartTotalItems" x-cloak class="absolute top-0 right-0 bg-accent text-darkLux text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center translate-x-1 -translate-y-1 shadow-[0_0_10px_rgba(212,175,55,0.5)] border border-darkLux"></span>
                 </button>
             </div>
@@ -181,9 +186,9 @@
     <section x-data="{
             currentSlide: 0,
             slides: [
-                'https://images.unsplash.com/photo-1544640808-32ca72ac7f37?auto=format&fit=crop&w=1920&q=80', // Velas/Tarot
-                'https://images.unsplash.com/photo-1600084534720-6d45e45eb334?auto=format&fit=crop&w=1920&q=80', // Astrología
-                'https://images.unsplash.com/photo-1532968961962-810cb2ce4a89?auto=format&fit=crop&w=1920&q=80'  // Oráculo/Luz
+                'https://images.unsplash.com/photo-1544640808-32ca72ac7f37?auto=format&fit=crop&w=1920&q=80', 
+                'https://images.unsplash.com/photo-1600084534720-6d45e45eb334?auto=format&fit=crop&w=1920&q=80', 
+                'https://images.unsplash.com/photo-1532968961962-810cb2ce4a89?auto=format&fit=crop&w=1920&q=80'  
             ],
             next() { this.currentSlide = (this.currentSlide + 1) % this.slides.length; },
             prev() { this.currentSlide = (this.currentSlide - 1 + this.slides.length) % this.slides.length; },
@@ -191,18 +196,15 @@
         }" 
         class="relative w-full h-[90vh] min-h-[600px] overflow-hidden flex items-center justify-center group bg-base">
         
-        <!-- Imágenes de Fondo -->
         <template x-for="(slide, index) in slides" :key="index">
             <div class="absolute inset-0 bg-cover bg-center transition-all duration-[1500ms] ease-in-out transform"
                  :class="currentSlide === index ? 'opacity-50 scale-100 z-0' : 'opacity-0 scale-105 -z-10'"
                  :style="`background-image: url('${slide}')`"></div>
         </template>
         
-        <!-- Filtros Místicos (Nebulosa Púrpura) -->
         <div class="absolute inset-0 bg-gradient-to-b from-base/60 via-surface/40 to-base z-0 pointer-events-none"></div>
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] h-[90vw] max-w-4xl max-h-4xl bg-[radial-gradient(circle,_var(--tw-gradient-stops))] from-accent/10 via-surfaceHighlight/20 to-transparent rounded-full pointer-events-none blur-[60px] animate-mystic-pulse z-0"></div>
         
-        <!-- Controles Manuales -->
         <button @click="prev()" aria-label="Anterior" class="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 w-10 h-10 border border-surfaceHighlight hover:border-accent rounded-full flex items-center justify-center text-accent opacity-0 group-hover:opacity-100 transition-all duration-300 z-20 backdrop-blur-sm bg-base/30">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" /></svg>
         </button>
@@ -210,7 +212,6 @@
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" /></svg>
         </button>
 
-        <!-- Indicadores -->
         <div class="absolute bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-4 z-20">
             <template x-for="(slide, index) in slides" :key="index">
                 <button @click="currentSlide = index" :aria-label="`Ir a la imagen ${index + 1}`" class="transition-all duration-500 rounded-full rotate-45"
@@ -218,7 +219,6 @@
             </template>
         </div>
 
-        <!-- Contenido principal centrado -->
         <div class="relative z-10 text-center px-4 max-w-4xl mx-auto pt-10">
             <div class="flex items-center justify-center gap-4 mb-6 opacity-80">
                 <div class="w-12 h-[1px] bg-accent/50"></div>
@@ -238,7 +238,7 @@
         </div>
     </section>
 
-    <!-- 1. SECCIÓN: LECTURAS Y DESTACADOS (CARRUSEL AUTOMÁTICO) -->
+    <!-- 1. SECCIÓN: DESTACADOS (CARRUSEL AUTOMÁTICO INMERSIVO) -->
     <section id="destacados" class="bg-base py-20 relative z-20" x-show="featuredProducts.length > 0"
         x-data="{
             timer: null,
@@ -256,7 +256,6 @@
                 let slider = this.$refs.destacadosSlider;
                 if(!slider) return;
                 let maxScroll = slider.scrollWidth - slider.clientWidth;
-                // Si llegamos al final, volvemos a empezar
                 if (slider.scrollLeft >= maxScroll - 10) {
                     if(auto) slider.scrollTo({ left: 0, behavior: 'smooth' });
                 } else {
@@ -284,29 +283,21 @@
             </div>
             
             <div class="relative group/slider">
-                <!-- Flecha Izquierda (Flotante) -->
+                <!-- Flecha Izquierda -->
                 <button @click="scrollPrev()" aria-label="Deslizar izquierda" class="absolute left-2 sm:-left-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 border border-surfaceHighlight hover:border-accent rounded-full flex items-center justify-center text-accent bg-base/60 backdrop-blur-md shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-all duration-300 hover:scale-110">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" /></svg>
                 </button>
 
-                <!-- Carrusel Horizontal Premium (Con Auto-Play) -->
+                <!-- Carrusel Horizontal Premium -->
                 <div x-ref="destacadosSlider" class="flex overflow-x-auto snap-x snap-mandatory gap-4 sm:gap-6 pb-6 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide scroll-smooth" :class="featuredProducts.length === 1 ? 'justify-center' : (featuredProducts.length <= 3 ? 'md:justify-center' : '')">
                     <template x-for="product in featuredProducts" :key="product.id">
-                        <!-- Tarjeta Inmersiva con Imagen de Fondo -->
                         <div class="snap-center flex-none w-[85vw] sm:w-[320px] md:w-80 group relative overflow-hidden rounded-2xl cursor-pointer border border-surfaceHighlight shadow-lg hover:shadow-[0_0_30px_rgba(212,175,55,0.15)] transition-all duration-500 aspect-[4/5] sm:aspect-[3/4]" @click="selectedProduct = product">
                             
-                            <!-- Imagen de Fondo -->
                             <img :src="product.image" :alt="product.name" class="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-110 group-hover:opacity-100 transition-all duration-700" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1544640808-32ca72ac7f37?w=400&q=80';">
-                            
-                            <!-- Gradiente de Oscurecimiento Inferior para legibilidad -->
                             <div class="absolute inset-0 bg-gradient-to-t from-base via-base/80 to-transparent opacity-90 group-hover:opacity-95 transition-opacity"></div>
-                            
-                            <!-- Marco interno decorativo -->
                             <div class="absolute inset-3 border border-accent/20 rounded-xl z-10 pointer-events-none group-hover:border-accent/50 transition-colors"></div>
                             
-                            <!-- Contenido Flotante -->
                             <div class="relative z-20 flex flex-col h-full p-6 sm:p-8 justify-end text-center">
-                                <!-- Etiquetas Superiores Flotantes -->
                                 <div class="absolute top-6 w-full left-0 flex justify-center z-20">
                                     <span class="bg-base/80 backdrop-blur-sm text-accent border border-accent/30 text-[9px] font-bold uppercase tracking-[0.2em] px-3 py-1 rounded-full shadow-md" x-text="getCategoryName(product.categoryId)"></span>
                                 </div>
@@ -329,7 +320,7 @@
                     </template>
                 </div>
 
-                <!-- Flecha Derecha (Flotante) -->
+                <!-- Flecha Derecha -->
                 <button @click="scrollNext()" aria-label="Deslizar derecha" class="absolute right-2 sm:-right-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 border border-surfaceHighlight hover:border-accent rounded-full flex items-center justify-center text-accent bg-base/60 backdrop-blur-md shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-all duration-300 hover:scale-110">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" /></svg>
                 </button>
@@ -407,7 +398,6 @@
 
     <!-- 3. SECCIÓN: VENTAS FLASH (Misterio y Urgencia a todo ancho) -->
     <section id="flash" class="w-full relative bg-surface border-y border-danger/30 py-16 mt-8 mb-24 shadow-[0_0_50px_rgba(225,29,72,0.05)] overflow-hidden" x-show="flashSales.length > 0">
-        <!-- Resplandor rojizo de fondo -->
         <div class="absolute top-0 right-0 w-96 h-96 bg-danger/10 rounded-full blur-[100px] pointer-events-none"></div>
         <div class="absolute bottom-0 left-0 w-64 h-64 bg-accent/5 rounded-full blur-[80px] pointer-events-none"></div>
         
@@ -420,7 +410,6 @@
                 <h2 class="text-3xl sm:text-4xl font-heading font-bold text-textMain">Ofertas de tiempo limitado</h2>
             </div>
             
-            <!-- Lógica condicional: Centrado si es 1, Cuadrícula de 2 si son más -->
             <div class="w-full" :class="flashSales.length === 1 ? 'flex justify-center' : 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 md:gap-8'">
                 <template x-for="product in flashSales" :key="product.id">
                     <div class="group flex flex-col tarot-card !p-2 md:!p-4 border-danger/30 hover:border-danger/60 relative bg-base/50" :class="flashSales.length === 1 ? 'w-[85vw] max-w-[340px] md:w-80' : 'w-full'">
@@ -428,7 +417,7 @@
                             <span class="absolute top-2 right-2 bg-danger/90 text-white text-[7px] md:text-[8px] font-bold uppercase tracking-widest px-2 py-1 rounded-sm z-10 shadow-md">Fugaz</span>
                             <img :src="product.image" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" onerror="this.onerror=null; this.src='https://via.placeholder.com/400x500/1A112A/A78BFA?text=Img';">
                             <div class="absolute inset-1.5 border border-danger/20 pointer-events-none rounded-sm transition-colors group-hover:border-danger/40"></div>
-                            <!-- Indicador de Stock -->
+                            
                             <div class="absolute top-2 left-0 w-full flex justify-center z-20">
                                 <span x-show="product.stock !== null && product.stock <= 5 && product.stock > 0" class="bg-warning/90 backdrop-blur-sm text-darkLux text-[7px] md:text-[8px] font-bold uppercase tracking-widest px-2 py-1 rounded-sm shadow-md">Últimas <span x-text="product.stock"></span></span>
                                 <span x-show="product.stock === 0" class="bg-danger/90 backdrop-blur-sm text-white text-[7px] md:text-[8px] font-bold uppercase tracking-widest px-2 py-1 rounded-sm shadow-md">Agotado</span>
@@ -451,89 +440,6 @@
         </div>
     </section>
 
-    <!-- Carrito Lateral (El Morral Mágico) -->
-    <div x-show="isCartOpen" class="fixed inset-0 z-[70] overflow-hidden" x-cloak>
-        <div x-show="isCartOpen" x-transition.opacity @click="isCartOpen = false" class="absolute inset-0 bg-base/80 backdrop-blur-sm"></div>
-
-        <div class="fixed inset-y-0 right-0 max-w-md w-full flex">
-            <div x-show="isCartOpen" 
-                 x-transition:enter="transform transition ease-in-out duration-500" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
-                 x-transition:leave="transform transition ease-in-out duration-500" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full"
-                 class="w-full h-full bg-surface flex flex-col shadow-2xl border-l border-surfaceHighlight">
-
-                <div class="p-6 sm:p-8 flex items-center justify-between border-b border-surfaceHighlight bg-base/50">
-                    <h2 class="text-xl font-heading font-bold text-textMain flex items-center gap-3">
-                        <span class="text-accent text-2xl">✧</span> Tu Morral
-                    </h2>
-                    <button @click="isCartOpen = false" class="text-textMuted hover:text-danger bg-surface p-2.5 rounded-lg transition-all border border-surfaceHighlight">
-                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
-                </div>
-
-                <div class="flex-1 overflow-y-auto px-6 py-6 bg-base/30">
-                    <template x-if="cart.length === 0">
-                        <div class="h-full flex flex-col items-center justify-center text-center opacity-60">
-                            <div class="text-4xl text-accent mb-4">☾</div>
-                            <p class="text-textMain font-heading font-bold text-lg mb-2">Tu morral está vacío</p>
-                            <p class="text-textMuted text-sm font-light">Explora el archivo para añadir elementos.</p>
-                        </div>
-                    </template>
-                    
-                    <ul class="space-y-4">
-                        <template x-for="item in cart" :key="item.id">
-                            <li class="flex items-center p-3 bg-surface rounded-xl border border-surfaceHighlight shadow-sm group">
-                                <div class="w-14 h-20 rounded-md overflow-hidden bg-base mr-4 border border-surfaceHighlight/50">
-                                    <img :src="item.image || 'https://via.placeholder.com/80/1A112A/A78BFA?text=Img'" :alt="item.name" class="w-full h-full object-cover opacity-80">
-                                </div>
-                                
-                                <div class="flex-1 min-w-0">
-                                    <h4 class="text-textMain font-heading font-bold text-sm mb-1 truncate" x-text="item.name"></h4>
-                                    <div class="flex flex-col gap-2 mt-2">
-                                        <span class="text-accent font-semibold text-sm" x-text="formatPrice(item.price)"></span>
-                                        <div class="flex items-center border border-surfaceHighlight rounded-md bg-base w-fit">
-                                            <button @click="updateCartQuantity(item.id, -1)" class="px-2.5 py-1 text-textMuted hover:text-textMain">-</button>
-                                            <span x-text="item.quantity" class="text-xs text-textMain font-bold w-4 text-center"></span>
-                                            <button @click="updateCartQuantity(item.id, 1)" class="px-2.5 py-1 text-textMuted hover:text-textMain transition-opacity" :disabled="item.stock !== null && item.quantity >= item.stock" :class="(item.stock !== null && item.quantity >= item.stock) ? 'opacity-30 cursor-not-allowed' : ''">+</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="flex flex-col items-end ml-2 h-full justify-between py-1">
-                                    <button @click="removeFromCart(item.id)" class="text-textMuted hover:text-danger p-1.5 transition-colors" title="Retirar">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                    </button>
-                                    <span class="text-textMain font-bold text-sm mt-4" x-text="formatPrice(item.price * item.quantity)"></span>
-                                </div>
-                            </li>
-                        </template>
-                    </ul>
-                </div>
-
-                <div class="p-6 sm:p-8 bg-surface border-t border-surfaceHighlight">
-                    <div class="flex justify-between items-center text-sm text-textMuted mb-3 font-light">
-                        <span>Intercambio</span>
-                        <span class="text-textMain font-medium" x-text="formatPrice(calculateTotal())"></span>
-                    </div>
-                    <div class="flex justify-between items-center text-sm text-textMuted mb-6 font-light">
-                        <span>Envío Digital</span>
-                        <span class="text-accent text-xs font-semibold uppercase tracking-widest">Gratis</span>
-                    </div>
-                    <div class="flex justify-between items-center border-t border-surfaceHighlight pt-5 mb-8">
-                        <span class="uppercase tracking-[0.2em] text-[11px] font-bold text-textMuted">Total Final</span>
-                        <span class="text-2xl font-heading font-bold text-accent" x-text="formatPrice(calculateTotal())"></span>
-                    </div>
-                    <!-- BOTÓN WHATSAPP -->
-                    <button class="btn-success w-full"
-                            :disabled="cart.length === 0"
-                            @click="checkoutWhatsapp()">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-                        Sellar el Pacto
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Modal de Vista de Producto (Detalles del Grimorio) -->
     <div x-show="selectedProduct" class="fixed inset-0 z-[80] overflow-y-auto" x-cloak>
         <div x-show="selectedProduct" x-transition.opacity @click="selectedProduct = null" class="fixed inset-0 bg-base/90 backdrop-blur-md"></div>
@@ -547,25 +453,113 @@
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
 
-                <div class="md:w-1/2 relative bg-base aspect-[3/4] md:aspect-auto p-6 sm:p-10 flex items-center justify-center">
+                <!-- Lado Izquierdo: Carrusel de Imágenes Táctil y Automático -->
+                <div class="md:w-1/2 relative bg-base aspect-[3/4] md:aspect-auto p-6 sm:p-10 flex items-center justify-center group/carousel"
+                     x-data="{
+                        activeImage: 0,
+                        autoSlide: null,
+                        get currentImages() {
+                            if (!selectedProduct) return [];
+                            return selectedProduct.images && selectedProduct.images.length > 0 ? selectedProduct.images.slice(0, 3) : [selectedProduct.image];
+                        },
+                        startAutoSlide() {
+                            this.stopAutoSlide();
+                            if (this.currentImages.length > 1) {
+                                this.autoSlide = setInterval(() => { this.nextImage(true); }, 4000);
+                            }
+                        },
+                        stopAutoSlide() {
+                            if (this.autoSlide) clearInterval(this.autoSlide);
+                            this.autoSlide = null;
+                        },
+                        nextImage(auto = false) {
+                            if (this.currentImages.length <= 1) return;
+                            let slider = this.$refs.modalImageSlider;
+                            if(!slider) return;
+                            
+                            let maxScroll = slider.scrollWidth - slider.clientWidth;
+                            if (slider.scrollLeft >= maxScroll - 10) {
+                                if(auto) slider.scrollTo({ left: 0, behavior: 'smooth' });
+                            } else {
+                                slider.scrollBy({ left: slider.clientWidth, behavior: 'smooth' });
+                            }
+                        },
+                        prevImage() {
+                            if (this.currentImages.length <= 1) return;
+                            let slider = this.$refs.modalImageSlider;
+                            if(!slider) return;
+                            slider.scrollBy({ left: -slider.clientWidth, behavior: 'smooth' });
+                        },
+                        scrollToImage() {
+                            let slider = this.$refs.modalImageSlider;
+                            if(slider) {
+                                slider.scrollTo({ left: slider.clientWidth * this.activeImage, behavior: 'smooth' });
+                            }
+                        },
+                        onScroll() {
+                            let slider = this.$refs.modalImageSlider;
+                            if(slider) {
+                                this.activeImage = Math.round(slider.scrollLeft / slider.clientWidth);
+                            }
+                        }
+                     }"
+                     x-init="$watch('selectedProduct', value => { if(value) { activeImage = 0; if($refs.modalImageSlider) $refs.modalImageSlider.scrollLeft = 0; startAutoSlide(); } else { stopAutoSlide(); } })"
+                     @mouseenter="stopAutoSlide()" @mouseleave="startAutoSlide()"
+                     @touchstart="stopAutoSlide()" @touchend="startAutoSlide()">
+
                     <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-accent/5 via-transparent to-transparent pointer-events-none"></div>
-                    <img :src="selectedProduct?.image" :alt="selectedProduct?.name" class="w-full h-full object-cover rounded-lg shadow-lg border border-surfaceHighlight/50 z-10 opacity-80" onerror="this.onerror=null; this.src='https://via.placeholder.com/400x500/1A112A/A78BFA?text=Img';">
-                    <!-- Marco decorativo -->
+                    
+                    <!-- Contenedor Slider Deslizable -->
+                    <!-- Se agregó overflow-y-hidden para bloquear scroll vertical en el track -->
+                    <div x-ref="modalImageSlider" @scroll.passive="onScroll" class="flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory w-full h-full rounded-lg shadow-lg border border-surfaceHighlight/50 z-10 opacity-80 scrollbar-hide scroll-smooth relative">
+                        <template x-for="(img, index) in currentImages" :key="index">
+                            <!-- Se agregó overflow-hidden aquí para que el zoom (scale) se corte al borde -->
+                            <div class="w-full h-full flex-shrink-0 snap-center relative cursor-pointer flex items-center justify-center bg-base overflow-hidden" @click="fullscreenImage = img" title="Ver imagen a pantalla completa">
+                                <img :src="img" :alt="selectedProduct?.name" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" onerror="this.onerror=null; this.src='https://via.placeholder.com/400x500/1A112A/A78BFA?text=Img';">
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Flechas de Navegación Lateral -->
+                    <template x-if="currentImages.length > 1">
+                        <div class="absolute inset-x-8 sm:inset-x-12 top-1/2 -translate-y-1/2 flex justify-between z-20 pointer-events-none">
+                            <button @click.stop="prevImage()" aria-label="Foto anterior" class="w-8 h-8 rounded-full bg-base/80 backdrop-blur-sm border border-surfaceHighlight text-textMuted hover:text-accent flex items-center justify-center pointer-events-auto shadow-md transition-transform hover:scale-110 opacity-0 group-hover/carousel:opacity-100">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                            </button>
+                            <button @click.stop="nextImage()" aria-label="Siguiente foto" class="w-8 h-8 rounded-full bg-base/80 backdrop-blur-sm border border-surfaceHighlight text-textMuted hover:text-accent flex items-center justify-center pointer-events-auto shadow-md transition-transform hover:scale-110 opacity-0 group-hover/carousel:opacity-100">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                            </button>
+                        </div>
+                    </template>
+
+                    <!-- Puntos Inferiores de Paginación -->
+                    <template x-if="currentImages.length > 1">
+                        <div class="absolute bottom-16 md:bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20 bg-base/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-surfaceHighlight/50">
+                            <template x-for="(img, index) in currentImages" :key="index">
+                                <button @click.stop="activeImage = index; scrollToImage()" 
+                                        class="transition-all duration-300 rounded-full" 
+                                        :class="activeImage === index ? 'w-2 h-2 bg-accent shadow-[0_0_8px_rgba(212,175,55,0.8)]' : 'w-1.5 h-1.5 bg-surfaceHighlight hover:bg-textMuted'">
+                                </button>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- Marco decorativo y Stock -->
                     <div class="absolute inset-8 border border-accent/20 z-20 pointer-events-none rounded-sm hidden sm:block"></div>
-                    <!-- Indicador de Stock Modal -->
-                    <div class="absolute bottom-10 w-full flex justify-center z-30">
+                    <div class="absolute bottom-10 w-full flex justify-center z-30 pointer-events-none">
                         <span x-show="selectedProduct?.stock !== null && selectedProduct?.stock <= 5 && selectedProduct?.stock > 0" class="bg-warning/90 backdrop-blur-sm text-darkLux text-[11px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-sm shadow-md">Últimas <span x-text="selectedProduct?.stock"></span> unidades</span>
                         <span x-show="selectedProduct?.stock === 0" class="bg-danger/90 backdrop-blur-sm text-white text-[11px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-sm shadow-md">Totalmente Agotado</span>
                     </div>
                 </div>
 
-                <div class="md:w-1/2 p-8 md:p-10 flex flex-col bg-surface border-l border-surfaceHighlight">
+                <div class="md:w-1/2 p-8 md:p-10 flex flex-col bg-surface border-l border-surfaceHighlight min-w-0">
                     <span class="text-accent text-[10px] uppercase tracking-[0.3em] font-bold mb-4 flex items-center gap-2">
                         ✧ <span x-text="getCategoryName(selectedProduct?.category || selectedProduct?.categoryId)"></span> ✧
                     </span>
                     
-                    <h2 class="text-3xl font-heading font-bold text-textMain mb-6 leading-tight" x-text="selectedProduct?.name"></h2>
-                    <div class="text-textMuted text-sm leading-relaxed mb-8 flex-grow font-light space-y-4" x-html="selectedProduct?.fullDescription?.replace(/\n/g, '<br>') || selectedProduct?.description"></div>
+                    <!-- Break words para evitar desbordes -->
+                    <h2 class="text-3xl font-heading font-bold text-textMain mb-6 leading-tight break-words" x-text="selectedProduct?.name"></h2>
+                    <div class="text-textMuted text-sm leading-relaxed mb-8 flex-grow font-light space-y-4 break-words" x-html="selectedProduct?.fullDescription?.replace(/\n/g, '<br>') || selectedProduct?.description"></div>
 
                     <div class="flex items-end gap-4 mb-8 bg-base/50 p-4 rounded-lg border border-surfaceHighlight">
                         <div class="flex flex-col">
@@ -588,6 +582,14 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Visor de Imagen Pantalla Completa (Minimalista) -->
+    <div x-show="fullscreenImage !== null" class="fixed inset-0 z-[100] flex items-center justify-center bg-base/95 backdrop-blur-md p-4 sm:p-8" x-cloak>
+        <button @click="fullscreenImage = null" class="absolute top-4 right-4 sm:top-8 sm:right-8 text-textMuted hover:text-accent z-50 transition-transform hover:scale-110 bg-surface/80 p-3 rounded-full border border-surfaceHighlight shadow-lg">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+        <img :src="fullscreenImage" @click.away="fullscreenImage = null" class="max-w-full max-h-full object-contain rounded-md shadow-2xl border border-surfaceHighlight/30" />
     </div>
 
     <!-- Footer Místico -->
@@ -652,13 +654,22 @@
             Alpine.data('esotericStore', () => ({
                 isCartOpen: false,
                 selectedProduct: null,
+                fullscreenImage: null,
                 searchQuery: '',
                 selectedCategory: 'todos',
                 categories: [], 
                 dbError: '',
                 
                 products: [
-                    { id: 1, name: 'Lectura de Cruz Celta', description: 'Profunda lectura de 10 cartas para entender el panorama completo de tu situación actual.', fullDescription: 'La tirada de la Cruz Celta es una de las más antiguas y completas. Analizaremos tu pasado, tu presente, las influencias ocultas, tus miedos, esperanzas y el resultado probable si continúas en este camino. La lectura se entrega en un PDF detallado con la fotografía de tu tirada.', price: 25000, category: 'lecturas', isFeatured: true, isFlashSale: false, image: 'https://images.unsplash.com/photo-1544640808-32ca72ac7f37?auto=format&fit=crop&w=400&q=80' },
+                    { 
+                        id: 1, name: 'Lectura de Cruz Celta', description: 'Profunda lectura de 10 cartas para entender el panorama completo de tu situación actual.', fullDescription: 'La tirada de la Cruz Celta es una de las más antiguas y completas. Analizaremos tu pasado, tu presente, las influencias ocultas, tus miedos, esperanzas y el resultado probable si continúas en este camino. La lectura se entrega en un PDF detallado con la fotografía de tu tirada.', price: 25000, category: 'lecturas', isFeatured: true, isFlashSale: false, 
+                        image: 'https://images.unsplash.com/photo-1544640808-32ca72ac7f37?auto=format&fit=crop&w=400&q=80',
+                        images: [
+                            'https://images.unsplash.com/photo-1544640808-32ca72ac7f37?auto=format&fit=crop&w=400&q=80',
+                            'https://images.unsplash.com/photo-1532968961962-810cb2ce4a89?auto=format&fit=crop&w=400&q=80',
+                            'https://images.unsplash.com/photo-1602339670464-3257ec8d533b?auto=format&fit=crop&w=400&q=80'
+                        ]
+                    },
                     { id: 2, name: 'Generador de Sigilos Pro', description: 'Herramienta digital interactiva para intenciones.', fullDescription: 'El Generador de Sigilos Pro utiliza algoritmos basados en geometría sagrada para transformar tus intenciones escritas en símbolos visuales únicos y cargados energéticamente.', price: 15000, category: 'herramientas', isFeatured: true, isFlashSale: false, image: 'https://images.unsplash.com/photo-1602339670464-3257ec8d533b?auto=format&fit=crop&w=400&q=80' },
                     { id: 3, name: 'Limpieza Áurica a Distancia', description: 'Ritual de armonización energética de 3 días.', fullDescription: 'Mediante técnicas de radiónica y reiki, limpiaré las densidades acumuladas en tu campo energético durante 3 días consecutivos. Recibirás un reporte de los bloqueos encontrados y consejos para mantener tu vibración alta.', price: 18000, originalPrice: 22000, category: 'servicios', isFeatured: false, isFlashSale: true, image: 'https://images.unsplash.com/photo-1532968961962-810cb2ce4a89?auto=format&fit=crop&w=400&q=80' },
                 ],
@@ -670,7 +681,7 @@
                             const { data: catData, error: catError } = await supabaseClient.from('categories').select('*');
                             if (!catError && catData) this.categories = catData;
 
-                            const { data: prodData, error: prodError } = await supabaseClient.from('products')
+                            let { data: prodData, error: prodError } = await supabaseClient.from('products')
                                 .select('*')
                                 .order('display_order', { ascending: true, nullsFirst: false })
                                 .order('id', { ascending: true });
