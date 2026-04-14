@@ -15,7 +15,7 @@
     <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Configuración de Tailwind usando RGB Variables para que los temas dinámicos funcionen sin romperse -->
+    <!-- Configuración de Tailwind -->
     <script>
         tailwind.config = {
             theme: {
@@ -68,7 +68,6 @@
         .btn-cancel {
             @apply px-6 py-3 bg-transparent border border-surfaceHighlight text-textMuted hover:bg-surfaceHighlight hover:text-textMain rounded-lg text-xs uppercase tracking-[0.2em] font-medium transition-all;
         }
-        /* Ajustes de Color Picker */
         input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
         input[type="color"]::-webkit-color-swatch { border: none; border-radius: 6px; }
     </style>
@@ -79,6 +78,7 @@
             --color-surface: 26 17 42; 
             --color-surface-highlight: 45 29 69; 
             --color-accent: 212 175 55; 
+            --overlay-opacity: 0.8;
         }
 
         ::-webkit-scrollbar { width: 6px; }
@@ -101,11 +101,84 @@
             appearance: none;
         }
     </style>
+
+    <!-- SCRIPT ANTI-PARPADEO -->
+    <script>
+        (function() {
+            try {
+                const hexToRgb = (hex) => {
+                    if (!hex) return '0 0 0';
+                    let c = hex.substring(1);
+                    if(c.length === 3) c = c.split('').map(x => x + x).join('');
+                    return `${parseInt(c.slice(0, 2), 16)} ${parseInt(c.slice(2, 4), 16)} ${parseInt(c.slice(4, 6), 16)}`;
+                };
+                const themePresets = {
+                    default: { base: '#0D0914', surface: '#1A112A', accent: '#D4AF37', highlight: '#2D1D45' },
+                    dragon: { base: '#140505', surface: '#210A0A', accent: '#E11D48', highlight: '#331212' },
+                    forest: { base: '#05120B', surface: '#092215', accent: '#10B981', highlight: '#113623' },
+                    ocean: { base: '#050A14', surface: '#0A1326', accent: '#3B82F6', highlight: '#122240' }
+                };
+                const lightenDarkenColor = (col, amt) => {
+                    let usePound = false;
+                    if (col[0] == "#") { col = col.slice(1); usePound = true; }
+                    let num = parseInt(col,16);
+                    let r = (num >> 16) + amt; if (r > 255) r = 255; else if (r < 0) r = 0;
+                    let b = ((num >> 8) & 0x00FF) + amt; if (b > 255) b = 255; else if (b < 0) b = 0;
+                    let g = (num & 0x0000FF) + amt; if (g > 255) g = 255; else if (g < 0) g = 0;
+                    return (usePound?"#":"") + String("000000" + (g | (b << 8) | (r << 16)).toString(16)).slice(-6);
+                };
+
+                let t = localStorage.getItem('nexus_theme') || 'default';
+                let preset = themePresets[t] || themePresets['default'];
+                
+                let b = t === 'custom' ? (localStorage.getItem('nexus_color_base') || preset.base) : preset.base;
+                let s = t === 'custom' ? (localStorage.getItem('nexus_color_surface') || preset.surface) : preset.surface;
+                let a = t === 'custom' ? (localStorage.getItem('nexus_color_accent') || preset.accent) : preset.accent;
+                let h = t === 'custom' ? lightenDarkenColor(s, 25) : preset.highlight;
+                
+                // Leemos la opacidad correcta
+                let opacity = localStorage.getItem('nexus_hero_opacity');
+                opacity = opacity !== null ? opacity : 80;
+
+                document.documentElement.style.setProperty('--color-base', hexToRgb(b));
+                document.documentElement.style.setProperty('--color-surface', hexToRgb(s));
+                document.documentElement.style.setProperty('--color-surface-highlight', hexToRgb(h));
+                document.documentElement.style.setProperty('--color-accent', hexToRgb(a));
+                document.documentElement.style.setProperty('--overlay-opacity', opacity / 100);
+            } catch(e) {}
+        })();
+    </script>
 </head>
 
 <body class="bg-base text-textMuted font-sans antialiased min-h-screen flex selection:bg-accent/30 selection:text-textMain transition-colors duration-500 overflow-x-hidden" 
       x-data="adminPanel()" 
+      :class="isLoading ? 'overflow-hidden' : ''"
       x-effect="document.title = (settingsForm.site_name || 'Panel') + ' | Admin'">
+
+    <!-- PANTALLA DE CARGA INICIAL MÍSTICA -->
+    <div x-show="isLoading" 
+         x-transition:leave="transition ease-in duration-700" 
+         x-transition:leave-start="opacity-100" 
+         x-transition:leave-end="opacity-0" 
+         class="fixed inset-0 z-[200] bg-base flex flex-col items-center justify-center transition-colors duration-500">
+        
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-surfaceHighlight/30 via-base to-base pointer-events-none transition-colors duration-500"></div>
+        
+        <!-- Orbe Mágico con desenfoque nativo intacto -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] max-w-2xl max-h-2xl bg-accent/5 rounded-full pointer-events-none animate-mystic-pulse transition-colors duration-500 blur-[80px]"></div>
+
+        <div class="relative z-10 flex flex-col items-center animate-mystic-pulse">
+            <template x-if="settingsForm.logo_url">
+                <img :src="settingsForm.logo_url" alt="Logotipo" class="h-20 w-auto object-contain mb-6 drop-shadow-[0_0_15px_rgba(var(--color-accent),0.3)] transition-all duration-500">
+            </template>
+            <h2 x-show="settingsForm.site_name && !settingsForm.logo_url" class="text-2xl font-heading font-bold tracking-[0.2em] text-textMain mb-8 transition-colors duration-500" x-text="settingsForm.site_name"></h2>
+            
+            <div class="flex items-center gap-3 mt-4">
+                <svg class="animate-spin h-5 w-5 text-accent transition-colors duration-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <span class="text-xs uppercase tracking-[0.3em] font-bold text-textMuted transition-colors duration-500">Iniciando sistema...</span>
+            </div>
+        </div>
+    </div>
 
     <!-- NOTIFICACIÓN FLOTANTE GLOBAL -->
     <div x-show="settingsMessage" 
@@ -116,16 +189,13 @@
         <span x-text="settingsMessage" class="font-bold tracking-wide"></span>
     </div>
 
-    <!-- ========================================== -->
     <!-- PANTALLA DE LOGIN -->
-    <!-- ========================================== -->
     <div x-show="!isCheckingAuth && !isAuthenticated" class="fixed inset-0 z-[90] bg-base flex flex-col items-center justify-center p-4 overflow-hidden" x-cloak>
         <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-surfaceHighlight/30 via-base to-base pointer-events-none"></div>
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] bg-accent/5 rounded-full blur-[80px] pointer-events-none animate-mystic-pulse"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] bg-accent/5 rounded-full pointer-events-none animate-mystic-pulse blur-[80px]"></div>
 
         <div class="relative max-w-sm w-full bg-surface border border-accent/30 p-10 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] text-center z-10 backdrop-blur-sm">
             
-            <!-- LOGO DINÁMICO -->
             <template x-if="settingsForm.logo_url">
                 <img :src="settingsForm.logo_url" class="h-16 w-auto object-contain mx-auto mb-6">
             </template>
@@ -149,9 +219,7 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
     <!-- INTERFAZ PRINCIPAL DEL PANEL -->
-    <!-- ========================================== -->
     <div x-show="isAuthenticated" class="flex w-full h-screen overflow-hidden bg-base" x-cloak>
         
         <aside class="fixed inset-y-0 left-0 z-[60] w-64 bg-surface border-r border-surfaceHighlight transform transition-transform duration-300 md:translate-x-0 md:static md:flex-shrink-0 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.6)]"
@@ -262,7 +330,8 @@
                     </div>
 
                     <div class="bg-surface border border-surfaceHighlight rounded-2xl shadow-lg overflow-hidden relative">
-                        <div class="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-[100px] pointer-events-none"></div>
+                        <!-- Recuperamos el blur nativo para los detalles decorativos -->
+                        <div class="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full pointer-events-none blur-[100px]"></div>
                         <div class="px-6 md:px-8 py-5 md:py-6 border-b border-surfaceHighlight flex justify-between items-center bg-base/50">
                             <h4 class="text-base md:text-lg font-heading font-bold text-textMain">Últimos Productos</h4>
                         </div>
@@ -513,6 +582,17 @@
                                             <span class="text-xs font-mono text-textMain uppercase" x-text="settingsForm.color_accent"></span>
                                         </div>
                                     </div>
+                                </div>
+                                
+                                <!-- Controlador de la Opacidad del Degradado -->
+                                <div class="mt-6 pt-6 border-t border-surfaceHighlight/50">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <label class="admin-label !mb-0">Opacidad de la Portada</label>
+                                        <span class="text-xs font-mono text-accent" x-text="(settingsForm.hero_opacity !== undefined ? settingsForm.hero_opacity : 80) + '%'"></span>
+                                    </div>
+                                    <!-- AHORA ESTÁ CONECTADO A hero_opacity EN LUGAR DE blur_level -->
+                                    <input type="range" x-model="settingsForm.hero_opacity" min="0" max="100" step="5" class="w-full accent-accent h-2 bg-surfaceHighlight rounded-lg cursor-pointer">
+                                    <p class="text-[9px] text-textMuted mt-2 ml-1">Controla qué tan oscurecida se ve la imagen de la tienda. 0% es totalmente transparente.</p>
                                 </div>
                             </div>
                         </div>
@@ -876,7 +956,7 @@
                 categories: [],
                 products: [],
 
-                // ESTADO DE CONFIGURACIÓN DEL SITIO CON CACHÉ
+                // ESTADO DE CONFIGURACIÓN DEL SITIO CON CACHÉ (hero_opacity en lugar de blur_level)
                 settingsForm: { 
                     id: 1, whatsapp: '', email: '', hero_title: '', hero_subtitle: '', footer_description: '', hero_images: [], 
                     site_name: localStorage.getItem('nexus_site_name') || '', 
@@ -885,7 +965,8 @@
                     theme: localStorage.getItem('nexus_theme') || 'default', 
                     color_base: localStorage.getItem('nexus_color_base') || '#0D0914', 
                     color_surface: localStorage.getItem('nexus_color_surface') || '#1A112A', 
-                    color_accent: localStorage.getItem('nexus_color_accent') || '#D4AF37'
+                    color_accent: localStorage.getItem('nexus_color_accent') || '#D4AF37',
+                    hero_opacity: localStorage.getItem('nexus_hero_opacity') !== null ? parseInt(localStorage.getItem('nexus_hero_opacity')) : 80
                 },
                 
                 themePresets: {
@@ -927,13 +1008,13 @@
                 },
 
                 async init() {
-                    // Aplicar caché al instante
                     this.applyThemePreview();
 
                     this.$watch('settingsForm.theme', () => this.applyThemePreview());
                     this.$watch('settingsForm.color_base', () => { if(this.settingsForm.theme === 'custom') this.applyThemePreview() });
                     this.$watch('settingsForm.color_surface', () => { if(this.settingsForm.theme === 'custom') this.applyThemePreview() });
                     this.$watch('settingsForm.color_accent', () => { if(this.settingsForm.theme === 'custom') this.applyThemePreview() });
+                    this.$watch('settingsForm.hero_opacity', () => this.applyThemePreview());
 
                     if (supabaseClient) {
                         try {
@@ -942,7 +1023,6 @@
                                 this.settingsForm = { ...this.settingsForm, ...setObj };
                                 if (!this.settingsForm.hero_images) this.settingsForm.hero_images = [];
                                 
-                                // Actualizar caché local
                                 localStorage.setItem('nexus_site_name', this.settingsForm.site_name || '');
                                 localStorage.setItem('nexus_site_motto', this.settingsForm.site_motto || '');
                                 localStorage.setItem('nexus_logo_url', this.settingsForm.logo_url || '');
@@ -950,6 +1030,7 @@
                                 localStorage.setItem('nexus_color_base', this.settingsForm.color_base || '#0D0914');
                                 localStorage.setItem('nexus_color_surface', this.settingsForm.color_surface || '#1A112A');
                                 localStorage.setItem('nexus_color_accent', this.settingsForm.color_accent || '#D4AF37');
+                                localStorage.setItem('nexus_hero_opacity', this.settingsForm.hero_opacity !== undefined ? this.settingsForm.hero_opacity : 80);
 
                                 this.applyThemePreview();
                             }
@@ -966,7 +1047,6 @@
                             }
                         }
                         
-                        // Quitar pantalla de carga suavemente
                         setTimeout(() => { this.isLoading = false; }, 800);
                     } else {
                         this.isLoading = false;
@@ -1056,6 +1136,7 @@
                     document.documentElement.style.setProperty('--color-surface', this.hexToRgb(s));
                     document.documentElement.style.setProperty('--color-surface-highlight', this.hexToRgb(h));
                     document.documentElement.style.setProperty('--color-accent', this.hexToRgb(a));
+                    document.documentElement.style.setProperty('--overlay-opacity', (this.settingsForm.hero_opacity !== undefined ? this.settingsForm.hero_opacity : 80) / 100);
                 },
 
                 handleLogoSelection(event) {
@@ -1171,7 +1252,6 @@
                         if (response.data && response.data.length > 0) {
                             this.settingsForm = response.data[0];
                             
-                            // Guardamos en caché al actualizar
                             localStorage.setItem('nexus_site_name', this.settingsForm.site_name || '');
                             localStorage.setItem('nexus_site_motto', this.settingsForm.site_motto || '');
                             localStorage.setItem('nexus_logo_url', this.settingsForm.logo_url || '');
@@ -1179,6 +1259,7 @@
                             localStorage.setItem('nexus_color_base', this.settingsForm.color_base || '#0D0914');
                             localStorage.setItem('nexus_color_surface', this.settingsForm.color_surface || '#1A112A');
                             localStorage.setItem('nexus_color_accent', this.settingsForm.color_accent || '#D4AF37');
+                            localStorage.setItem('nexus_hero_opacity', this.settingsForm.hero_opacity !== undefined ? this.settingsForm.hero_opacity : 80);
 
                             this.newHeroImageFiles = [];
                             this.newHeroImagePreviews = [];
@@ -1191,7 +1272,7 @@
                         }
                     } catch (err) {
                         if (err.message && (err.message.includes('logo_url') || err.message.includes('schema cache'))) {
-                            this.settingsError = '⚠️ Faltan columnas en la base de datos. Por favor, asegúrate de ejecutar el código SQL provisto para agregar la identidad de marca.';
+                            this.settingsError = '⚠️ Faltan columnas en la base de datos. Asegúrate de haber ejecutado el SQL actualizado.';
                         } else {
                             this.settingsError = 'Error al guardar la configuración: ' + err.message;
                         }
