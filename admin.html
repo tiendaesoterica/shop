@@ -103,36 +103,9 @@
     </style>
 </head>
 
-<body class="bg-base text-textMuted font-sans antialiased min-h-screen flex selection:bg-accent/30 selection:text-textMain transition-colors duration-500" 
+<body class="bg-base text-textMuted font-sans antialiased min-h-screen flex selection:bg-accent/30 selection:text-textMain transition-colors duration-500 overflow-x-hidden" 
       x-data="adminPanel()" 
-      :class="isLoading ? 'overflow-hidden' : ''"
       x-effect="document.title = (settingsForm.site_name || 'Panel') + ' | Admin'">
-
-    <!-- ============================================== -->
-    <!-- PANTALLA DE CARGA INICIAL MÍSTICA -->
-    <!-- ============================================== -->
-    <div x-show="isLoading" 
-         x-transition:leave="transition ease-in duration-700" 
-         x-transition:leave-start="opacity-100" 
-         x-transition:leave-end="opacity-0" 
-         class="fixed inset-0 z-[200] bg-base flex flex-col items-center justify-center transition-colors duration-500">
-        
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-surfaceHighlight/30 via-base to-base pointer-events-none transition-colors duration-500"></div>
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] max-w-2xl max-h-2xl bg-accent/5 rounded-full blur-[80px] pointer-events-none animate-mystic-pulse transition-colors duration-500"></div>
-
-        <div class="relative z-10 flex flex-col items-center animate-mystic-pulse">
-            <template x-if="settingsForm.logo_url">
-                <img :src="settingsForm.logo_url" alt="Logotipo" class="h-20 w-auto object-contain mb-6 drop-shadow-[0_0_15px_rgba(var(--color-accent),0.3)] transition-all duration-500">
-            </template>
-            
-            <h2 x-show="settingsForm.site_name && !settingsForm.logo_url" class="text-2xl font-heading font-bold tracking-[0.2em] text-textMain mb-8 transition-colors duration-500" x-text="settingsForm.site_name"></h2>
-            
-            <div class="flex items-center gap-3 mt-4">
-                <svg class="animate-spin h-5 w-5 text-accent transition-colors duration-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                <span class="text-xs uppercase tracking-[0.3em] font-bold text-textMuted transition-colors duration-500">Iniciando sistema...</span>
-            </div>
-        </div>
-    </div>
 
     <!-- NOTIFICACIÓN FLOTANTE GLOBAL -->
     <div x-show="settingsMessage" 
@@ -143,493 +116,498 @@
         <span x-text="settingsMessage" class="font-bold tracking-wide"></span>
     </div>
 
-    <!-- ENVOLTORIO PRINCIPAL (Totalmente invisible hasta que carga el sistema) -->
-    <div x-show="!isLoading" x-transition.opacity.duration.800ms x-cloak class="w-full">
-        <!-- ========================================== -->
-        <!-- PANTALLA DE LOGIN -->
-        <!-- ========================================== -->
-        <div x-show="!isAuthenticated" class="fixed inset-0 z-[90] bg-base flex flex-col items-center justify-center p-4">
-            <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-surfaceHighlight/30 via-base to-base pointer-events-none"></div>
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] bg-accent/5 rounded-full blur-[80px] pointer-events-none animate-mystic-pulse"></div>
+    <!-- ========================================== -->
+    <!-- PANTALLA DE LOGIN -->
+    <!-- ========================================== -->
+    <div x-show="!isCheckingAuth && !isAuthenticated" class="fixed inset-0 z-[90] bg-base flex flex-col items-center justify-center p-4 overflow-hidden" x-cloak>
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-surfaceHighlight/30 via-base to-base pointer-events-none"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] bg-accent/5 rounded-full blur-[80px] pointer-events-none animate-mystic-pulse"></div>
 
-            <div class="relative max-w-sm w-full bg-surface border border-accent/30 p-10 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] text-center z-10 backdrop-blur-sm">
-                
-                <!-- LOGO DINÁMICO -->
-                <template x-if="settingsForm.logo_url">
-                    <img :src="settingsForm.logo_url" class="h-16 w-auto object-contain mx-auto mb-6">
-                </template>
-                <template x-if="!settingsForm.logo_url">
-                    <div class="text-2xl font-heading font-bold text-textMain mb-2 tracking-wide" x-text="settingsForm.site_name || 'Panel'"></div>
-                </template>
-                
-                <h2 class="text-xl font-heading font-bold text-textMain mb-2 tracking-wide" x-show="settingsForm.logo_url">Acceso Autorizado</h2>
-                <p class="text-[10px] text-accent/70 mb-8 uppercase tracking-[0.3em] font-bold">Panel de Administración</p>
-                
-                <form @submit.prevent="login" class="space-y-5">
-                    <input type="email" x-model="adminEmail" required class="admin-input tracking-widest text-center" placeholder="Correo Electrónico">
-                    <input type="password" x-model="adminPassword" required class="admin-input tracking-widest text-center" placeholder="Contraseña">
-                    <button type="submit" class="btn-primary w-full mt-2 py-4 text-sm">Iniciar Sesión</button>
-                </form>
-                
-                <div x-show="loginError" class="mt-6 bg-danger/10 border border-danger/30 text-danger text-xs px-4 py-3 rounded-lg flex items-center justify-center gap-2" x-cloak>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <span x-text="loginError"></span>
-                </div>
+        <div class="relative max-w-sm w-full bg-surface border border-accent/30 p-10 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] text-center z-10 backdrop-blur-sm">
+            
+            <!-- LOGO DINÁMICO -->
+            <template x-if="settingsForm.logo_url">
+                <img :src="settingsForm.logo_url" class="h-16 w-auto object-contain mx-auto mb-6">
+            </template>
+            <template x-if="!settingsForm.logo_url">
+                <div class="text-2xl font-heading font-bold text-textMain mb-2 tracking-wide" x-text="settingsForm.site_name || 'Panel'"></div>
+            </template>
+            
+            <h2 class="text-xl font-heading font-bold text-textMain mb-2 tracking-wide" x-show="settingsForm.logo_url">Acceso Autorizado</h2>
+            <p class="text-[10px] text-accent/70 mb-8 uppercase tracking-[0.3em] font-bold">Panel de Administración</p>
+            
+            <form @submit.prevent="login" class="space-y-5">
+                <input type="email" x-model="adminEmail" required class="admin-input tracking-widest text-center" placeholder="Correo Electrónico">
+                <input type="password" x-model="adminPassword" required class="admin-input tracking-widest text-center" placeholder="Contraseña">
+                <button type="submit" class="btn-primary w-full mt-2 py-4 text-sm">Iniciar Sesión</button>
+            </form>
+            
+            <div x-show="loginError" class="mt-6 bg-danger/10 border border-danger/30 text-danger text-xs px-4 py-3 rounded-lg flex items-center justify-center gap-2" x-cloak>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span x-text="loginError"></span>
             </div>
         </div>
+    </div>
 
-        <!-- ========================================== -->
-        <!-- INTERFAZ PRINCIPAL DEL PANEL -->
-        <!-- ========================================== -->
-        <div x-show="isAuthenticated" class="flex w-full h-screen overflow-hidden bg-base" x-cloak>
+    <!-- ========================================== -->
+    <!-- INTERFAZ PRINCIPAL DEL PANEL -->
+    <!-- ========================================== -->
+    <div x-show="isAuthenticated" class="flex w-full h-screen overflow-hidden bg-base" x-cloak>
+        
+        <aside class="fixed inset-y-0 left-0 z-[60] w-64 bg-surface border-r border-surfaceHighlight transform transition-transform duration-300 md:translate-x-0 md:static md:flex-shrink-0 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.6)]"
+               :class="{'translate-x-0': isSidebarOpen, '-translate-x-full': !isSidebarOpen}">
             
-            <aside class="fixed inset-y-0 left-0 z-[60] w-64 bg-surface border-r border-surfaceHighlight transform transition-transform duration-300 md:translate-x-0 md:static md:flex-shrink-0 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.6)]"
-                   :class="{'translate-x-0': isSidebarOpen, '-translate-x-full': !isSidebarOpen}">
+            <div class="h-16 md:h-20 flex items-center justify-between px-6 border-b border-surfaceHighlight bg-base/30">
+                <a href="#" class="flex items-center gap-3">
+                    <template x-if="settingsForm.logo_url">
+                        <img :src="settingsForm.logo_url" class="h-8 w-auto object-contain">
+                    </template>
+                    <template x-if="!settingsForm.logo_url">
+                        <div class="text-accent">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2v20M17 5l-10 14M22 12H2M19 17L5 7" />
+                            </svg>
+                        </div>
+                    </template>
+                    <span class="text-sm font-heading font-bold text-textMain tracking-[0.2em] uppercase" x-show="!settingsForm.logo_url" x-text="(settingsForm.site_name || '') + ' Admin'"></span>
+                </a>
+                <button @click="isSidebarOpen = false" class="md:hidden text-textMuted hover:text-accent transition-colors p-1">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+
+            <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-2 custom-scrollbar">
+                <a href="#" @click.prevent="currentView = 'dashboard'; isSidebarOpen = false" 
+                   class="flex items-center gap-3 px-4 py-3.5 rounded-lg transition-all duration-300"
+                   :class="currentView === 'dashboard' ? 'bg-surfaceHighlight text-accent font-bold border border-accent/20 shadow-inner' : 'text-textMuted hover:bg-surfaceHighlight/50 hover:text-textMain font-medium'">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                    <span class="text-[11px] uppercase tracking-[0.2em] font-heading">Dashboard</span>
+                </a>
                 
-                <div class="h-16 md:h-20 flex items-center justify-between px-6 border-b border-surfaceHighlight bg-base/30">
-                    <a href="#" class="flex items-center gap-3">
-                        <template x-if="settingsForm.logo_url">
-                            <img :src="settingsForm.logo_url" class="h-8 w-auto object-contain">
-                        </template>
-                        <span class="text-sm font-heading font-bold text-textMain tracking-[0.2em] uppercase" x-show="!settingsForm.logo_url" x-text="(settingsForm.site_name || '') + ' Admin'"></span>
-                    </a>
-                    <button @click="isSidebarOpen = false" class="md:hidden text-textMuted hover:text-accent transition-colors p-1">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                <a href="#" @click.prevent="currentView = 'products'; isSidebarOpen = false"
+                   class="flex items-center gap-3 px-4 py-3.5 rounded-lg transition-all duration-300"
+                   :class="currentView === 'products' ? 'bg-surfaceHighlight text-accent font-bold border border-accent/20 shadow-inner' : 'text-textMuted hover:bg-surfaceHighlight/50 hover:text-textMain font-medium'">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    <span class="text-[11px] uppercase tracking-[0.2em] font-heading">Productos</span>
+                </a>
+
+                <a href="#" @click.prevent="currentView = 'categories'; isSidebarOpen = false"
+                   class="flex items-center gap-3 px-4 py-3.5 rounded-lg transition-all duration-300"
+                   :class="currentView === 'categories' ? 'bg-surfaceHighlight text-accent font-bold border border-accent/20 shadow-inner' : 'text-textMuted hover:bg-surfaceHighlight/50 hover:text-textMain font-medium'">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                    <span class="text-[11px] uppercase tracking-[0.2em] font-heading">Categorías</span>
+                </a>
+
+                <a href="#" @click.prevent="currentView = 'settings'; isSidebarOpen = false"
+                   x-show="['admin', 'superadmin'].includes(userRole)"
+                   class="flex items-center gap-3 px-4 py-3.5 rounded-lg transition-all duration-300"
+                   :class="currentView === 'settings' ? 'bg-surfaceHighlight text-accent font-bold border border-accent/20 shadow-inner' : 'text-textMuted hover:bg-surfaceHighlight/50 hover:text-textMain font-medium'">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <span class="text-[11px] uppercase tracking-[0.2em] font-heading">Configuración</span>
+                </a>
+            </nav>
+
+            <div class="p-6 border-t border-surfaceHighlight space-y-3 bg-base/30">
+                <a href="index.html" target="_blank" class="flex items-center justify-center gap-2 w-full border border-surfaceHighlight text-textMuted hover:text-accent hover:border-accent/50 py-3 rounded-lg transition-all text-[10px] uppercase tracking-[0.2em] font-bold">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    Ver Tienda
+                </a>
+                <button @click="logout" class="flex items-center justify-center gap-2 w-full bg-danger/5 text-danger hover:bg-danger hover:text-white border border-danger/20 hover:border-danger py-3 rounded-lg transition-all text-[10px] uppercase tracking-[0.2em] font-bold">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    Cerrar Sesión
+                </button>
+            </div>
+        </aside>
+
+        <!-- Overlay móvil -->
+        <div x-show="isSidebarOpen" @click="isSidebarOpen = false" class="md:hidden fixed inset-0 bg-base/80 backdrop-blur-sm z-[50]" x-cloak></div>
+
+        <!-- Contenido Principal -->
+        <main class="flex-1 flex flex-col h-screen overflow-hidden relative w-full">
+            
+            <header class="h-16 md:h-20 bg-surface/80 backdrop-blur-xl border-b border-surfaceHighlight flex items-center justify-between px-4 md:px-10 z-30 sticky top-0 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <button @click="isSidebarOpen = true" aria-label="Abrir menú" class="md:hidden text-textMain hover:text-accent p-1.5 -ml-1.5 transition-colors focus:outline-none">
+                        <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16" /></svg>
                     </button>
+                    <h2 class="text-lg md:text-xl font-heading font-bold text-textMain tracking-wide" x-text="viewTitles[currentView]"></h2>
+                </div>
+                
+                <div class="flex items-center gap-2 bg-success/10 border border-success/20 px-3 md:px-4 py-1.5 md:py-2 rounded-full">
+                    <span class="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span>
+                    <span class="text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-bold text-success hidden sm:inline-block">Sistema En Línea</span>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6 md:p-10">
+                
+                <!-- VISTA: DASHBOARD -->
+                <div x-show="currentView === 'dashboard'" x-transition.opacity x-cloak>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-10 md:mb-12 mt-2 md:mt-0">
+                        <div class="bg-surface border border-surfaceHighlight p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-accent/40 transition-colors">
+                            <div class="absolute -right-4 -top-4 w-24 h-24 bg-accent/5 rounded-full blur-2xl group-hover:bg-accent/10 transition-colors"></div>
+                            <span class="text-[10px] font-heading font-bold uppercase tracking-[0.2em] text-textMuted mb-2 block">Total Productos</span>
+                            <span class="text-4xl font-heading font-bold text-textMain" x-text="products.length"></span>
+                        </div>
+                        <div class="bg-surface border border-surfaceHighlight p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-accent/40 transition-colors">
+                            <div class="absolute -right-4 -top-4 w-24 h-24 bg-accent/5 rounded-full blur-2xl group-hover:bg-accent/10 transition-colors"></div>
+                            <span class="text-[10px] font-heading font-bold uppercase tracking-[0.2em] text-textMuted mb-2 block">Categorías Activas</span>
+                            <span class="text-4xl font-heading font-bold text-textMain" x-text="categories.length"></span>
+                        </div>
+                        <div class="bg-surface border border-surfaceHighlight p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-accent/40 transition-colors">
+                            <div class="absolute -right-4 -top-4 w-24 h-24 bg-warning/5 rounded-full blur-2xl group-hover:bg-warning/10 transition-colors"></div>
+                            <span class="text-[10px] font-heading font-bold uppercase tracking-[0.2em] text-warning mb-2 block">Productos Destacados</span>
+                            <span class="text-4xl font-heading font-bold text-warning" x-text="products.filter(p => p.isFeatured).length"></span>
+                        </div>
+                    </div>
+
+                    <div class="bg-surface border border-surfaceHighlight rounded-2xl shadow-lg overflow-hidden relative">
+                        <div class="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-[100px] pointer-events-none"></div>
+                        <div class="px-6 md:px-8 py-5 md:py-6 border-b border-surfaceHighlight flex justify-between items-center bg-base/50">
+                            <h4 class="text-base md:text-lg font-heading font-bold text-textMain">Últimos Productos</h4>
+                        </div>
+                        <div class="divide-y divide-surfaceHighlight/50">
+                            <template x-if="products.length === 0">
+                                <div class="p-12 text-center text-textMuted text-sm font-light">No hay productos recientes.</div>
+                            </template>
+                            <template x-for="product in products.slice().sort((a,b) => b.id - a.id).slice(0, 10)" :key="product.id">
+                                <div class="px-4 sm:px-6 md:px-8 py-4 md:py-5 flex items-center justify-between hover:bg-surfaceHighlight/30 transition-colors group relative z-10 cursor-pointer" @click="currentView = 'products'; openProductModal(product)">
+                                    <div class="flex items-center gap-4 md:gap-5">
+                                        <div class="w-10 h-14 rounded-md overflow-hidden border border-surfaceHighlight flex-shrink-0 bg-base shadow-inner">
+                                            <img :src="product.image || 'https://via.placeholder.com/40x60/1A112A/A78BFA?text=Img'" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" onerror="this.onerror=null; this.src='https://via.placeholder.com/40x60/1A112A/A78BFA?text=Img';">
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-bold text-textMain mb-1 group-hover:text-accent transition-colors" x-text="product.name"></p>
+                                            <p class="text-[10px] sm:text-[11px] text-textMuted font-light">
+                                                Añadido a <span class="text-accent capitalize font-medium" x-text="getCategoryName(product.categoryId)"></span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3 md:gap-4">
+                                        <span class="text-[9px] md:text-[10px] text-textMuted font-mono uppercase tracking-widest bg-base px-2 md:px-3 py-1 md:py-1.5 rounded-md border border-surfaceHighlight shadow-sm hidden sm:block" x-text="formatDate(product.created_at)"></span>
+                                        <button @click.stop="currentView = 'products'; openProductModal(product)" class="bg-surfaceHighlight/50 text-textMuted hover:bg-accent hover:text-darkLux p-2 rounded-md transition-all sm:opacity-0 group-hover:opacity-100" title="Editar">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
                 </div>
 
-                <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-2 custom-scrollbar">
-                    <a href="#" @click.prevent="currentView = 'dashboard'; isSidebarOpen = false" 
-                       class="flex items-center gap-3 px-4 py-3.5 rounded-lg transition-all duration-300"
-                       :class="currentView === 'dashboard' ? 'bg-surfaceHighlight text-accent font-bold border border-accent/20 shadow-inner' : 'text-textMuted hover:bg-surfaceHighlight/50 hover:text-textMain font-medium'">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
-                        <span class="text-[11px] uppercase tracking-[0.2em] font-heading">Dashboard</span>
-                    </a>
-                    
-                    <a href="#" @click.prevent="currentView = 'products'; isSidebarOpen = false"
-                       class="flex items-center gap-3 px-4 py-3.5 rounded-lg transition-all duration-300"
-                       :class="currentView === 'products' ? 'bg-surfaceHighlight text-accent font-bold border border-accent/20 shadow-inner' : 'text-textMuted hover:bg-surfaceHighlight/50 hover:text-textMain font-medium'">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                        <span class="text-[11px] uppercase tracking-[0.2em] font-heading">Productos</span>
-                    </a>
-
-                    <a href="#" @click.prevent="currentView = 'categories'; isSidebarOpen = false"
-                       class="flex items-center gap-3 px-4 py-3.5 rounded-lg transition-all duration-300"
-                       :class="currentView === 'categories' ? 'bg-surfaceHighlight text-accent font-bold border border-accent/20 shadow-inner' : 'text-textMuted hover:bg-surfaceHighlight/50 hover:text-textMain font-medium'">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
-                        <span class="text-[11px] uppercase tracking-[0.2em] font-heading">Categorías</span>
-                    </a>
-
-                    <a href="#" @click.prevent="currentView = 'settings'; isSidebarOpen = false"
-                       x-show="['admin', 'superadmin'].includes(userRole)"
-                       class="flex items-center gap-3 px-4 py-3.5 rounded-lg transition-all duration-300"
-                       :class="currentView === 'settings' ? 'bg-surfaceHighlight text-accent font-bold border border-accent/20 shadow-inner' : 'text-textMuted hover:bg-surfaceHighlight/50 hover:text-textMain font-medium'">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        <span class="text-[11px] uppercase tracking-[0.2em] font-heading">Configuración</span>
-                    </a>
-                </nav>
-
-                <div class="p-6 border-t border-surfaceHighlight space-y-3 bg-base/30">
-                    <a href="index.html" target="_blank" class="flex items-center justify-center gap-2 w-full border border-surfaceHighlight text-textMuted hover:text-accent hover:border-accent/50 py-3 rounded-lg transition-all text-[10px] uppercase tracking-[0.2em] font-bold">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                        Ver Tienda
-                    </a>
-                    <button @click="logout" class="flex items-center justify-center gap-2 w-full bg-danger/5 text-danger hover:bg-danger hover:text-white border border-danger/20 hover:border-danger py-3 rounded-lg transition-all text-[10px] uppercase tracking-[0.2em] font-bold">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                        Cerrar Sesión
-                    </button>
-                </div>
-            </aside>
-
-            <!-- Overlay móvil -->
-            <div x-show="isSidebarOpen" @click="isSidebarOpen = false" class="md:hidden fixed inset-0 bg-base/80 backdrop-blur-sm z-[50]" x-cloak></div>
-
-            <!-- Contenido Principal -->
-            <main class="flex-1 flex flex-col h-screen overflow-hidden relative w-full">
-                
-                <header class="h-16 md:h-20 bg-surface/80 backdrop-blur-xl border-b border-surfaceHighlight flex items-center justify-between px-4 md:px-10 z-30 sticky top-0 shadow-sm">
-                    <div class="flex items-center gap-3">
-                        <button @click="isSidebarOpen = true" aria-label="Abrir menú" class="md:hidden text-textMain hover:text-accent p-1.5 -ml-1.5 transition-colors focus:outline-none">
-                            <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                <!-- VISTA: GESTIÓN DE PRODUCTOS -->
+                <div x-show="currentView === 'products'" x-transition.opacity x-cloak>
+                    <div class="flex justify-end mb-6 mt-2 md:mt-0">
+                        <button @click="openProductModal()" class="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            Nuevo Producto
                         </button>
-                        <h2 class="text-lg md:text-xl font-heading font-bold text-textMain tracking-wide" x-text="viewTitles[currentView]"></h2>
-                    </div>
-                    
-                    <div class="flex items-center gap-2 bg-success/10 border border-success/20 px-3 md:px-4 py-1.5 md:py-2 rounded-full">
-                        <span class="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span>
-                        <span class="text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-bold text-success hidden sm:inline-block">Sistema En Línea</span>
-                    </div>
-                </header>
-
-                <div class="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6 md:p-10">
-                    
-                    <!-- VISTA: DASHBOARD -->
-                    <div x-show="currentView === 'dashboard'" x-transition.opacity x-cloak>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-10 md:mb-12 mt-2 md:mt-0">
-                            <div class="bg-surface border border-surfaceHighlight p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-accent/40 transition-colors">
-                                <div class="absolute -right-4 -top-4 w-24 h-24 bg-accent/5 rounded-full blur-2xl group-hover:bg-accent/10 transition-colors"></div>
-                                <span class="text-[10px] font-heading font-bold uppercase tracking-[0.2em] text-textMuted mb-2 block">Total Productos</span>
-                                <span class="text-4xl font-heading font-bold text-textMain" x-text="products.length"></span>
-                            </div>
-                            <div class="bg-surface border border-surfaceHighlight p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-accent/40 transition-colors">
-                                <div class="absolute -right-4 -top-4 w-24 h-24 bg-accent/5 rounded-full blur-2xl group-hover:bg-accent/10 transition-colors"></div>
-                                <span class="text-[10px] font-heading font-bold uppercase tracking-[0.2em] text-textMuted mb-2 block">Categorías Activas</span>
-                                <span class="text-4xl font-heading font-bold text-textMain" x-text="categories.length"></span>
-                            </div>
-                            <div class="bg-surface border border-surfaceHighlight p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-accent/40 transition-colors">
-                                <div class="absolute -right-4 -top-4 w-24 h-24 bg-warning/5 rounded-full blur-2xl group-hover:bg-warning/10 transition-colors"></div>
-                                <span class="text-[10px] font-heading font-bold uppercase tracking-[0.2em] text-warning mb-2 block">Productos Destacados</span>
-                                <span class="text-4xl font-heading font-bold text-warning" x-text="products.filter(p => p.isFeatured).length"></span>
-                            </div>
-                        </div>
-
-                        <div class="bg-surface border border-surfaceHighlight rounded-2xl shadow-lg overflow-hidden relative">
-                            <div class="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-[100px] pointer-events-none"></div>
-                            <div class="px-6 md:px-8 py-5 md:py-6 border-b border-surfaceHighlight flex justify-between items-center bg-base/50">
-                                <h4 class="text-base md:text-lg font-heading font-bold text-textMain">Últimos Productos</h4>
-                            </div>
-                            <div class="divide-y divide-surfaceHighlight/50">
-                                <template x-if="products.length === 0">
-                                    <div class="p-12 text-center text-textMuted text-sm font-light">No hay productos recientes.</div>
-                                </template>
-                                <template x-for="product in products.slice().sort((a,b) => b.id - a.id).slice(0, 10)" :key="product.id">
-                                    <div class="px-4 sm:px-6 md:px-8 py-4 md:py-5 flex items-center justify-between hover:bg-surfaceHighlight/30 transition-colors group relative z-10 cursor-pointer" @click="currentView = 'products'; openProductModal(product)">
-                                        <div class="flex items-center gap-4 md:gap-5">
-                                            <div class="w-10 h-14 rounded-md overflow-hidden border border-surfaceHighlight flex-shrink-0 bg-base shadow-inner">
-                                                <img :src="product.image || 'https://via.placeholder.com/40x60/1A112A/A78BFA?text=Img'" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" onerror="this.onerror=null; this.src='https://via.placeholder.com/40x60/1A112A/A78BFA?text=Img';">
-                                            </div>
-                                            <div>
-                                                <p class="text-sm font-bold text-textMain mb-1 group-hover:text-accent transition-colors" x-text="product.name"></p>
-                                                <p class="text-[10px] sm:text-[11px] text-textMuted font-light">
-                                                    Añadido a <span class="text-accent capitalize font-medium" x-text="getCategoryName(product.categoryId)"></span>
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center gap-3 md:gap-4">
-                                            <span class="text-[9px] md:text-[10px] text-textMuted font-mono uppercase tracking-widest bg-base px-2 md:px-3 py-1 md:py-1.5 rounded-md border border-surfaceHighlight shadow-sm hidden sm:block" x-text="formatDate(product.created_at)"></span>
-                                            <button @click.stop="currentView = 'products'; openProductModal(product)" class="bg-surfaceHighlight/50 text-textMuted hover:bg-accent hover:text-darkLux p-2 rounded-md transition-all sm:opacity-0 group-hover:opacity-100" title="Editar">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
                     </div>
 
-                    <!-- VISTA: GESTIÓN DE PRODUCTOS -->
-                    <div x-show="currentView === 'products'" x-transition.opacity x-cloak>
-                        <div class="flex justify-end mb-6 mt-2 md:mt-0">
-                            <button @click="openProductModal()" class="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                Nuevo Producto
-                            </button>
-                        </div>
-
-                        <div class="bg-surface border border-surfaceHighlight rounded-2xl shadow-lg overflow-hidden">
-                            <div class="overflow-x-auto custom-scrollbar">
-                                <table class="w-full text-left border-collapse min-w-[800px]">
-                                    <thead>
-                                        <tr class="border-b border-surfaceHighlight text-[10px] uppercase tracking-[0.2em] text-textMuted font-bold bg-base/50">
-                                            <th class="px-6 py-5 text-center w-16">Orden</th>
-                                            <th class="px-6 py-5">Producto</th>
-                                            <th class="px-6 py-5">Precio (ARS)</th>
-                                            <th class="px-6 py-5 text-center">Stock</th>
-                                            <th class="px-6 py-5 text-center">Estado</th>
-                                            <th class="px-6 py-5 text-right">Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="text-sm divide-y divide-surfaceHighlight/50">
-                                        <template x-if="products.length === 0">
-                                            <tr><td colspan="6" class="p-16 text-center text-textMuted font-light">No hay productos registrados.</td></tr>
-                                        </template>
-                                        <template x-for="(product, index) in products" :key="product.id">
-                                            <tr class="hover:bg-surfaceHighlight/20 transition-colors group cursor-pointer" @click="openProductModal(product)">
-                                                
-                                                <td class="px-4 py-4 text-center">
-                                                    <div class="flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button @click.stop="moveOrder(index, -1)" x-show="index > 0" class="p-1 text-textMuted hover:text-accent hover:bg-surfaceHighlight/50 rounded transition-colors" title="Subir orden">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
-                                                        </button>
-                                                        <button @click.stop="moveOrder(index, 1)" x-show="index < products.length - 1" class="p-1 text-textMuted hover:text-accent hover:bg-surfaceHighlight/50 rounded transition-colors" title="Bajar orden">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                                                        </button>
-                                                    </div>
-                                                    <span class="text-xs text-textMuted/30 group-hover:hidden" x-text="index + 1"></span>
-                                                </td>
-
-                                                <td class="px-6 py-4">
-                                                    <div class="flex items-center gap-4">
-                                                        <div class="relative w-10 h-12 rounded-md overflow-hidden border border-surfaceHighlight flex-shrink-0 bg-base">
-                                                            <img :src="product.image || 'https://via.placeholder.com/40x50/1A112A/A78BFA?text=Img'" class="w-full h-full object-cover opacity-80 group-hover:opacity-100" onerror="this.onerror=null; this.src='https://via.placeholder.com/40x50/1A112A/A78BFA?text=Img';">
-                                                        </div>
-                                                        <div>
-                                                            <p class="text-textMain font-bold text-sm group-hover:text-accent transition-colors" x-text="product.name"></p>
-                                                            <p class="text-[11px] text-textMuted font-light truncate w-32 md:w-56 mt-1" x-text="product.description"></p>
-                                                            <p class="text-[9px] text-accent/70 uppercase tracking-widest mt-1" x-text="getCategoryName(product.categoryId)"></p>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td class="px-6 py-4 font-bold text-textMain" x-text="formatPrice(product.price)"></td>
-                                                
-                                                <td class="px-6 py-4 text-center font-mono">
-                                                    <span x-show="product.stock === null || product.stock === ''" class="text-textMuted text-lg font-sans" title="Stock Ilimitado">∞</span>
-                                                    <span x-show="product.stock !== null && product.stock !== ''" class="px-2 py-1 rounded bg-base border border-surfaceHighlight text-xs" :class="product.stock <= 5 ? 'text-warning border-warning/30' : 'text-textMain'" x-text="product.stock"></span>
-                                                </td>
-
-                                                <td class="px-6 py-4 text-center">
-                                                    <div class="flex justify-center gap-2">
-                                                        <span x-show="product.isFeatured" class="px-2 py-1 rounded bg-warning/10 text-warning border border-warning/20 text-[9px] font-bold uppercase tracking-widest" title="Destacado">Dest.</span>
-                                                        <span x-show="product.isFlashSale" class="px-2 py-1 rounded bg-danger/10 text-danger border border-danger/20 text-[9px] font-bold uppercase tracking-widest" title="Venta Flash">Flash</span>
-                                                        <span x-show="!product.isFeatured && !product.isFlashSale" class="text-surfaceHighlight text-xs">-</span>
-                                                    </div>
-                                                </td>
-                                                <td class="px-6 py-4 text-right">
-                                                    <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button @click.stop="openProductModal(product)" class="bg-surfaceHighlight/50 hover:bg-accent text-textMuted hover:text-darkLux p-2 rounded-md transition-all" title="Editar">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                                        </button>
-                                                        <button @click.stop="confirmDeleteProduct(product.id)" class="bg-danger/10 hover:bg-danger text-danger hover:text-white border border-danger/20 p-2 rounded-md transition-all" title="Eliminar">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </template>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- VISTA: GESTIÓN DE CATEGORÍAS -->
-                    <div x-show="currentView === 'categories'" x-transition.opacity x-cloak>
-                         <div class="flex justify-end mb-6 mt-2 md:mt-0">
-                            <button @click="openCategoryModal()" class="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                Nueva Categoría
-                            </button>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <template x-if="categories.length === 0">
-                                <div class="col-span-full text-center text-textMuted font-light py-16 border border-surfaceHighlight border-dashed bg-surface/50 rounded-2xl">Aún no se han creado categorías.</div>
-                            </template>
-                            <template x-for="category in categories" :key="category.id">
-                                <div class="bg-surface border border-surfaceHighlight hover:border-accent/50 p-6 rounded-2xl flex flex-col group transition-all duration-300 shadow-lg relative overflow-hidden">
-                                    <div class="absolute -right-4 -bottom-4 text-surfaceHighlight group-hover:text-accent/10 transition-colors">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5l-10 14M22 12H2M19 17L5 7" /></svg>
-                                    </div>
-                                    <div class="flex justify-between items-start mb-8 relative z-10">
-                                        <div>
-                                            <h4 class="text-xl font-heading font-bold text-textMain capitalize mb-2 group-hover:text-accent transition-colors" x-text="category.name"></h4>
-                                            <span class="text-[9px] uppercase tracking-[0.2em] text-textMuted font-mono bg-base px-2 py-1 rounded-md border border-surfaceHighlight" x-text="`ID: ${category.id}`"></span>
-                                        </div>
-                                        <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                             <button @click="openCategoryModal(category)" class="bg-surfaceHighlight/50 text-textMuted hover:bg-accent hover:text-darkLux p-2 rounded-md transition-all">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                            </button>
-                                            <button @click="deleteCategory(category.id)" class="bg-danger/10 text-danger hover:bg-danger hover:text-white border border-danger/20 p-2 rounded-md transition-all">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="mt-auto pt-4 border-t border-surfaceHighlight/50 flex items-center justify-between relative z-10">
-                                        <span class="text-[10px] text-textMuted font-bold uppercase tracking-[0.2em]">Productos Vinculados</span>
-                                        <span class="text-xs font-bold text-accent bg-accent/10 px-2.5 py-1 rounded-md border border-accent/20" x-text="products.filter(p => p.categoryId === category.id).length"></span>
-                                    </div>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-
-                    <!-- VISTA: CONFIGURACIÓN DEL SITIO -->
-                    <div x-show="currentView === 'settings'" x-transition.opacity x-cloak>
-                        <div class="mb-8 mt-2 md:mt-0">
-                            <p class="text-sm text-textMuted font-light">Gestiona la información de contacto, identidad visual, textos principales y portadas de tu tienda digital.</p>
-                        </div>
-
-                        <form @submit.prevent="saveSettings" class="space-y-8 pb-10">
-                            
-                            <div x-show="settingsError" class="bg-danger/10 border border-danger/30 text-danger text-sm px-4 py-3 rounded-lg flex items-center gap-3 shadow-md" x-cloak>
-                                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                <span x-text="settingsError" class="font-bold tracking-wide"></span>
-                            </div>
-
-                            <!-- SECCIÓN: Identidad de Marca -->
-                            <div class="bg-surface border border-surfaceHighlight rounded-2xl p-6 md:p-8 shadow-lg relative overflow-hidden">
-                                <h4 class="text-lg font-heading font-bold text-textMain mb-6 border-b border-surfaceHighlight/50 pb-4">Identidad de Marca</h4>
-                                
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10 mb-8">
-                                    <div class="space-y-6">
-                                        <div>
-                                            <label class="admin-label">Nombre de la Tienda</label>
-                                            <input type="text" x-model="settingsForm.site_name" class="admin-input font-heading font-bold" placeholder="Ej: NEXUS">
-                                        </div>
-                                        <div>
-                                            <label class="admin-label">Lema (Motto)</label>
-                                            <input type="text" x-model="settingsForm.site_motto" class="admin-input" placeholder="Ej: El velo se levanta">
-                                            <p class="text-[9px] text-textMuted mt-1.5 ml-1">Frase corta que aparecerá encima del título en la portada.</p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div>
-                                        <label class="admin-label">Logotipo de la Tienda</label>
-                                        <div class="w-full h-36 rounded-xl border-2 border-dashed border-surfaceHighlight hover:border-accent overflow-hidden bg-base/50 flex flex-col items-center justify-center relative cursor-pointer group transition-colors" @click="document.getElementById('logoUpload').click()">
+                    <div class="bg-surface border border-surfaceHighlight rounded-2xl shadow-lg overflow-hidden">
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-left border-collapse min-w-[800px]">
+                                <thead>
+                                    <tr class="border-b border-surfaceHighlight text-[10px] uppercase tracking-[0.2em] text-textMuted font-bold bg-base/50">
+                                        <th class="px-6 py-5 text-center w-16">Orden</th>
+                                        <th class="px-6 py-5">Producto</th>
+                                        <th class="px-6 py-5">Precio (ARS)</th>
+                                        <th class="px-6 py-5 text-center">Stock</th>
+                                        <th class="px-6 py-5 text-center">Estado</th>
+                                        <th class="px-6 py-5 text-right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm divide-y divide-surfaceHighlight/50">
+                                    <template x-if="products.length === 0">
+                                        <tr><td colspan="6" class="p-16 text-center text-textMuted font-light">No hay productos registrados.</td></tr>
+                                    </template>
+                                    <template x-for="(product, index) in products" :key="product.id">
+                                        <tr class="hover:bg-surfaceHighlight/20 transition-colors group cursor-pointer" @click="openProductModal(product)">
                                             
-                                            <template x-if="newLogoPreview || settingsForm.logo_url">
-                                                <div class="absolute inset-0 p-4 flex items-center justify-center bg-base z-10">
-                                                    <img :src="newLogoPreview || settingsForm.logo_url" class="max-w-full max-h-full object-contain">
-                                                    <button type="button" @click.stop="removeLogo()" class="absolute top-2 right-2 bg-danger/90 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-danger shadow-md">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                            <td class="px-4 py-4 text-center">
+                                                <div class="flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button @click.stop="moveOrder(index, -1)" x-show="index > 0" class="p-1 text-textMuted hover:text-accent hover:bg-surfaceHighlight/50 rounded transition-colors" title="Subir orden">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+                                                    </button>
+                                                    <button @click.stop="moveOrder(index, 1)" x-show="index < products.length - 1" class="p-1 text-textMuted hover:text-accent hover:bg-surfaceHighlight/50 rounded transition-colors" title="Bajar orden">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                                                     </button>
                                                 </div>
-                                            </template>
+                                                <span class="text-xs text-textMuted/30 group-hover:hidden" x-text="index + 1"></span>
+                                            </td>
 
-                                            <div class="text-center" x-show="!newLogoPreview && !settingsForm.logo_url">
-                                                <svg class="w-8 h-8 text-textMuted group-hover:text-accent transition-colors mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                                <span class="text-[10px] text-textMuted uppercase font-bold tracking-widest group-hover:text-accent transition-colors">Subir Logotipo</span>
-                                            </div>
-                                        </div>
-                                        <input type="file" id="logoUpload" accept="image/*" class="hidden" @change="handleLogoSelection">
-                                        <p class="text-[9px] text-textMuted mt-2 ml-1">Sugerimos un archivo PNG con fondo transparente.</p>
-                                    </div>
-                                </div>
-
-                                <div class="pt-6 border-t border-surfaceHighlight/50 relative z-10">
-                                    <label class="admin-label mb-4">Esquema de Colores (Tema)</label>
-                                    
-                                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
-                                        <template x-for="(preset, key) in themePresets" :key="key">
-                                            <button type="button" @click="selectTheme(key)" class="flex flex-col items-center justify-center p-4 rounded-xl border transition-all" :class="settingsForm.theme === key ? 'border-accent bg-accent/10 shadow-[0_0_15px_rgba(var(--color-accent),0.2)]' : 'border-surfaceHighlight hover:border-accent/50 bg-base/50'">
-                                                <div class="flex gap-1.5 mb-3">
-                                                    <div class="w-4 h-4 rounded-full border border-white/20 shadow-sm" :style="'background-color: ' + preset.base"></div>
-                                                    <div class="w-4 h-4 rounded-full border border-white/20 shadow-sm" :style="'background-color: ' + preset.surface"></div>
-                                                    <div class="w-4 h-4 rounded-full border border-white/20 shadow-sm" :style="'background-color: ' + preset.accent"></div>
+                                            <td class="px-6 py-4">
+                                                <div class="flex items-center gap-4">
+                                                    <div class="relative w-10 h-12 rounded-md overflow-hidden border border-surfaceHighlight flex-shrink-0 bg-base">
+                                                        <img :src="product.image || 'https://via.placeholder.com/40x50/1A112A/A78BFA?text=Img'" class="w-full h-full object-cover opacity-80 group-hover:opacity-100" onerror="this.onerror=null; this.src='https://via.placeholder.com/40x50/1A112A/A78BFA?text=Img';">
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-textMain font-bold text-sm group-hover:text-accent transition-colors" x-text="product.name"></p>
+                                                        <p class="text-[11px] text-textMuted font-light truncate w-32 md:w-56 mt-1" x-text="product.description"></p>
+                                                        <p class="text-[9px] text-accent/70 uppercase tracking-widest mt-1" x-text="getCategoryName(product.categoryId)"></p>
+                                                    </div>
                                                 </div>
-                                                <span class="text-[9px] uppercase tracking-widest font-bold" :class="settingsForm.theme === key ? 'text-accent' : 'text-textMuted'" x-text="preset.name"></span>
-                                            </button>
-                                        </template>
-                                    </div>
+                                            </td>
+                                            <td class="px-6 py-4 font-bold text-textMain" x-text="formatPrice(product.price)"></td>
+                                            
+                                            <td class="px-6 py-4 text-center font-mono">
+                                                <span x-show="product.stock === null || product.stock === ''" class="text-textMuted text-lg font-sans" title="Stock Ilimitado">∞</span>
+                                                <span x-show="product.stock !== null && product.stock !== ''" class="px-2 py-1 rounded bg-base border border-surfaceHighlight text-xs" :class="product.stock <= 5 ? 'text-warning border-warning/30' : 'text-textMain'" x-text="product.stock"></span>
+                                            </td>
 
-                                    <div x-show="settingsForm.theme === 'custom'" x-transition class="mt-4 p-5 bg-base rounded-xl border border-surfaceHighlight grid grid-cols-1 md:grid-cols-3 gap-6" x-cloak>
-                                        <div>
-                                            <label class="admin-label">Fondo Principal (Base)</label>
-                                            <div class="flex items-center gap-3">
-                                                <input type="color" x-model="settingsForm.color_base" class="h-10 w-16 rounded cursor-pointer bg-transparent border-0 p-0 shadow-inner">
-                                                <span class="text-xs font-mono text-textMain uppercase" x-text="settingsForm.color_base"></span>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label class="admin-label">Tarjetas (Surface)</label>
-                                            <div class="flex items-center gap-3">
-                                                <input type="color" x-model="settingsForm.color_surface" class="h-10 w-16 rounded cursor-pointer bg-transparent border-0 p-0 shadow-inner">
-                                                <span class="text-xs font-mono text-textMain uppercase" x-text="settingsForm.color_surface"></span>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label class="admin-label">Destacados (Acento)</label>
-                                            <div class="flex items-center gap-3">
-                                                <input type="color" x-model="settingsForm.color_accent" class="h-10 w-16 rounded cursor-pointer bg-transparent border-0 p-0 shadow-inner">
-                                                <span class="text-xs font-mono text-textMain uppercase" x-text="settingsForm.color_accent"></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Sección: Contacto -->
-                            <div class="bg-surface border border-surfaceHighlight rounded-2xl p-6 md:p-8 shadow-lg relative overflow-hidden">
-                                <h4 class="text-lg font-heading font-bold text-textMain mb-6 border-b border-surfaceHighlight/50 pb-4">Vías de Contacto</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-                                    <div>
-                                        <label class="admin-label">Número de WhatsApp (Ventas)</label>
-                                        <div class="relative">
-                                            <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                                            <input type="text" x-model="settingsForm.whatsapp" class="admin-input !pl-12 font-mono" placeholder="Ej: 5491123456789">
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label class="admin-label">Correo Electrónico (Footer)</label>
-                                        <div class="relative">
-                                            <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-textMuted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                                            <input type="email" x-model="settingsForm.email" class="admin-input !pl-12 font-mono" placeholder="contacto@mitienda.com">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Sección: Textos y Portada -->
-                            <div class="bg-surface border border-surfaceHighlight rounded-2xl p-6 md:p-8 shadow-lg relative overflow-hidden">
-                                <h4 class="text-lg font-heading font-bold text-textMain mb-6 border-b border-surfaceHighlight/50 pb-4">Textos y Portada (Hero)</h4>
-                                
-                                <div class="space-y-6 relative z-10">
-                                    <div>
-                                        <label class="admin-label">Título Principal (H1)</label>
-                                        <input type="text" x-model="settingsForm.hero_title" class="admin-input text-lg font-heading font-bold" placeholder="El título gigante al entrar a la web...">
-                                    </div>
-                                    
-                                    <div>
-                                        <label class="admin-label">Subtítulo de la Portada</label>
-                                        <textarea x-model="settingsForm.hero_subtitle" rows="2" class="admin-input font-light resize-none" placeholder="El texto debajo del título gigante..."></textarea>
-                                    </div>
-
-                                    <div>
-                                        <label class="admin-label">Descripción de la Tienda (Footer)</label>
-                                        <textarea x-model="settingsForm.footer_description" rows="3" class="admin-input font-light resize-none" placeholder="Pequeño resumen sobre qué es la tienda que va al fondo de la web..."></textarea>
-                                    </div>
-
-                                    <div class="pt-4 border-t border-surfaceHighlight/50">
-                                        <div class="flex justify-between items-baseline mb-3 ml-1">
-                                            <label class="admin-label !mb-0">Imágenes del Carrusel de Portada (Hero)</label>
-                                            <span class="text-[9px] text-textMuted font-bold uppercase tracking-widest">(Max 3 imágenes)</span>
-                                        </div>
-                                        
-                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                            <template x-for="(url, index) in settingsForm.hero_images" :key="'hero-exist-'+index">
-                                                <div class="relative aspect-video sm:aspect-square md:aspect-video rounded-xl border border-surfaceHighlight overflow-hidden group bg-base shadow-inner">
-                                                    <img :src="url" class="w-full h-full object-cover">
-                                                    <button type="button" @click="removeExistingHeroImage(index)" class="absolute top-2 right-2 bg-danger/90 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-danger shadow-md">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                            <td class="px-6 py-4 text-center">
+                                                <div class="flex justify-center gap-2">
+                                                    <span x-show="product.isFeatured" class="px-2 py-1 rounded bg-warning/10 text-warning border border-warning/20 text-[9px] font-bold uppercase tracking-widest" title="Destacado">Dest.</span>
+                                                    <span x-show="product.isFlashSale" class="px-2 py-1 rounded bg-danger/10 text-danger border border-danger/20 text-[9px] font-bold uppercase tracking-widest" title="Venta Flash">Flash</span>
+                                                    <span x-show="!product.isFeatured && !product.isFlashSale" class="text-surfaceHighlight text-xs">-</span>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 text-right">
+                                                <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button @click.stop="openProductModal(product)" class="bg-surfaceHighlight/50 hover:bg-accent text-textMuted hover:text-darkLux p-2 rounded-md transition-all" title="Editar">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                                    </button>
+                                                    <button @click.stop="confirmDeleteProduct(product.id)" class="bg-danger/10 hover:bg-danger text-danger hover:text-white border border-danger/20 p-2 rounded-md transition-all" title="Eliminar">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                                     </button>
                                                 </div>
-                                            </template>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
 
-                                            <template x-for="(preview, index) in newHeroImagePreviews" :key="'hero-new-'+index">
-                                                <div class="relative aspect-video sm:aspect-square md:aspect-video rounded-xl border border-surfaceHighlight overflow-hidden group bg-base shadow-inner">
-                                                    <img :src="preview" class="w-full h-full object-cover opacity-70">
-                                                    <span class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-accent text-darkLux text-[8px] font-bold px-2 py-0.5 rounded-full shadow-md">NUEVA</span>
-                                                    <button type="button" @click="removeNewHeroImage(index)" class="absolute top-2 right-2 bg-danger/90 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-danger shadow-md">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                                    </button>
-                                                </div>
-                                            </template>
-
-                                            <div x-show="(settingsForm.hero_images?.length || 0) + newHeroImagePreviews.length < 3" 
-                                                 class="aspect-video sm:aspect-square md:aspect-video rounded-xl border-2 border-dashed border-surfaceHighlight hover:border-accent flex flex-col items-center justify-center cursor-pointer transition-colors group bg-base/30 hover:bg-base/50"
-                                                 @click="document.getElementById('heroImageUpload').click()">
-                                                <svg class="w-8 h-8 text-textMuted group-hover:text-accent transition-colors mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                                <span class="text-[10px] text-textMuted uppercase font-bold tracking-widest group-hover:text-accent transition-colors text-center px-2">Añadir Portada</span>
-                                            </div>
-                                        </div>
-                                        <input type="file" id="heroImageUpload" accept="image/*" multiple class="hidden" @change="handleHeroImageSelection">
-                                        <p class="text-[10px] text-textMuted font-light mt-3 ml-1">Sugerimos utilizar imágenes horizontales en alta calidad (ej. 1920x1080px).</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="flex justify-end pt-4">
-                                <button type="submit" class="btn-primary w-full sm:w-auto flex items-center justify-center gap-3 px-10 py-4 shadow-xl" :disabled="isSavingSettings">
-                                    <svg x-show="isSavingSettings" class="animate-spin -ml-1 h-5 w-5 text-darkLux" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                    <span x-text="isSavingSettings ? 'Aplicando Configuración...' : 'Guardar Configuración Global'"></span>
-                                </button>
-                            </div>
-                        </form>
+                <!-- VISTA: GESTIÓN DE CATEGORÍAS -->
+                <div x-show="currentView === 'categories'" x-transition.opacity x-cloak>
+                     <div class="flex justify-end mb-6 mt-2 md:mt-0">
+                        <button @click="openCategoryModal()" class="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            Nueva Categoría
+                        </button>
                     </div>
 
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <template x-if="categories.length === 0">
+                            <div class="col-span-full text-center text-textMuted font-light py-16 border border-surfaceHighlight border-dashed bg-surface/50 rounded-2xl">Aún no se han creado categorías.</div>
+                        </template>
+                        <template x-for="category in categories" :key="category.id">
+                            <div class="bg-surface border border-surfaceHighlight hover:border-accent/50 p-6 rounded-2xl flex flex-col group transition-all duration-300 shadow-lg relative overflow-hidden">
+                                <div class="absolute -right-4 -bottom-4 text-surfaceHighlight group-hover:text-accent/10 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5l-10 14M22 12H2M19 17L5 7" /></svg>
+                                </div>
+                                <div class="flex justify-between items-start mb-8 relative z-10">
+                                    <div>
+                                        <h4 class="text-xl font-heading font-bold text-textMain capitalize mb-2 group-hover:text-accent transition-colors" x-text="category.name"></h4>
+                                        <span class="text-[9px] uppercase tracking-[0.2em] text-textMuted font-mono bg-base px-2 py-1 rounded-md border border-surfaceHighlight" x-text="`ID: ${category.id}`"></span>
+                                    </div>
+                                    <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                         <button @click="openCategoryModal(category)" class="bg-surfaceHighlight/50 text-textMuted hover:bg-accent hover:text-darkLux p-2 rounded-md transition-all">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                        </button>
+                                        <button @click="deleteCategory(category.id)" class="bg-danger/10 text-danger hover:bg-danger hover:text-white border border-danger/20 p-2 rounded-md transition-all">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mt-auto pt-4 border-t border-surfaceHighlight/50 flex items-center justify-between relative z-10">
+                                    <span class="text-[10px] text-textMuted font-bold uppercase tracking-[0.2em]">Productos Vinculados</span>
+                                    <span class="text-xs font-bold text-accent bg-accent/10 px-2.5 py-1 rounded-md border border-accent/20" x-text="products.filter(p => p.categoryId === category.id).length"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
                 </div>
-            </main>
-        </div>
+
+                <!-- VISTA: CONFIGURACIÓN DEL SITIO -->
+                <div x-show="currentView === 'settings'" x-transition.opacity x-cloak>
+                    <div class="mb-8 mt-2 md:mt-0">
+                        <p class="text-sm text-textMuted font-light">Gestiona la información de contacto, identidad visual, textos principales y portadas de tu tienda digital.</p>
+                    </div>
+
+                    <form @submit.prevent="saveSettings" class="space-y-8 pb-10">
+                        
+                        <div x-show="settingsError" class="bg-danger/10 border border-danger/30 text-danger text-sm px-4 py-3 rounded-lg flex items-center gap-3 shadow-md" x-cloak>
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span x-text="settingsError" class="font-bold tracking-wide"></span>
+                        </div>
+
+                        <!-- SECCIÓN: Identidad de Marca -->
+                        <div class="bg-surface border border-surfaceHighlight rounded-2xl p-6 md:p-8 shadow-lg relative overflow-hidden">
+                            <h4 class="text-lg font-heading font-bold text-textMain mb-6 border-b border-surfaceHighlight/50 pb-4">Identidad de Marca</h4>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10 mb-8">
+                                <div class="space-y-6">
+                                    <div>
+                                        <label class="admin-label">Nombre de la Tienda</label>
+                                        <input type="text" x-model="settingsForm.site_name" class="admin-input font-heading font-bold" placeholder="Ej: NEXUS">
+                                    </div>
+                                    <div>
+                                        <label class="admin-label">Lema (Motto)</label>
+                                        <input type="text" x-model="settingsForm.site_motto" class="admin-input" placeholder="Ej: El velo se levanta">
+                                        <p class="text-[9px] text-textMuted mt-1.5 ml-1">Frase corta que aparecerá encima del título en la portada.</p>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="admin-label">Logotipo de la Tienda</label>
+                                    <div class="w-full h-36 rounded-xl border-2 border-dashed border-surfaceHighlight hover:border-accent overflow-hidden bg-base/50 flex flex-col items-center justify-center relative cursor-pointer group transition-colors" @click="document.getElementById('logoUpload').click()">
+                                        
+                                        <template x-if="newLogoPreview || settingsForm.logo_url">
+                                            <div class="absolute inset-0 p-4 flex items-center justify-center bg-base z-10">
+                                                <img :src="newLogoPreview || settingsForm.logo_url" class="max-w-full max-h-full object-contain">
+                                                <button type="button" @click.stop="removeLogo()" class="absolute top-2 right-2 bg-danger/90 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-danger shadow-md">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                </button>
+                                            </div>
+                                        </template>
+
+                                        <div class="text-center" x-show="!newLogoPreview && !settingsForm.logo_url">
+                                            <svg class="w-8 h-8 text-textMuted group-hover:text-accent transition-colors mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                            <span class="text-[10px] text-textMuted uppercase font-bold tracking-widest group-hover:text-accent transition-colors">Subir Logotipo</span>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="logoUpload" accept="image/*" class="hidden" @change="handleLogoSelection">
+                                    <p class="text-[9px] text-textMuted mt-2 ml-1">Sugerimos un archivo PNG con fondo transparente.</p>
+                                </div>
+                            </div>
+
+                            <!-- GESTOR DE TEMAS Y COLORES -->
+                            <div class="pt-6 border-t border-surfaceHighlight/50 relative z-10">
+                                <label class="admin-label mb-4">Esquema de Colores (Tema)</label>
+                                
+                                <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                    <template x-for="(preset, key) in themePresets" :key="key">
+                                        <button type="button" @click="selectTheme(key)" class="flex flex-col items-center justify-center p-4 rounded-xl border transition-all" :class="settingsForm.theme === key ? 'border-accent bg-accent/10 shadow-[0_0_15px_rgba(var(--color-accent),0.2)]' : 'border-surfaceHighlight hover:border-accent/50 bg-base/50'">
+                                            <div class="flex gap-1.5 mb-3">
+                                                <div class="w-4 h-4 rounded-full border border-white/20 shadow-sm" :style="'background-color: ' + preset.base"></div>
+                                                <div class="w-4 h-4 rounded-full border border-white/20 shadow-sm" :style="'background-color: ' + preset.surface"></div>
+                                                <div class="w-4 h-4 rounded-full border border-white/20 shadow-sm" :style="'background-color: ' + preset.accent"></div>
+                                            </div>
+                                            <span class="text-[9px] uppercase tracking-widest font-bold" :class="settingsForm.theme === key ? 'text-accent' : 'text-textMuted'" x-text="preset.name"></span>
+                                        </button>
+                                    </template>
+                                </div>
+
+                                <div x-show="settingsForm.theme === 'custom'" x-transition class="mt-4 p-5 bg-base rounded-xl border border-surfaceHighlight grid grid-cols-1 md:grid-cols-3 gap-6" x-cloak>
+                                    <div>
+                                        <label class="admin-label">Fondo Principal (Base)</label>
+                                        <div class="flex items-center gap-3">
+                                            <input type="color" x-model="settingsForm.color_base" class="h-10 w-16 rounded cursor-pointer bg-transparent border-0 p-0 shadow-inner">
+                                            <span class="text-xs font-mono text-textMain uppercase" x-text="settingsForm.color_base"></span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="admin-label">Tarjetas (Surface)</label>
+                                        <div class="flex items-center gap-3">
+                                            <input type="color" x-model="settingsForm.color_surface" class="h-10 w-16 rounded cursor-pointer bg-transparent border-0 p-0 shadow-inner">
+                                            <span class="text-xs font-mono text-textMain uppercase" x-text="settingsForm.color_surface"></span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="admin-label">Destacados (Acento)</label>
+                                        <div class="flex items-center gap-3">
+                                            <input type="color" x-model="settingsForm.color_accent" class="h-10 w-16 rounded cursor-pointer bg-transparent border-0 p-0 shadow-inner">
+                                            <span class="text-xs font-mono text-textMain uppercase" x-text="settingsForm.color_accent"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección: Contacto -->
+                        <div class="bg-surface border border-surfaceHighlight rounded-2xl p-6 md:p-8 shadow-lg relative overflow-hidden">
+                            <h4 class="text-lg font-heading font-bold text-textMain mb-6 border-b border-surfaceHighlight/50 pb-4">Vías de Contacto</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                                <div>
+                                    <label class="admin-label">Número de WhatsApp (Ventas)</label>
+                                    <div class="relative">
+                                        <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                                        <input type="text" x-model="settingsForm.whatsapp" class="admin-input !pl-12 font-mono" placeholder="Ej: 5491123456789">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="admin-label">Correo Electrónico (Footer)</label>
+                                    <div class="relative">
+                                        <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-textMuted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                        <input type="email" x-model="settingsForm.email" class="admin-input !pl-12 font-mono" placeholder="contacto@mitienda.com">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección: Textos y Portada -->
+                        <div class="bg-surface border border-surfaceHighlight rounded-2xl p-6 md:p-8 shadow-lg relative overflow-hidden">
+                            <h4 class="text-lg font-heading font-bold text-textMain mb-6 border-b border-surfaceHighlight/50 pb-4">Textos y Portada (Hero)</h4>
+                            
+                            <div class="space-y-6 relative z-10">
+                                <div>
+                                    <label class="admin-label">Título Principal (H1)</label>
+                                    <input type="text" x-model="settingsForm.hero_title" class="admin-input text-lg font-heading font-bold" placeholder="El título gigante al entrar a la web...">
+                                </div>
+                                
+                                <div>
+                                    <label class="admin-label">Subtítulo de la Portada</label>
+                                    <textarea x-model="settingsForm.hero_subtitle" rows="2" class="admin-input font-light resize-none" placeholder="El texto debajo del título gigante..."></textarea>
+                                </div>
+
+                                <div>
+                                    <label class="admin-label">Descripción de la Tienda (Footer)</label>
+                                    <textarea x-model="settingsForm.footer_description" rows="3" class="admin-input font-light resize-none" placeholder="Pequeño resumen sobre qué es la tienda que va al fondo de la web..."></textarea>
+                                </div>
+
+                                <div class="pt-4 border-t border-surfaceHighlight/50">
+                                    <div class="flex justify-between items-baseline mb-3 ml-1">
+                                        <label class="admin-label !mb-0">Imágenes del Carrusel de Portada (Hero)</label>
+                                        <span class="text-[9px] text-textMuted font-bold uppercase tracking-widest">(Max 3 imágenes)</span>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        <template x-for="(url, index) in settingsForm.hero_images" :key="'hero-exist-'+index">
+                                            <div class="relative aspect-video sm:aspect-square md:aspect-video rounded-xl border border-surfaceHighlight overflow-hidden group bg-base shadow-inner">
+                                                <img :src="url" class="w-full h-full object-cover">
+                                                <button type="button" @click="removeExistingHeroImage(index)" class="absolute top-2 right-2 bg-danger/90 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-danger shadow-md">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                </button>
+                                            </div>
+                                        </template>
+
+                                        <template x-for="(preview, index) in newHeroImagePreviews" :key="'hero-new-'+index">
+                                            <div class="relative aspect-video sm:aspect-square md:aspect-video rounded-xl border border-surfaceHighlight overflow-hidden group bg-base shadow-inner">
+                                                <img :src="preview" class="w-full h-full object-cover opacity-70">
+                                                <span class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-accent text-darkLux text-[8px] font-bold px-2 py-0.5 rounded-full shadow-md">NUEVA</span>
+                                                <button type="button" @click="removeNewHeroImage(index)" class="absolute top-2 right-2 bg-danger/90 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-danger shadow-md">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                </button>
+                                            </div>
+                                        </template>
+
+                                        <div x-show="(settingsForm.hero_images?.length || 0) + newHeroImagePreviews.length < 3" 
+                                             class="aspect-video sm:aspect-square md:aspect-video rounded-xl border-2 border-dashed border-surfaceHighlight hover:border-accent flex flex-col items-center justify-center cursor-pointer transition-colors group bg-base/30 hover:bg-base/50"
+                                             @click="document.getElementById('heroImageUpload').click()">
+                                            <svg class="w-8 h-8 text-textMuted group-hover:text-accent transition-colors mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                            <span class="text-[10px] text-textMuted uppercase font-bold tracking-widest group-hover:text-accent transition-colors text-center px-2">Añadir Portada</span>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="heroImageUpload" accept="image/*" multiple class="hidden" @change="handleHeroImageSelection">
+                                    <p class="text-[10px] text-textMuted font-light mt-3 ml-1">Sugerimos utilizar imágenes horizontales en alta calidad (ej. 1920x1080px).</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end pt-4">
+                            <button type="submit" class="btn-primary w-full sm:w-auto flex items-center justify-center gap-3 px-10 py-4 shadow-xl" :disabled="isSavingSettings">
+                                <svg x-show="isSavingSettings" class="animate-spin -ml-1 h-5 w-5 text-darkLux" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                <span x-text="isSavingSettings ? 'Aplicando Configuración...' : 'Guardar Configuración Global'"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </main>
     </div>
 
     <!-- MODALES DE FORMULARIOS -->
@@ -879,6 +857,7 @@
 
         document.addEventListener('alpine:init', () => {
             Alpine.data('adminPanel', () => ({
+                isCheckingAuth: true,
                 isLoading: true,
                 isAuthenticated: false,
                 adminEmail: '',
@@ -992,6 +971,8 @@
                     } else {
                         this.isLoading = false;
                     }
+                    
+                    this.isCheckingAuth = false;
                 },
 
                 async login() {
