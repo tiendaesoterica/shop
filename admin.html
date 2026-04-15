@@ -182,8 +182,8 @@
     <div x-show="globalMessage" 
          x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-8" x-transition:enter-end="opacity-100 translate-y-0"
          x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-8"
-         class="fixed top-8 left-1/2 -translate-x-1/2 z-[100] backdrop-blur-md text-white text-sm px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl border"
-         :class="isGlobalError ? 'bg-danger/90 border-danger/30 shadow-danger/30' : 'bg-success/90 border-success/30 shadow-success/30'" x-cloak>
+         class="fixed top-8 left-1/2 -translate-x-1/2 z-[100] backdrop-blur-md text-white text-sm px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl border z-[9999]"
+         :class="isGlobalError ? 'bg-danger/90 border-danger/30 shadow-[0_15px_40px_rgba(225,29,72,0.3)]' : 'bg-success/90 border-success/30 shadow-[0_15px_40px_rgba(16,185,129,0.3)]'" x-cloak>
         <svg x-show="!isGlobalError" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
         <svg x-show="isGlobalError" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
         <span x-text="globalMessage" class="font-bold tracking-wide"></span>
@@ -497,11 +497,6 @@
 
                     <form @submit.prevent="saveSettings" class="space-y-8 pb-10">
                         
-                        <div x-show="settingsError" class="bg-danger/10 border border-danger/30 text-danger text-sm px-4 py-3 rounded-lg flex items-center gap-3 shadow-md" x-cloak>
-                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            <span x-text="settingsError" class="font-bold tracking-wide"></span>
-                        </div>
-
                         <!-- SECCIÓN: Identidad de Marca -->
                         <div class="bg-surface border border-surfaceHighlight rounded-2xl p-6 md:p-8 shadow-lg relative overflow-hidden">
                             <h4 class="text-lg font-heading font-bold text-textMain mb-6 border-b border-surfaceHighlight/50 pb-4">Identidad de Marca</h4>
@@ -589,7 +584,6 @@
                                         <label class="admin-label !mb-0">Opacidad de la Portada</label>
                                         <span class="text-xs font-mono text-accent" x-text="(settingsForm.hero_opacity !== undefined ? settingsForm.hero_opacity : 80) + '%'"></span>
                                     </div>
-                                    <!-- AHORA ESTÁ CONECTADO A hero_opacity EN LUGAR DE blur_level -->
                                     <input type="range" x-model="settingsForm.hero_opacity" min="0" max="100" step="5" class="w-full accent-accent h-2 bg-surfaceHighlight rounded-lg cursor-pointer">
                                     <p class="text-[9px] text-textMuted mt-2 ml-1">Controla qué tan oscurecida se ve la imagen de la tienda. 0% es totalmente transparente.</p>
                                 </div>
@@ -676,6 +670,83 @@
                             </div>
                         </div>
 
+                        <!-- SECCIÓN: GESTOR DE SERVICIOS (TARJETAS) DINÁMICOS Y COMPACTOS -->
+                        <div class="bg-surface border border-surfaceHighlight rounded-2xl p-6 md:p-8 shadow-lg relative overflow-visible">
+                            <div class="flex justify-between items-center border-b border-surfaceHighlight/50 pb-4 mb-6">
+                                <h4 class="text-lg font-heading font-bold text-textMain">Servicios Destacados</h4>
+                                <span class="text-[10px] text-textMuted uppercase tracking-widest font-bold bg-base px-3 py-1 rounded-full border border-surfaceHighlight" x-text="(settingsForm.services ? settingsForm.services.length : 0) + '/4'"></span>
+                            </div>
+                            <p class="text-xs text-textMuted font-light mb-6">Añade hasta 4 tarjetas de servicios o pilares de tu marca. Usa imágenes panorámicas o elige un ícono de la librería universal si decides no subir fotos.</p>
+                            
+                            <div class="space-y-4 relative z-10">
+                                <template x-for="(service, index) in settingsForm.services" :key="service.id">
+                                    <div x-data="{ showIconSelector: false }" class="p-4 bg-base/50 rounded-xl border border-surfaceHighlight relative group flex flex-col sm:flex-row gap-5 items-start transition-colors hover:border-accent/40 hover:bg-base">
+                                        
+                                        <!-- Zona Izquierda: Imagen Compacta y Selector de Ícono Desplegable -->
+                                        <div class="w-full sm:w-36 flex-shrink-0 flex flex-col gap-2 relative">
+                                            
+                                            <div class="w-full aspect-video rounded-lg border border-dashed border-surfaceHighlight hover:border-accent overflow-hidden bg-surface flex flex-col items-center justify-center relative cursor-pointer transition-colors shadow-inner" @click="document.getElementById('svcImg_' + service.id).click()">
+                                                <template x-if="newServicePreviews[service.id] || service.image">
+                                                    <div class="absolute inset-0 flex items-center justify-center bg-base z-10">
+                                                        <img :src="newServicePreviews[service.id] || service.image" class="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500">
+                                                        <button type="button" @click.stop="removeServiceImage(service.id)" class="absolute top-1 right-1 bg-danger/90 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-danger shadow-md" title="Eliminar imagen">
+                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                        </button>
+                                                    </div>
+                                                </template>
+                                                <div class="text-center" x-show="!newServicePreviews[service.id] && !service.image">
+                                                    <svg class="w-5 h-5 text-textMuted group-hover:text-accent transition-colors mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                    <span class="text-[8px] text-textMuted uppercase font-bold tracking-widest group-hover:text-accent transition-colors block">Subir Foto</span>
+                                                </div>
+                                            </div>
+                                            <input type="file" :id="'svcImg_' + service.id" accept="image/*" class="hidden" @change="handleServiceImage($event, service.id)">
+                                            
+                                            <p class="text-[8px] text-textMuted text-center font-medium opacity-70">Rec: 800x450px (16:9)</p>
+
+                                            <!-- Botón Desplegable de Íconos -->
+                                            <div x-show="!newServicePreviews[service.id] && !service.image" class="w-full relative mt-1">
+                                                <button type="button" @click="showIconSelector = !showIconSelector" class="w-full flex items-center justify-between px-2.5 py-1.5 bg-surface border border-surfaceHighlight rounded-md text-[10px] text-textMuted hover:border-accent hover:text-textMain transition-colors shadow-sm">
+                                                    <span class="flex items-center gap-1.5">
+                                                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" x-html="serviceIcons[service.icon || 'star']"></svg>
+                                                        <span class="font-medium">Elegir Ícono</span>
+                                                    </span>
+                                                    <svg class="w-3.5 h-3.5 transition-transform" :class="showIconSelector ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                </button>
+                                                
+                                                <!-- Panel Expandible de Íconos con dirección inteligente -->
+                                                <div x-show="showIconSelector" @click.away="showIconSelector = false" class="absolute left-0 w-[200px] sm:w-[220px] p-2 bg-surface border border-surfaceHighlight rounded-lg grid grid-cols-5 gap-1.5 z-[50] shadow-xl max-h-48 overflow-y-auto custom-scrollbar" :class="index >= 2 ? 'bottom-full mb-1' : 'top-full mt-1'" x-transition>
+                                                    <template x-for="(svgContent, iconName) in serviceIcons" :key="iconName">
+                                                        <button type="button" @click="service.icon = iconName; showIconSelector = false" class="aspect-square rounded border flex items-center justify-center transition-colors hover:scale-110" :class="(service.icon === iconName || (!service.icon && iconName === 'star')) ? 'bg-accent/20 border-accent text-accent shadow-sm' : 'bg-base border-surfaceHighlight/50 text-textMuted hover:text-accent hover:border-accent/50'" :title="iconName">
+                                                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" x-html="svgContent"></svg>
+                                                        </button>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Textos Compactos de la Tarjeta -->
+                                        <div class="flex-grow w-full space-y-2.5 relative z-0">
+                                            <input type="text" x-model="service.title" class="admin-input !py-2.5 !px-3 font-heading font-bold text-sm" placeholder="Título del Servicio (Obligatorio)" required>
+                                            <textarea x-model="service.description" rows="3" class="admin-input !py-2.5 !px-3 font-light resize-none text-xs leading-relaxed" placeholder="Breve descripción obligatoria (2-3 líneas)..." required></textarea>
+                                        </div>
+
+                                        <!-- Botón Eliminar Tarjeta Minimalista -->
+                                        <div class="absolute sm:static top-2 right-2 sm:mt-1 flex-shrink-0 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                            <button type="button" @click="removeService(index)" class="text-textMuted hover:text-danger p-1.5 rounded-md transition-colors bg-surface sm:bg-transparent border sm:border-transparent border-surfaceHighlight hover:bg-danger/10" title="Eliminar tarjeta">
+                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- Botón para agregar más servicios -->
+                                <button type="button" @click="addService" x-show="!settingsForm.services || settingsForm.services.length < 4" class="w-full py-3.5 border border-dashed border-surfaceHighlight hover:border-accent text-textMuted hover:text-accent font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 bg-surface/30 hover:bg-surface shadow-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                    Añadir Tarjeta de Servicio
+                                </button>
+                            </div>
+                        </div>
+
                         <div class="flex justify-end pt-4">
                             <button type="submit" class="btn-primary w-full sm:w-auto flex items-center justify-center gap-3 px-10 py-4 shadow-xl" :disabled="isSavingSettings">
                                 <svg x-show="isSavingSettings" class="animate-spin -ml-1 h-5 w-5 text-darkLux" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -720,7 +791,6 @@
         </div>
     </div>
 
-    <!-- Modal: Eliminar Categoría -->
     <div x-show="isCategoryDeleteModalOpen" class="fixed inset-0 z-[100] overflow-y-auto" x-cloak>
         <div x-show="isCategoryDeleteModalOpen" x-transition.opacity @click="isCategoryDeleteModalOpen = false" class="fixed inset-0 bg-base/95 backdrop-blur-md"></div>
         <div class="flex items-center justify-center min-h-screen px-4 text-center sm:p-0">
@@ -751,7 +821,6 @@
         </div>
     </div>
 
-    <!-- Modal: Crear/Editar Producto -->
     <div x-show="isProductModalOpen" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
         <div x-show="isProductModalOpen" x-transition.opacity @click="isProductModalOpen = false" class="fixed inset-0 bg-base/90 backdrop-blur-md"></div>
         <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
@@ -995,7 +1064,8 @@
                     color_base: localStorage.getItem('nexus_color_base') || '#0D0914', 
                     color_surface: localStorage.getItem('nexus_color_surface') || '#1A112A', 
                     color_accent: localStorage.getItem('nexus_color_accent') || '#D4AF37',
-                    hero_opacity: localStorage.getItem('nexus_hero_opacity') !== null ? parseInt(localStorage.getItem('nexus_hero_opacity')) : 80
+                    hero_opacity: localStorage.getItem('nexus_hero_opacity') !== null ? parseInt(localStorage.getItem('nexus_hero_opacity')) : 80,
+                    services: JSON.parse(localStorage.getItem('nexus_services')) || []
                 },
                 
                 themePresets: {
@@ -1006,17 +1076,51 @@
                     custom: { name: 'Personalizado', base: '#0D0914', surface: '#1A112A', accent: '#D4AF37', highlight: '#2D1D45' }
                 },
 
+                // LIBRERÍA DE 28 ÍCONOS UNIVERSALES
+                serviceIcons: {
+                    star: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 2l2.4 7.6H22l-6.2 4.8 2.4 7.6-6.2-4.8-6.2 4.8 2.4-7.6L2 9.6h7.6L12 2z" />',
+                    eye: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />',
+                    moon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />',
+                    sun: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />',
+                    fire: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 7 10c0-2 .5-3 1.5-5C9.5 4 10 2 12 2c0 2 2 3 3 5 .5 1 1.5 2 1.5 4 0 1-.5 2-1 3z" />',
+                    lotus: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 22s8-4 8-10V5l-8 7-8-7v7c0 6 8 10 8 10z" />',
+                    heart: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />',
+                    shield: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />',
+                    lock: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11v2m-4 4h8a2 2 0 002-2v-4a2 2 0 00-2-2H8a2 2 0 00-2 2v4a2 2 0 002 2zm4-10a4 4 0 00-4 4v2h8V7a4 4 0 00-4-4z" />',
+                    book: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />',
+                    sparkles: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />',
+                    users: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />',
+                    globe: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />',
+                    chat: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />',
+                    key: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />',
+                    compass: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 16l2.879-2.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />',
+                    store: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />',
+                    scale: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 14l9-4 9 4M5 14v4a2 2 0 002 2h10a2 2 0 002-2v-4M12 4v6m0 0l-3 3m3-3l3 3" />',
+                    briefcase: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />',
+                    chart: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3v18h18M9 9l3 3 3-3 4 4" />',
+                    camera: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7h3l2-2h8l2 2h3v12H3V7zm9 9a3 3 0 100-6 3 3 0 000 6z" />',
+                    laptop: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />',
+                    scissors: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" />',
+                    music: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />',
+                    truck: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 16a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4zm-8-4h8M3 5h12v11H3V5zm12 2h3.5l3.5 4v5h-7V7z" />',
+                    building: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />',
+                    pen: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />',
+                    tag: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />'
+                },
+
                 newHeroImagePreviews: [],
                 newHeroImageFiles: [],
                 
                 newLogoPreview: null,
                 newLogoFile: null,
 
+                newServiceFiles: {},
+                newServicePreviews: {},
+
                 isSavingSettings: false,
                 settingsError: '',
                 settingsMessage: '',
                 
-                // Nuevas variables para el control de notificaciones globales
                 globalMessage: '',
                 isGlobalError: false,
 
@@ -1026,13 +1130,11 @@
                 isDeleteModalOpen: false,
                 productToDeleteId: null,
                 
-                // Nuevas variables para el modal de eliminación de categorías
                 isCategoryDeleteModalOpen: false,
                 categoryToDeleteId: null,
                 
                 userRole: '',
 
-                // Helper para notificaciones
                 notify(msg, isError = false) {
                     this.globalMessage = msg;
                     this.isGlobalError = isError;
@@ -1052,6 +1154,8 @@
                 },
 
                 async init() {
+                    if (!this.settingsForm.services) this.settingsForm.services = [];
+
                     this.applyThemePreview();
 
                     this.$watch('settingsForm.theme', () => this.applyThemePreview());
@@ -1066,6 +1170,7 @@
                             if (setObj) {
                                 this.settingsForm = { ...this.settingsForm, ...setObj };
                                 if (!this.settingsForm.hero_images) this.settingsForm.hero_images = [];
+                                if (!this.settingsForm.services) this.settingsForm.services = [];
                                 
                                 localStorage.setItem('nexus_site_name', this.settingsForm.site_name || '');
                                 localStorage.setItem('nexus_site_motto', this.settingsForm.site_motto || '');
@@ -1075,6 +1180,7 @@
                                 localStorage.setItem('nexus_color_surface', this.settingsForm.color_surface || '#1A112A');
                                 localStorage.setItem('nexus_color_accent', this.settingsForm.color_accent || '#D4AF37');
                                 localStorage.setItem('nexus_hero_opacity', this.settingsForm.hero_opacity !== undefined ? this.settingsForm.hero_opacity : 80);
+                                localStorage.setItem('nexus_services', JSON.stringify(this.settingsForm.services));
 
                                 this.applyThemePreview();
                             }
@@ -1225,6 +1331,46 @@
                     this.newHeroImageFiles.splice(index, 1);
                 },
 
+                addService() {
+                    if (!this.settingsForm.services) this.settingsForm.services = [];
+                    if (this.settingsForm.services.length >= 4) return;
+                    
+                    this.settingsForm.services.push({
+                        id: 'svc_' + Date.now().toString(36),
+                        title: 'Nuevo Servicio Especial',
+                        description: 'Añade una descripción breve aquí para explicar en qué consiste este nuevo servicio para tus visitantes.',
+                        image: '',
+                        icon: 'star'
+                    });
+                },
+
+                removeService(index) {
+                    const svcId = this.settingsForm.services[index].id;
+                    if (this.newServicePreviews[svcId]) {
+                        URL.revokeObjectURL(this.newServicePreviews[svcId]);
+                        delete this.newServicePreviews[svcId];
+                        delete this.newServiceFiles[svcId];
+                    }
+                    this.settingsForm.services.splice(index, 1);
+                },
+
+                handleServiceImage(event, id) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    this.newServiceFiles[id] = file;
+                    if (this.newServicePreviews[id]) URL.revokeObjectURL(this.newServicePreviews[id]);
+                    this.newServicePreviews[id] = URL.createObjectURL(file);
+                    event.target.value = '';
+                },
+
+                removeServiceImage(id) {
+                    if (this.newServicePreviews[id]) URL.revokeObjectURL(this.newServicePreviews[id]);
+                    delete this.newServicePreviews[id];
+                    delete this.newServiceFiles[id];
+                    const svc = this.settingsForm.services.find(s => s.id === id);
+                    if(svc) svc.image = '';
+                },
+
                 async compressImage(file, isHero = false) {
                     return new Promise((resolve, reject) => {
                         const reader = new FileReader();
@@ -1262,18 +1408,8 @@
 
                 sanitizeInput(str) {
                     if (typeof str !== 'string') return str;
-                    const map = {
-                        '&': '&amp;',
-                        '<': '&lt;',
-                        '>': '&gt;',
-                        '"': '&quot;',
-                        "'": '&#x27;',
-                        "/": '&#x2F;',
-                        "`": '&#x60;',
-                        "=": '&#x3D;'
-                    };
-                    const reg = /[&<>"'`=\/]/ig;
-                    return str.replace(reg, (match) => (map[match]));
+                    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', "/": '&#x2F;', "`": '&#x60;', "=": '&#x3D;' };
+                    return str.replace(/[&<>"'`=\/]/ig, (match) => (map[match]));
                 },
 
                 async saveSettings() {
@@ -1282,25 +1418,34 @@
 
                     try {
                         let finalHeroUrls = [...(this.settingsForm.hero_images || [])];
-                        
                         if (this.newHeroImageFiles && this.newHeroImageFiles.length > 0) {
                             for (let file of this.newHeroImageFiles) {
-                                const compressedFile = await this.compressImage(file, true);
-                                const url = await this.uploadImageToSupabase(compressedFile);
+                                const url = await this.uploadImageToSupabase(await this.compressImage(file, true));
                                 finalHeroUrls.push(url);
                             }
                         }
 
                         let finalLogoUrl = this.settingsForm.logo_url;
                         if (this.newLogoFile) {
-                            const compressedLogo = await this.compressImage(this.newLogoFile, false);
-                            finalLogoUrl = await this.uploadImageToSupabase(compressedLogo);
+                            finalLogoUrl = await this.uploadImageToSupabase(await this.compressImage(this.newLogoFile, false));
+                        }
+
+                        for (let service of this.settingsForm.services) {
+                            if (this.newServiceFiles[service.id]) {
+                                const compressed = await this.compressImage(this.newServiceFiles[service.id], false);
+                                const url = await this.uploadImageToSupabase(compressed);
+                                service.image = url;
+                            }
+                            service.title = this.sanitizeInput(service.title);
+                            service.description = this.sanitizeInput(service.description);
+                            if(!service.icon) service.icon = 'star';
                         }
 
                         const settingsData = { 
                             ...this.settingsForm, 
                             hero_images: finalHeroUrls, 
                             logo_url: finalLogoUrl,
+                            services: this.settingsForm.services,
                             site_name: this.sanitizeInput(this.settingsForm.site_name),
                             site_motto: this.sanitizeInput(this.settingsForm.site_motto),
                             hero_title: this.sanitizeInput(this.settingsForm.hero_title),
@@ -1319,6 +1464,7 @@
                         
                         if (response.data && response.data.length > 0) {
                             this.settingsForm = response.data[0];
+                            if (!this.settingsForm.services) this.settingsForm.services = [];
                             
                             localStorage.setItem('nexus_site_name', this.settingsForm.site_name || '');
                             localStorage.setItem('nexus_site_motto', this.settingsForm.site_motto || '');
@@ -1328,18 +1474,19 @@
                             localStorage.setItem('nexus_color_surface', this.settingsForm.color_surface || '#1A112A');
                             localStorage.setItem('nexus_color_accent', this.settingsForm.color_accent || '#D4AF37');
                             localStorage.setItem('nexus_hero_opacity', this.settingsForm.hero_opacity !== undefined ? this.settingsForm.hero_opacity : 80);
+                            localStorage.setItem('nexus_services', JSON.stringify(this.settingsForm.services));
 
-                            this.newHeroImageFiles = [];
-                            this.newHeroImagePreviews = [];
-                            this.newLogoFile = null;
-                            this.newLogoPreview = null;
+                            this.newHeroImageFiles = []; this.newHeroImagePreviews = [];
+                            this.newLogoFile = null; this.newLogoPreview = null;
+                            this.newServiceFiles = {}; this.newServicePreviews = {};
+
                             this.notify('Configuración global guardada exitosamente.');
                         } else {
                             throw new Error("Bloqueado por permisos de seguridad (RLS) en la base de datos.");
                         }
                     } catch (err) {
-                        if (err.message && (err.message.includes('logo_url') || err.message.includes('schema cache'))) {
-                            this.settingsError = '⚠️ Faltan columnas en la base de datos. Asegúrate de haber ejecutado el SQL actualizado.';
+                        if (err.message && err.message.includes('schema cache')) {
+                            this.settingsError = '⚠️ Base de datos no sincronizada. Ejecuta el nuevo código SQL de Servicios primero.';
                         } else {
                             this.settingsError = 'Error al guardar la configuración: ' + err.message;
                         }
