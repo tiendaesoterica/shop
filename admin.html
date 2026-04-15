@@ -670,7 +670,7 @@
                             </div>
                         </div>
 
-                        <!-- SECCIÓN: GESTOR DE SERVICIOS (TARJETAS) DINÁMICOS Y COMPACTOS -->
+                        <!-- SECCIÓN: GESTOR DE SERVICIOS (TARJETAS) -->
                         <div class="bg-surface border border-surfaceHighlight rounded-2xl p-6 md:p-8 shadow-lg relative overflow-visible">
                             <div class="flex justify-between items-center border-b border-surfaceHighlight/50 pb-4 mb-6">
                                 <h4 class="text-lg font-heading font-bold text-textMain">Servicios Destacados</h4>
@@ -743,6 +743,69 @@
                                 <button type="button" @click="addService" x-show="!settingsForm.services || settingsForm.services.length < 4" class="w-full py-3.5 border border-dashed border-surfaceHighlight hover:border-accent text-textMuted hover:text-accent font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 bg-surface/30 hover:bg-surface shadow-sm">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                                     Añadir Tarjeta de Servicio
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- NUEVA SECCIÓN: GESTOR DE PILARES DE CONFIANZA -->
+                        <div class="bg-surface border border-surfaceHighlight rounded-2xl p-6 md:p-8 shadow-lg relative overflow-visible mt-8">
+                            <div class="flex justify-between items-center border-b border-surfaceHighlight/50 pb-4 mb-6">
+                                <h4 class="text-lg font-heading font-bold text-textMain">Pilares de Confianza</h4>
+                                <span class="text-[10px] text-textMuted uppercase tracking-widest font-bold bg-base px-3 py-1 rounded-full border border-surfaceHighlight" x-text="(settingsForm.service_features ? settingsForm.service_features.length : 0) + '/3'"></span>
+                            </div>
+                            <p class="text-xs text-textMuted font-light mb-6">Edita los 3 pilares que aparecen en la barra inferior para transmitir confianza y seguridad a tus clientes.</p>
+                            
+                            <div class="space-y-4 relative z-10">
+                                <template x-for="(feature, index) in settingsForm.service_features" :key="feature.id">
+                                    <div x-data="{ showFeatureIconSelector: false }" class="p-4 bg-base/50 rounded-xl border border-surfaceHighlight relative group flex flex-col sm:flex-row gap-5 items-start transition-colors hover:border-accent/40 hover:bg-base">
+                                        
+                                        <!-- Selector de Ícono Desplegable (Solo Iconos, sin subida de imagen) -->
+                                        <div class="w-full sm:w-36 flex-shrink-0 flex flex-col gap-2 relative">
+                                            
+                                            <!-- Vista Previa del Ícono Grande -->
+                                            <div class="w-full aspect-video rounded-lg border border-surfaceHighlight bg-surface flex flex-col items-center justify-center relative shadow-inner text-accent">
+                                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-html="serviceIcons[feature.icon || 'star']"></svg>
+                                            </div>
+
+                                            <!-- Botón Desplegable de Íconos -->
+                                            <div class="w-full relative mt-1">
+                                                <button type="button" @click="showFeatureIconSelector = !showFeatureIconSelector" class="w-full flex items-center justify-between px-2.5 py-1.5 bg-surface border border-surfaceHighlight rounded-md text-[10px] text-textMuted hover:border-accent hover:text-textMain transition-colors shadow-sm">
+                                                    <span class="flex items-center gap-1.5">
+                                                        <span class="font-medium">Cambiar Ícono</span>
+                                                    </span>
+                                                    <svg class="w-3.5 h-3.5 transition-transform" :class="showFeatureIconSelector ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                </button>
+                                                
+                                                <!-- Panel Expandible de Íconos con dirección inteligente -->
+                                                <div x-show="showFeatureIconSelector" @click.away="showFeatureIconSelector = false" class="absolute left-0 w-[200px] sm:w-[220px] p-2 bg-surface border border-surfaceHighlight rounded-lg grid grid-cols-5 gap-1.5 z-[50] shadow-xl max-h-48 overflow-y-auto custom-scrollbar" :class="index >= 1 ? 'bottom-full mb-1' : 'top-full mt-1'" x-transition>
+                                                    <template x-for="(svgContent, iconName) in serviceIcons" :key="iconName">
+                                                        <button type="button" @click="feature.icon = iconName; showFeatureIconSelector = false" class="aspect-square rounded border flex items-center justify-center transition-colors hover:scale-110" :class="(feature.icon === iconName || (!feature.icon && iconName === 'star')) ? 'bg-accent/20 border-accent text-accent shadow-sm' : 'bg-base border-surfaceHighlight/50 text-textMuted hover:text-accent hover:border-accent/50'" :title="iconName">
+                                                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" x-html="svgContent"></svg>
+                                                        </button>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Textos Compactos del Pilar -->
+                                        <div class="flex-grow w-full space-y-2.5 relative z-0">
+                                            <input type="text" x-model="feature.title" class="admin-input !py-2.5 !px-3 font-heading font-bold text-sm uppercase tracking-widest" placeholder="Título del Pilar (Obligatorio)" required>
+                                            <textarea x-model="feature.description" rows="3" class="admin-input !py-2.5 !px-3 font-light resize-none text-xs leading-relaxed" placeholder="Breve descripción obligatoria..." required></textarea>
+                                        </div>
+
+                                        <!-- Botón Eliminar Pilar Minimalista -->
+                                        <div class="absolute sm:static top-2 right-2 sm:mt-1 flex-shrink-0 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                            <button type="button" @click="removeFeature(index)" class="text-textMuted hover:text-danger p-1.5 rounded-md transition-colors bg-surface sm:bg-transparent border sm:border-transparent border-surfaceHighlight hover:bg-danger/10" title="Eliminar pilar">
+                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- Botón para agregar más pilares -->
+                                <button type="button" @click="addFeature" x-show="!settingsForm.service_features || settingsForm.service_features.length < 3" class="w-full py-3.5 border border-dashed border-surfaceHighlight hover:border-accent text-textMuted hover:text-accent font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 bg-surface/30 hover:bg-surface shadow-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                    Añadir Pilar
                                 </button>
                             </div>
                         </div>
@@ -827,7 +890,7 @@
             <div x-show="isProductModalOpen"
                  x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-8 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
                  x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-8 sm:scale-95"
-                 class="relative bg-surface border border-surfaceHighlight rounded-2xl text-left overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] transform transition-all sm:my-8 sm:max-w-3xl w-full z-10">
+                 class="relative bg-surface border border-surfaceHighlight rounded-2xl text-left overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] transform transition-all sm:my-8 sm:max-w-md w-full z-10">
                 
                 <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-accent to-transparent opacity-50"></div>
 
@@ -1065,7 +1128,8 @@
                     color_surface: localStorage.getItem('nexus_color_surface') || '#1A112A', 
                     color_accent: localStorage.getItem('nexus_color_accent') || '#D4AF37',
                     hero_opacity: localStorage.getItem('nexus_hero_opacity') !== null ? parseInt(localStorage.getItem('nexus_hero_opacity')) : 80,
-                    services: JSON.parse(localStorage.getItem('nexus_services')) || []
+                    services: JSON.parse(localStorage.getItem('nexus_services')) || [],
+                    service_features: JSON.parse(localStorage.getItem('nexus_service_features')) || []
                 },
                 
                 themePresets: {
@@ -1087,7 +1151,7 @@
                     heart: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />',
                     shield: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />',
                     lock: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11v2m-4 4h8a2 2 0 002-2v-4a2 2 0 00-2-2H8a2 2 0 00-2 2v4a2 2 0 002 2zm4-10a4 4 0 00-4 4v2h8V7a4 4 0 00-4-4z" />',
-                    book: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />',
+                    book: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477-4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />',
                     sparkles: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />',
                     users: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />',
                     globe: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />',
@@ -1155,6 +1219,7 @@
 
                 async init() {
                     if (!this.settingsForm.services) this.settingsForm.services = [];
+                    if (!this.settingsForm.service_features) this.settingsForm.service_features = [];
 
                     this.applyThemePreview();
 
@@ -1171,6 +1236,7 @@
                                 this.settingsForm = { ...this.settingsForm, ...setObj };
                                 if (!this.settingsForm.hero_images) this.settingsForm.hero_images = [];
                                 if (!this.settingsForm.services) this.settingsForm.services = [];
+                                if (!this.settingsForm.service_features) this.settingsForm.service_features = [];
                                 
                                 localStorage.setItem('nexus_site_name', this.settingsForm.site_name || '');
                                 localStorage.setItem('nexus_site_motto', this.settingsForm.site_motto || '');
@@ -1181,6 +1247,7 @@
                                 localStorage.setItem('nexus_color_accent', this.settingsForm.color_accent || '#D4AF37');
                                 localStorage.setItem('nexus_hero_opacity', this.settingsForm.hero_opacity !== undefined ? this.settingsForm.hero_opacity : 80);
                                 localStorage.setItem('nexus_services', JSON.stringify(this.settingsForm.services));
+                                localStorage.setItem('nexus_service_features', JSON.stringify(this.settingsForm.service_features));
 
                                 this.applyThemePreview();
                             }
@@ -1270,7 +1337,7 @@
                     if (b > 255) b = 255; else if (b < 0) b = 0;
                     let g = (num & 0x0000FF) + amt;
                     if (g > 255) g = 255; else if (g < 0) g = 0;
-                    return (usePound?"#":"") + String("000000" + (g | (b << 8) | (r << 16)).toString(16)).slice(-6);
+                    return (usePound?"#":"") + String("000000" + (g | (b << 8) | (r << 16)).slice(-6));
                 },
 
                 applyThemePreview() {
@@ -1371,6 +1438,22 @@
                     if(svc) svc.image = '';
                 },
 
+                addFeature() {
+                    if (!this.settingsForm.service_features) this.settingsForm.service_features = [];
+                    if (this.settingsForm.service_features.length >= 3) return;
+                    
+                    this.settingsForm.service_features.push({
+                        id: 'feat_' + Date.now().toString(36),
+                        title: 'Nuevo Pilar',
+                        description: 'Descripción breve de la cualidad.',
+                        icon: 'star'
+                    });
+                },
+
+                removeFeature(index) {
+                    this.settingsForm.service_features.splice(index, 1);
+                },
+
                 async compressImage(file, isHero = false) {
                     return new Promise((resolve, reject) => {
                         const reader = new FileReader();
@@ -1416,6 +1499,44 @@
                     this.settingsError = '';
                     this.isSavingSettings = true;
 
+                    // Validación de Tarjetas de Servicio
+                    if (this.settingsForm.services && this.settingsForm.services.length > 0) {
+                        for (let i = 0; i < this.settingsForm.services.length; i++) {
+                            const svc = this.settingsForm.services[i];
+                            if (!svc.title || !svc.title.trim()) {
+                                this.settingsError = `La tarjeta de servicio #${i + 1} necesita un título obligatorio.`;
+                                this.isSavingSettings = false;
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                return;
+                            }
+                            if (!svc.description || !svc.description.trim()) {
+                                this.settingsError = `La tarjeta de servicio #${i + 1} necesita una descripción obligatoria.`;
+                                this.isSavingSettings = false;
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                return;
+                            }
+                        }
+                    }
+
+                    // Validación de Pilares de Confianza
+                    if (this.settingsForm.service_features && this.settingsForm.service_features.length > 0) {
+                        for (let i = 0; i < this.settingsForm.service_features.length; i++) {
+                            const feat = this.settingsForm.service_features[i];
+                            if (!feat.title || !feat.title.trim()) {
+                                this.settingsError = `El pilar #${i + 1} necesita un título obligatorio.`;
+                                this.isSavingSettings = false;
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                return;
+                            }
+                            if (!feat.description || !feat.description.trim()) {
+                                this.settingsError = `El pilar #${i + 1} necesita una descripción obligatoria.`;
+                                this.isSavingSettings = false;
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                return;
+                            }
+                        }
+                    }
+
                     try {
                         let finalHeroUrls = [...(this.settingsForm.hero_images || [])];
                         if (this.newHeroImageFiles && this.newHeroImageFiles.length > 0) {
@@ -1441,11 +1562,18 @@
                             if(!service.icon) service.icon = 'star';
                         }
 
+                        for (let feature of this.settingsForm.service_features) {
+                            feature.title = this.sanitizeInput(feature.title);
+                            feature.description = this.sanitizeInput(feature.description);
+                            if(!feature.icon) feature.icon = 'star';
+                        }
+
                         const settingsData = { 
                             ...this.settingsForm, 
                             hero_images: finalHeroUrls, 
                             logo_url: finalLogoUrl,
                             services: this.settingsForm.services,
+                            service_features: this.settingsForm.service_features,
                             site_name: this.sanitizeInput(this.settingsForm.site_name),
                             site_motto: this.sanitizeInput(this.settingsForm.site_motto),
                             hero_title: this.sanitizeInput(this.settingsForm.hero_title),
@@ -1465,6 +1593,7 @@
                         if (response.data && response.data.length > 0) {
                             this.settingsForm = response.data[0];
                             if (!this.settingsForm.services) this.settingsForm.services = [];
+                            if (!this.settingsForm.service_features) this.settingsForm.service_features = [];
                             
                             localStorage.setItem('nexus_site_name', this.settingsForm.site_name || '');
                             localStorage.setItem('nexus_site_motto', this.settingsForm.site_motto || '');
@@ -1475,6 +1604,7 @@
                             localStorage.setItem('nexus_color_accent', this.settingsForm.color_accent || '#D4AF37');
                             localStorage.setItem('nexus_hero_opacity', this.settingsForm.hero_opacity !== undefined ? this.settingsForm.hero_opacity : 80);
                             localStorage.setItem('nexus_services', JSON.stringify(this.settingsForm.services));
+                            localStorage.setItem('nexus_service_features', JSON.stringify(this.settingsForm.service_features));
 
                             this.newHeroImageFiles = []; this.newHeroImagePreviews = [];
                             this.newLogoFile = null; this.newLogoPreview = null;
@@ -1486,7 +1616,7 @@
                         }
                     } catch (err) {
                         if (err.message && err.message.includes('schema cache')) {
-                            this.settingsError = '⚠️ Base de datos no sincronizada. Ejecuta el nuevo código SQL de Servicios primero.';
+                            this.settingsError = '⚠️ Base de datos no sincronizada. Ejecuta el nuevo código SQL de Pilares de Confianza primero.';
                         } else {
                             this.settingsError = 'Error al guardar la configuración: ' + err.message;
                         }
