@@ -161,7 +161,7 @@
 
 <body class="bg-base text-textMuted font-sans antialiased min-h-screen flex flex-col relative selection:bg-accent/30 selection:text-textMain transition-colors duration-500 overflow-x-hidden" 
       x-data="esotericStore()" 
-      :class="(isLoading || selectedProduct || isCartOpen || fullscreenImage) ? 'overflow-hidden' : ''"
+      :class="(isLoading || selectedProduct || selectedConsultation || isCartOpen || fullscreenImage) ? 'overflow-hidden' : ''"
       x-effect="document.title = settings.site_name ? (settings.site_name + ' | Santuario') : 'Abriendo portal...'">
 
     <!-- PANTALLA DE CARGA INICIAL -->
@@ -231,6 +231,7 @@
 
                 <nav class="hidden lg:flex space-x-6 xl:space-x-10 bg-base/50 backdrop-blur-md px-8 py-3 rounded-full border border-surfaceHighlight shadow-inner" :class="(scrolled || isMobileMenuOpen) ? '' : 'hidden lg:flex'">
                     <a href="#servicios" class="text-[10px] xl:text-xs uppercase tracking-[0.2em] font-medium text-textMuted hover:text-accent transition-colors">Servicios</a>
+                    <a href="#sesiones" class="text-[10px] xl:text-xs uppercase tracking-[0.2em] font-medium text-textMuted hover:text-accent transition-colors">Sesiones</a>
                     <a href="#destacados" class="text-[10px] xl:text-xs uppercase tracking-[0.2em] font-medium text-textMuted hover:text-accent transition-colors">Destacados</a>
                     <a href="#catalogo" class="text-[10px] xl:text-xs uppercase tracking-[0.2em] font-medium text-textMuted hover:text-accent transition-colors">Tienda</a>
                     <a href="#flash" class="text-[10px] xl:text-xs uppercase tracking-[0.2em] font-medium text-danger hover:text-danger/80 transition-colors flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-danger animate-pulse"></span> Especial</a>
@@ -264,6 +265,7 @@
                  class="lg:hidden absolute top-full left-0 w-full bg-surface/95 backdrop-blur-xl border-b border-surfaceHighlight shadow-[0_20px_40px_rgba(0,0,0,0.6)]" x-cloak>
                 <div class="px-6 py-8 flex flex-col space-y-6 text-center border-t border-surfaceHighlight/50">
                     <a href="#servicios" @click="isMobileMenuOpen = false" class="text-sm uppercase tracking-[0.2em] font-heading font-bold text-textMain hover:text-accent">Servicios</a>
+                    <a href="#sesiones" @click="isMobileMenuOpen = false" class="text-sm uppercase tracking-[0.2em] font-heading font-bold text-textMain hover:text-accent">Sesiones y Consultas</a>
                     <a href="#destacados" @click="isMobileMenuOpen = false" class="text-sm uppercase tracking-[0.2em] font-heading font-bold text-textMain hover:text-accent">Destacados</a>
                     <a href="#catalogo" @click="isMobileMenuOpen = false" class="text-sm uppercase tracking-[0.2em] font-heading font-bold text-textMain hover:text-accent">Tienda de productos</a>
                     <a href="#flash" @click="isMobileMenuOpen = false" class="text-sm uppercase tracking-[0.2em] font-heading font-bold text-danger flex items-center justify-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-danger animate-pulse"></span> Promociones Especiales</a>
@@ -391,12 +393,51 @@
             </div>
 
             <div class="max-w-3xl mx-auto px-4 sm:px-6 text-center mt-20 relative z-10">
-                <h3 class="text-2xl font-heading font-bold text-textMain mb-4">¿Dudas sobre por dónde empezar?</h3>
-                <p class="text-textMuted text-sm font-light mb-8">El primer paso suele ser el más revelador. Escríbenos directamente y te orientaremos hacia la práctica que mejor resuene con tu momento actual.</p>
+                <h3 class="text-2xl font-heading font-bold text-textMain mb-4" x-text="settings.cta_title || '¿Dudas sobre por dónde empezar?'"></h3>
+                <p class="text-textMuted text-sm font-light mb-8" x-text="settings.cta_description || 'El primer paso suele ser el más revelador. Escríbenos directamente y te orientaremos hacia la práctica que mejor resuene con tu momento actual.'"></p>
                 <button @click="window.open(`https://wa.me/${settings.whatsapp}?text=${encodeURIComponent('Hola, me gustaría recibir orientación sobre los servicios que ofrecen.')}`, '_blank')" class="btn-primary inline-flex items-center gap-3 px-8 py-4">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-                    Contactar al Asesor
+                    <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                    <span x-text="settings.cta_button_text || 'Contactar al Asesor'" class="truncate"></span>
                 </button>
+            </div>
+        </section>
+
+        <!-- ============================================== -->
+        <!-- NUEVA SECCIÓN: CONSULTAS Y SESIONES (1 a 1) -->
+        <!-- ============================================== -->
+        <section id="sesiones" class="bg-surface/40 py-24 relative z-20 border-b border-surfaceHighlight/30 transition-colors duration-500" x-show="consultations.length > 0" x-cloak>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+                <div class="text-center md:text-left mb-12 flex flex-col md:flex-row justify-between items-end gap-6">
+                    <div>
+                        <span class="text-accent text-[10px] tracking-[0.3em] uppercase font-bold mb-3 block flex items-center justify-center md:justify-start gap-2">
+                            ✧ Espacios 1 a 1 ✧
+                        </span>
+                        <h2 class="text-3xl sm:text-4xl md:text-5xl font-heading font-bold text-textMain mb-4">Consultas & Sesiones</h2>
+                        <p class="text-textMuted text-sm sm:text-base max-w-2xl font-light leading-relaxed">Reserva tu espacio personal para lecturas, análisis y orientación directa. Selecciona el servicio para ver detalles y coordinar disponibilidad.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                    <template x-for="cons in consultations" :key="cons.id">
+                        <div class="bg-base border border-surfaceHighlight rounded-2xl overflow-hidden flex flex-col group cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_15px_30px_rgba(var(--color-accent),0.1)] hover:border-accent/40" @click="selectedConsultation = cons">
+                            <div class="w-full aspect-[16/10] relative overflow-hidden bg-surface">
+                                <img :src="cons.image || 'https://via.placeholder.com/600x400/1A112A/A78BFA?text=Sesion'" :alt="cons.name" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700">
+                                <div class="absolute inset-0 bg-gradient-to-t from-base via-base/40 to-transparent opacity-90"></div>
+                                <span class="absolute top-4 right-4 bg-surfaceHighlight/80 backdrop-blur-md border border-surfaceHighlight text-textMuted text-[9px] uppercase tracking-widest font-bold px-3 py-1.5 rounded-full shadow-md z-10" x-text="cons.price ? formatPrice(cons.price) : 'Valor a convenir'"></span>
+                            </div>
+                            
+                            <div class="p-6 flex flex-col flex-grow relative z-10 -mt-6">
+                                <h3 class="text-xl font-heading font-bold text-textMain mb-2 group-hover:text-accent transition-colors drop-shadow-md" x-text="cons.name"></h3>
+                                <p class="text-sm text-textMuted font-light leading-relaxed mb-6 flex-grow line-clamp-3" x-text="cons.description"></p>
+                                
+                                <button class="w-full bg-surface hover:bg-accent text-textMain hover:text-darkLux text-[10px] uppercase tracking-[0.2em] py-3.5 rounded-lg transition-all duration-300 font-bold border border-surfaceHighlight hover:border-accent shadow-sm flex items-center justify-center gap-2">
+                                    <span x-text="cons.cta_text || 'Coordinar'"></span>
+                                    <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
             </div>
         </section>
 
@@ -635,6 +676,7 @@
                     <h4 class="text-textMain font-heading font-bold text-sm mb-5 tracking-[0.1em] uppercase">El Sendero</h4>
                     <ul class="space-y-3 text-sm font-medium text-textMuted">
                         <li><a href="#servicios" class="hover:text-accent transition-colors flex items-center gap-2">Servicios</a></li>
+                        <li><a href="#sesiones" class="hover:text-accent transition-colors flex items-center gap-2">Sesiones</a></li>
                         <li><a href="#destacados" class="hover:text-accent transition-colors flex items-center gap-2">Destacados</a></li>
                         <li><a href="#catalogo" class="hover:text-accent transition-colors flex items-center gap-2">Tienda</a></li>
                     </ul>
@@ -878,6 +920,49 @@
         </div>
     </div>
 
+    <!-- Modal de Vista de Consulta/Sesión (Diseño adaptado para no-producto) -->
+    <div x-show="selectedConsultation" class="fixed inset-0 z-[80] flex items-center justify-center p-0 sm:p-6" x-cloak>
+        <div x-show="selectedConsultation" x-transition.opacity @click="selectedConsultation = null" class="fixed inset-0 bg-base/90 backdrop-blur-md"></div>
+        
+        <div x-show="selectedConsultation"
+             x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-8 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-8 sm:scale-95"
+             class="relative bg-surface sm:rounded-2xl text-left shadow-[0_0_50px_rgba(var(--color-accent),0.15)] transform transition-all w-full h-full sm:h-auto sm:max-h-[90vh] max-w-4xl z-10 flex flex-col md:flex-row border-0 sm:border border-surfaceHighlight overflow-y-auto md:overflow-hidden custom-scrollbar">
+
+            <button @click="selectedConsultation = null" aria-label="Cerrar" class="fixed sm:absolute top-3 right-3 sm:top-4 sm:right-4 text-textMuted hover:text-accent z-50 transition-colors bg-base/90 p-2.5 rounded-full border border-surfaceHighlight backdrop-blur-sm shadow-md">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+
+            <!-- LADO DE LA IMAGEN: Edge-to-edge -->
+            <div class="w-full md:w-1/2 relative bg-base h-[40vh] md:h-auto md:min-h-[500px] flex-shrink-0 cursor-pointer" @click="fullscreenImage = selectedConsultation?.image">
+                <img :src="selectedConsultation?.image" :alt="selectedConsultation?.name" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x800/1A112A/A78BFA?text=Sesion';">
+                <div class="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-base/90 to-transparent pointer-events-none"></div>
+            </div>
+
+            <!-- LADO DEL CONTENIDO -->
+            <div class="w-full md:w-1/2 p-6 sm:p-8 md:p-10 flex flex-col bg-surface md:border-l border-surfaceHighlight min-w-0 md:overflow-y-auto custom-scrollbar">
+                <span class="text-accent text-[10px] uppercase tracking-[0.3em] font-bold mb-4 flex items-center gap-2">
+                    ✧ Sesión Personalizada ✧
+                </span>
+                
+                <h2 class="text-2xl sm:text-3xl font-heading font-bold text-textMain mb-6 leading-tight break-words" x-text="selectedConsultation?.name"></h2>
+                <div class="text-textMuted text-sm leading-relaxed mb-8 flex-grow font-light space-y-4 break-words" x-html="selectedConsultation?.full_description?.replace(/\n/g, '<br>') || selectedConsultation?.description"></div>
+
+                <div class="flex items-end gap-4 mb-8 bg-base/50 p-4 rounded-lg border border-surfaceHighlight mt-auto shadow-inner">
+                    <div class="flex flex-col">
+                        <span class="text-[9px] uppercase tracking-widest text-textMuted font-bold mb-1">Intercambio Sugerido</span>
+                        <span class="text-accent font-heading font-bold text-2xl sm:text-3xl" x-text="selectedConsultation?.price ? formatPrice(selectedConsultation.price) : 'A convenir'"></span>
+                    </div>
+                </div>
+
+                <button @click="checkoutConsultation(selectedConsultation)" class="btn-success w-full !py-4 flex items-center justify-center gap-3">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                    <span x-text="selectedConsultation?.cta_text || 'Coordinar Vía WhatsApp'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Visor de Imagen Pantalla Completa (Minimalista) -->
     <div x-show="fullscreenImage !== null" class="fixed inset-0 z-[100] flex items-center justify-center bg-base/95 backdrop-blur-md p-4 sm:p-8" x-cloak>
         <button @click="fullscreenImage = null" class="absolute top-4 right-4 sm:top-8 sm:right-8 text-textMuted hover:text-accent z-50 transition-transform hover:scale-110 bg-surface/80 p-3 rounded-full border border-surfaceHighlight shadow-lg">
@@ -901,10 +986,12 @@
                 isLoading: true,
                 isCartOpen: false,
                 selectedProduct: null,
+                selectedConsultation: null,
                 fullscreenImage: null,
                 searchQuery: '',
                 selectedCategory: 'todos',
                 categories: [], 
+                consultations: [],
                 dbError: '',
                 
                 settings: {
@@ -923,7 +1010,10 @@
                     footer_description: '',
                     hero_images: [],
                     services: JSON.parse(localStorage.getItem('nexus_services')) || [],
-                    service_features: JSON.parse(localStorage.getItem('nexus_service_features')) || []
+                    service_features: JSON.parse(localStorage.getItem('nexus_service_features')) || [],
+                    cta_title: localStorage.getItem('nexus_cta_title') || '',
+                    cta_description: localStorage.getItem('nexus_cta_description') || '',
+                    cta_button_text: localStorage.getItem('nexus_cta_button_text') || ''
                 },
 
                 themePresets: {
@@ -996,6 +1086,9 @@
                                 localStorage.setItem('nexus_hero_opacity', this.settings.hero_opacity !== undefined ? this.settings.hero_opacity : 80);
                                 localStorage.setItem('nexus_services', JSON.stringify(this.settings.services));
                                 localStorage.setItem('nexus_service_features', JSON.stringify(this.settings.service_features));
+                                localStorage.setItem('nexus_cta_title', this.settings.cta_title || '');
+                                localStorage.setItem('nexus_cta_description', this.settings.cta_description || '');
+                                localStorage.setItem('nexus_cta_button_text', this.settings.cta_button_text || '');
 
                                 this.applyTheme();
                             }
@@ -1016,6 +1109,17 @@
 
                             if (!prodError && prodData && prodData.length > 0) {
                                 this.products = prodData.map(p => ({...p, category: p.categoryId || p.category}));
+                            }
+
+                            // Cargar Consultas Activas
+                            const { data: consData, error: consError } = await supabaseClient.from('consultations')
+                                .select('*')
+                                .eq('is_active', true)
+                                .order('display_order', { ascending: true, nullsFirst: false })
+                                .order('id', { ascending: true });
+                                
+                            if (!consError && consData) {
+                                this.consultations = consData;
                             }
                         } catch (err) {
                             if (!err.message || !err.message.includes('Could not find the table')) {
@@ -1132,6 +1236,18 @@
                     let message = "✨ *NUEVO PEDIDO AL ORÁCULO - " + (this.settings.site_name || 'Tienda').toUpperCase() + "* ✨\n\nHola, deseo incorporar los siguientes elementos a mi camino:\n\n";
                     this.cart.forEach(item => { message += `▫️ ${item.quantity}x *${item.name}* - ${this.formatPrice(item.price * item.quantity)}\n`; });
                     message += `\n*INTERCAMBIO TOTAL: ${this.formatPrice(this.calculateTotal())}*\n\nQuedo a la espera de las instrucciones. ¡Gracias!`;
+                    window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, '_blank');
+                },
+
+                checkoutConsultation(cons) {
+                    if (!cons) return;
+                    const phoneNumber = this.settings.whatsapp; 
+                    let message = "✨ *SOLICITUD DE SESIÓN - " + (this.settings.site_name || 'Tienda').toUpperCase() + "* ✨\n\nHola, deseo coordinar el siguiente servicio:\n\n";
+                    message += `▫️ *${cons.name}*\n`;
+                    if (cons.price) {
+                        message += `Valor sugerido: ${this.formatPrice(cons.price)}\n`;
+                    }
+                    message += `\nQuedo a la espera de disponibilidad e instrucciones. ¡Gracias!`;
                     window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, '_blank');
                 }
             }))
