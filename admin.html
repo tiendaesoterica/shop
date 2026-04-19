@@ -222,7 +222,7 @@
     <!-- INTERFAZ PRINCIPAL DEL PANEL -->
     <div x-show="isAuthenticated" class="flex w-full h-screen overflow-hidden bg-base" x-cloak>
         
-        <aside class="fixed inset-y-0 left-0 z-[60] w-64 bg-surface border-r border-surfaceHighlight transform transition-transform duration-300 md:translate-x-0 md:static md:flex-shrink-0 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.6)]"
+        <aside class="fixed inset-y-0 left-0 z-[60] w-64 bg-surface border-r border-surfaceHighlight transform transition-transform duration-300 lg:translate-x-0 lg:static lg:flex-shrink-0 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.6)]"
                :class="{'translate-x-0': isSidebarOpen, '-translate-x-full': !isSidebarOpen}">
             
             <div class="h-16 md:h-20 flex items-center justify-between px-6 border-b border-surfaceHighlight bg-base/30">
@@ -239,7 +239,7 @@
                     </template>
                     <span class="text-sm font-heading font-bold text-textMain tracking-[0.2em] uppercase" x-show="!settingsForm.logo_url" x-text="(settingsForm.site_name || '') + ' Admin'"></span>
                 </a>
-                <button @click="isSidebarOpen = false" class="md:hidden text-textMuted hover:text-accent transition-colors p-1">
+                <button @click="isSidebarOpen = false" class="lg:hidden text-textMuted hover:text-accent transition-colors p-1">
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
             </div>
@@ -257,6 +257,13 @@
                    :class="currentView === 'products' ? 'bg-surfaceHighlight text-accent font-bold border border-accent/20 shadow-inner' : 'text-textMuted hover:bg-surfaceHighlight/50 hover:text-textMain font-medium'">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                     <span class="text-[11px] uppercase tracking-[0.2em] font-heading">Productos</span>
+                </a>
+
+                <a href="#" @click.prevent="currentView = 'consultations'; isSidebarOpen = false"
+                   class="flex items-center gap-3 px-4 py-3.5 rounded-lg transition-all duration-300"
+                   :class="currentView === 'consultations' ? 'bg-surfaceHighlight text-accent font-bold border border-accent/20 shadow-inner' : 'text-textMuted hover:bg-surfaceHighlight/50 hover:text-textMain font-medium'">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                    <span class="text-[11px] uppercase tracking-[0.2em] font-heading">Consultas</span>
                 </a>
 
                 <a href="#" @click.prevent="currentView = 'categories'; isSidebarOpen = false"
@@ -287,15 +294,15 @@
             </div>
         </aside>
 
-        <!-- Overlay móvil -->
-        <div x-show="isSidebarOpen" @click="isSidebarOpen = false" class="md:hidden fixed inset-0 bg-base/80 backdrop-blur-sm z-[50]" x-cloak></div>
+        <!-- Overlay móvil y tablet -->
+        <div x-show="isSidebarOpen" @click="isSidebarOpen = false" class="lg:hidden fixed inset-0 bg-base/80 backdrop-blur-sm z-[50]" x-cloak></div>
 
         <!-- Contenido Principal -->
         <main class="flex-1 flex flex-col h-screen overflow-hidden relative w-full">
             
             <header class="h-16 md:h-20 bg-surface/80 backdrop-blur-xl border-b border-surfaceHighlight flex items-center justify-between px-4 md:px-10 z-30 sticky top-0 shadow-sm">
                 <div class="flex items-center gap-3">
-                    <button @click="isSidebarOpen = true" aria-label="Abrir menú" class="md:hidden text-textMain hover:text-accent p-1.5 -ml-1.5 transition-colors focus:outline-none">
+                    <button @click="isSidebarOpen = true" aria-label="Abrir menú" class="lg:hidden text-textMain hover:text-accent p-1.5 -ml-1.5 transition-colors focus:outline-none">
                         <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16" /></svg>
                     </button>
                     <h2 class="text-lg md:text-xl font-heading font-bold text-textMain tracking-wide" x-text="viewTitles[currentView]"></h2>
@@ -324,8 +331,8 @@
                         </div>
                         <div class="bg-surface border border-surfaceHighlight p-6 rounded-2xl shadow-lg relative overflow-hidden group hover:border-accent/40 transition-colors">
                             <div class="absolute -right-4 -top-4 w-24 h-24 bg-warning/5 rounded-full blur-2xl group-hover:bg-warning/10 transition-colors"></div>
-                            <span class="text-[10px] font-heading font-bold uppercase tracking-[0.2em] text-warning mb-2 block">Productos Destacados</span>
-                            <span class="text-4xl font-heading font-bold text-warning" x-text="products.filter(p => p.isFeatured).length"></span>
+                            <span class="text-[10px] font-heading font-bold uppercase tracking-[0.2em] text-warning mb-2 block">Sesiones Activas</span>
+                            <span class="text-4xl font-heading font-bold text-warning" x-text="consultations.length"></span>
                         </div>
                     </div>
 
@@ -436,6 +443,81 @@
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                                     </button>
                                                     <button @click.stop="confirmDeleteProduct(product.id)" class="bg-danger/10 hover:bg-danger text-danger hover:text-white border border-danger/20 p-2 rounded-md transition-all" title="Eliminar">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VISTA: GESTIÓN DE CONSULTAS Y SESIONES -->
+                <div x-show="currentView === 'consultations'" x-transition.opacity x-cloak>
+                    <div class="flex justify-end mb-6 mt-2 md:mt-0">
+                        <button @click="openConsultationModal()" class="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            Nueva Consulta
+                        </button>
+                    </div>
+
+                    <div class="bg-surface border border-surfaceHighlight rounded-2xl shadow-lg overflow-hidden">
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-left border-collapse min-w-[800px]">
+                                <thead>
+                                    <tr class="border-b border-surfaceHighlight text-[10px] uppercase tracking-[0.2em] text-textMuted font-bold bg-base/50">
+                                        <th class="px-6 py-5 text-center w-16">Orden</th>
+                                        <th class="px-6 py-5">Servicio / Sesión</th>
+                                        <th class="px-6 py-5">Valor (Opcional)</th>
+                                        <th class="px-6 py-5 text-center">Botón CTA</th>
+                                        <th class="px-6 py-5 text-right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm divide-y divide-surfaceHighlight/50">
+                                    <template x-if="consultations.length === 0">
+                                        <tr><td colspan="5" class="p-16 text-center text-textMuted font-light">No hay consultas o sesiones registradas.</td></tr>
+                                    </template>
+                                    <template x-for="(cons, index) in consultations" :key="cons.id">
+                                        <tr class="hover:bg-surfaceHighlight/20 transition-colors group cursor-pointer" @click="openConsultationModal(cons)">
+                                            
+                                            <td class="px-4 py-4 text-center">
+                                                <div class="flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button @click.stop="moveConsultationOrder(index, -1)" x-show="index > 0" class="p-1 text-textMuted hover:text-accent hover:bg-surfaceHighlight/50 rounded transition-colors" title="Subir orden">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+                                                    </button>
+                                                    <button @click.stop="moveConsultationOrder(index, 1)" x-show="index < consultations.length - 1" class="p-1 text-textMuted hover:text-accent hover:bg-surfaceHighlight/50 rounded transition-colors" title="Bajar orden">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                                    </button>
+                                                </div>
+                                                <span class="text-xs text-textMuted/30 group-hover:hidden" x-text="index + 1"></span>
+                                            </td>
+
+                                            <td class="px-6 py-4">
+                                                <div class="flex items-center gap-4">
+                                                    <div class="relative w-10 h-10 rounded-md overflow-hidden border border-surfaceHighlight flex-shrink-0 bg-base">
+                                                        <img :src="cons.image || 'https://via.placeholder.com/40x40/1A112A/A78BFA?text=Img'" class="w-full h-full object-cover opacity-80 group-hover:opacity-100" onerror="this.onerror=null; this.src='https://via.placeholder.com/40x40/1A112A/A78BFA?text=Img';">
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-textMain font-bold text-sm group-hover:text-accent transition-colors" x-text="cons.name"></p>
+                                                        <p class="text-[11px] text-textMuted font-light truncate w-32 md:w-56 mt-1" x-text="cons.description"></p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 font-bold" :class="cons.price ? 'text-textMain' : 'text-textMuted font-light italic'" x-text="cons.price ? formatPrice(cons.price) : 'A convenir'"></td>
+                                            
+                                            <td class="px-6 py-4 text-center">
+                                                <span class="px-3 py-1 rounded bg-surfaceHighlight/50 border border-surfaceHighlight text-xs font-mono text-textMuted" x-text="cons.cta_text || 'Coordinar'"></span>
+                                            </td>
+
+                                            <td class="px-6 py-4 text-right">
+                                                <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button @click.stop="openConsultationModal(cons)" class="bg-surfaceHighlight/50 hover:bg-accent text-textMuted hover:text-darkLux p-2 rounded-md transition-all" title="Editar">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                                    </button>
+                                                    <button @click.stop="confirmDeleteConsultation(cons.id)" class="bg-danger/10 hover:bg-danger text-danger hover:text-white border border-danger/20 p-2 rounded-md transition-all" title="Eliminar">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                                     </button>
                                                 </div>
@@ -810,6 +892,32 @@
                             </div>
                         </div>
 
+                        <!-- NUEVA SECCIÓN: LLAMADO A LA ACCIÓN (CTA) -->
+                        <div class="bg-surface border border-surfaceHighlight rounded-2xl p-6 md:p-8 shadow-lg relative overflow-hidden mt-8">
+                            <h4 class="text-lg font-heading font-bold text-textMain mb-6 border-b border-surfaceHighlight/50 pb-4">Llamado a la Acción (Servicios)</h4>
+                            <p class="text-xs text-textMuted font-light mb-6">Personaliza el mensaje que invita a los usuarios a contactarte al final de la sección de servicios.</p>
+                            
+                            <div class="space-y-6 relative z-10">
+                                <div>
+                                    <label class="admin-label">Título del Mensaje</label>
+                                    <input type="text" x-model="settingsForm.cta_title" class="admin-input font-heading font-bold" placeholder="Ej: ¿Dudas sobre por dónde empezar?">
+                                </div>
+                                
+                                <div>
+                                    <label class="admin-label">Texto Descriptivo</label>
+                                    <textarea x-model="settingsForm.cta_description" rows="2" class="admin-input font-light resize-none" placeholder="Ej: Escríbenos directamente y te orientaremos..."></textarea>
+                                </div>
+
+                                <div>
+                                    <div class="flex justify-between items-baseline mb-2 ml-1">
+                                        <label class="admin-label !mb-0">Texto del Botón</label>
+                                        <span class="text-[9px] text-textMuted font-bold uppercase tracking-widest">(Sugerido: Máx 25 caracteres)</span>
+                                    </div>
+                                    <input type="text" x-model="settingsForm.cta_button_text" maxlength="30" class="admin-input font-medium" placeholder="Ej: Contactar al Oráculo">
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="flex justify-end pt-4">
                             <button type="submit" class="btn-primary w-full sm:w-auto flex items-center justify-center gap-3 px-10 py-4 shadow-xl" :disabled="isSavingSettings">
                                 <svg x-show="isSavingSettings" class="animate-spin -ml-1 h-5 w-5 text-darkLux" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -884,13 +992,158 @@
         </div>
     </div>
 
+    <!-- MODAL: ELIMINAR CONSULTA -->
+    <div x-show="isConsultationDeleteModalOpen" class="fixed inset-0 z-[100] overflow-y-auto" x-cloak>
+        <div x-show="isConsultationDeleteModalOpen" x-transition.opacity @click="isConsultationDeleteModalOpen = false" class="fixed inset-0 bg-base/95 backdrop-blur-md"></div>
+        <div class="flex items-center justify-center min-h-screen px-4 text-center sm:p-0">
+            <div x-show="isConsultationDeleteModalOpen"
+                 x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-8 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-8 sm:scale-95"
+                 class="relative bg-surface border border-danger/30 rounded-2xl text-left overflow-hidden shadow-[0_0_50px_rgba(225,29,72,0.15)] transform transition-all sm:my-8 sm:max-w-md w-full z-10">
+                
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-danger to-transparent opacity-50"></div>
+                
+                <div class="p-8 text-center">
+                    <div class="w-16 h-16 rounded-full bg-danger/10 border border-danger/20 flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-8 h-8 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    </div>
+                    
+                    <h3 class="text-xl font-heading font-bold text-textMain mb-2">¿Eliminar Consulta?</h3>
+                    <p class="text-sm text-textMuted font-light leading-relaxed mb-8">Esta acción borrará permanentemente esta sesión/consulta del archivo. ¿Deseas continuar?</p>
+                    
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button type="button" @click="isConsultationDeleteModalOpen = false" class="btn-cancel w-full">Cancelar</button>
+                        <button type="button" @click="executeDeleteConsultation()" class="btn-danger w-full flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            Sí, Eliminar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CREAR/EDITAR CONSULTA -->
+    <div x-show="isConsultationModalOpen" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
+        <div x-show="isConsultationModalOpen" x-transition.opacity @click="isConsultationModalOpen = false" class="fixed inset-0 bg-base/90 backdrop-blur-md"></div>
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+            <div x-show="isConsultationModalOpen"
+                 x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-8 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-8 sm:scale-95"
+                 class="relative bg-surface border border-surfaceHighlight rounded-2xl text-left overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] transform transition-all sm:my-8 sm:max-w-3xl w-full z-10">
+                
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-accent to-transparent opacity-50"></div>
+
+                <div class="px-8 py-6 flex justify-between items-center bg-base/50 border-b border-surfaceHighlight">
+                    <h3 class="text-xl font-heading font-bold text-textMain" x-text="editingConsultationId ? 'Editar Consulta / Sesión' : 'Nueva Consulta / Sesión'"></h3>
+                    <button type="button" @click="isConsultationModalOpen = false" class="text-textMuted hover:text-danger bg-surface p-2 rounded-lg transition-all"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                </div>
+
+                <form class="p-8">
+                    <div x-show="consultationModalError" class="bg-danger/10 border border-danger/20 text-danger text-sm px-4 py-3 rounded-lg mb-8 flex items-center gap-3" x-cloak>
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span x-text="consultationModalError" class="font-medium"></span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-6">
+                            <div>
+                                <label class="admin-label">Nombre del Servicio</label>
+                                <input type="text" x-model="consultationForm.name" class="admin-input font-medium" placeholder="Ej: Lectura de Vínculos 1hr">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="admin-label">Precio (Opcional)</label>
+                                    <div class="relative">
+                                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-accent text-sm font-semibold">$</span>
+                                        <input type="number" x-model.number="consultationForm.price" min="0" class="admin-input !pl-12" placeholder="A convenir">
+                                    </div>
+                                    <p class="text-[9px] text-textMuted mt-1 ml-1">Déjalo vacío para mostrar "A convenir".</p>
+                                </div>
+                                <div>
+                                    <label class="admin-label">Texto Botón (CTA)</label>
+                                    <input type="text" x-model="consultationForm.cta_text" maxlength="25" class="admin-input" placeholder="Ej: Coordinar sesión">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="admin-label">Imagen de Portada</label>
+                                <div class="w-full aspect-[4/3] rounded-lg border-2 border-dashed border-surfaceHighlight hover:border-accent overflow-hidden bg-base/50 flex flex-col items-center justify-center relative cursor-pointer group transition-colors" @click="document.getElementById('consImageUpload').click()">
+                                    
+                                    <template x-if="consImagePreview || consultationForm.image">
+                                        <div class="absolute inset-0 flex items-center justify-center bg-base z-10">
+                                            <img :src="consImagePreview || consultationForm.image" class="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500">
+                                            <button type="button" @click.stop="removeConsImage()" class="absolute top-2 right-2 bg-danger/90 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-danger shadow-md">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                            </button>
+                                        </div>
+                                    </template>
+
+                                    <div class="text-center" x-show="!consImagePreview && !consultationForm.image">
+                                        <svg class="w-8 h-8 text-textMuted group-hover:text-accent transition-colors mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        <span class="text-[10px] text-textMuted uppercase font-bold tracking-widest group-hover:text-accent transition-colors">Subir Imagen</span>
+                                    </div>
+                                </div>
+                                <input type="file" id="consImageUpload" accept="image/*" class="hidden" @change="handleConsImageSelection">
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div>
+                                <label class="admin-label">Descripción Breve</label>
+                                <textarea x-model="consultationForm.description" rows="2" class="admin-input resize-none font-light leading-relaxed" placeholder="Resumen para la tarjeta de presentación..."></textarea>
+                            </div>
+
+                            <div>
+                                <label class="admin-label">Detalles Completos del Servicio</label>
+                                <textarea x-model="consultationForm.full_description" rows="6" class="admin-input font-light leading-relaxed" placeholder="Explica cómo se lleva a cabo la sesión, duración, metodología, etc..."></textarea>
+                            </div>
+
+                            <div class="pt-4 border-t border-surfaceHighlight/50">
+                                <label class="flex items-center gap-4 cursor-pointer group p-4 rounded-xl border border-surfaceHighlight/50 hover:border-success/30 hover:bg-base transition-all">
+                                    <div class="relative">
+                                        <input type="checkbox" x-model="consultationForm.is_active" class="sr-only">
+                                        <div class="block w-12 h-7 bg-surface border border-surfaceHighlight rounded-full transition-colors shadow-inner" :class="consultationForm.is_active ? 'border-success/50 bg-success/20' : ''"></div>
+                                        <div class="dot absolute left-1 top-1 bg-textMuted w-5 h-5 rounded-full transition-transform" :class="consultationForm.is_active ? 'transform translate-x-5 bg-success shadow-[0_0_10px_rgba(16,185,129,0.8)]' : ''"></div>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-bold text-textMuted group-hover:text-success transition-colors" :class="consultationForm.is_active ? 'text-success' : ''">Servicio Activo</span>
+                                        <span class="text-[10px] text-textMuted/70 font-light mt-0.5">Permite a los usuarios visualizar y coordinar este servicio.</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-10 flex flex-col-reverse sm:flex-row justify-between items-center border-t border-surfaceHighlight pt-6 gap-4">
+                        <div class="w-full sm:w-auto">
+                            <button type="button" x-show="editingConsultationId" @click="confirmDeleteConsultation(editingConsultationId)" class="btn-danger w-full flex items-center justify-center gap-2" :disabled="isUploading">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                Eliminar
+                            </button>
+                        </div>
+                        
+                        <div class="flex flex-col sm:flex-row w-full sm:w-auto gap-3">
+                            <button type="button" @click="isConsultationModalOpen = false" class="btn-cancel w-full sm:w-auto" :disabled="isUploading">Cancelar</button>
+                            <button type="button" @click="saveConsultation" class="btn-primary w-full sm:w-auto flex items-center justify-center gap-2" :disabled="isUploading">
+                                <svg x-show="isUploading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-darkLux" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                <span x-text="isUploading ? 'Procesando...' : 'Guardar Consulta'"></span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div x-show="isProductModalOpen" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
         <div x-show="isProductModalOpen" x-transition.opacity @click="isProductModalOpen = false" class="fixed inset-0 bg-base/90 backdrop-blur-md"></div>
         <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
             <div x-show="isProductModalOpen"
                  x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-8 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
                  x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-8 sm:scale-95"
-                 class="relative bg-surface border border-surfaceHighlight rounded-2xl text-left overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] transform transition-all sm:my-8 sm:max-w-md w-full z-10">
+                 class="relative bg-surface border border-surfaceHighlight rounded-2xl text-left overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] transform transition-all sm:my-8 sm:max-w-3xl w-full z-10">
                 
                 <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-accent to-transparent opacity-50"></div>
 
@@ -1111,12 +1364,14 @@
                 viewTitles: {
                     'dashboard': 'Dashboard',
                     'products': 'Productos',
+                    'consultations': 'Consultas y Sesiones',
                     'categories': 'Categorías',
                     'settings': 'Configuración'
                 },
 
                 categories: [],
                 products: [],
+                consultations: [],
 
                 settingsForm: { 
                     id: 1, whatsapp: '', email: '', hero_title: '', hero_subtitle: '', footer_description: '', hero_images: [], 
@@ -1129,7 +1384,10 @@
                     color_accent: localStorage.getItem('nexus_color_accent') || '#D4AF37',
                     hero_opacity: localStorage.getItem('nexus_hero_opacity') !== null ? parseInt(localStorage.getItem('nexus_hero_opacity')) : 80,
                     services: JSON.parse(localStorage.getItem('nexus_services')) || [],
-                    service_features: JSON.parse(localStorage.getItem('nexus_service_features')) || []
+                    service_features: JSON.parse(localStorage.getItem('nexus_service_features')) || [],
+                    cta_title: localStorage.getItem('nexus_cta_title') || '',
+                    cta_description: localStorage.getItem('nexus_cta_description') || '',
+                    cta_button_text: localStorage.getItem('nexus_cta_button_text') || ''
                 },
                 
                 themePresets: {
@@ -1227,7 +1485,6 @@
                     this.$watch('settingsForm.color_base', () => { if(this.settingsForm.theme === 'custom') this.applyThemePreview() });
                     this.$watch('settingsForm.color_surface', () => { if(this.settingsForm.theme === 'custom') this.applyThemePreview() });
                     this.$watch('settingsForm.color_accent', () => { if(this.settingsForm.theme === 'custom') this.applyThemePreview() });
-                    this.$watch('settingsForm.hero_opacity', () => this.applyThemePreview());
 
                     if (supabaseClient) {
                         try {
@@ -1248,6 +1505,9 @@
                                 localStorage.setItem('nexus_hero_opacity', this.settingsForm.hero_opacity !== undefined ? this.settingsForm.hero_opacity : 80);
                                 localStorage.setItem('nexus_services', JSON.stringify(this.settingsForm.services));
                                 localStorage.setItem('nexus_service_features', JSON.stringify(this.settingsForm.service_features));
+                                localStorage.setItem('nexus_cta_title', this.settingsForm.cta_title || '');
+                                localStorage.setItem('nexus_cta_description', this.settingsForm.cta_description || '');
+                                localStorage.setItem('nexus_cta_button_text', this.settingsForm.cta_button_text || '');
 
                                 this.applyThemePreview();
                             }
@@ -1307,6 +1567,13 @@
                                 .order('id', { ascending: true });
                                 
                             if (prodData && prodData.length > 0) this.products = prodData;
+
+                            const { data: consData } = await supabaseClient.from('consultations')
+                                .select('*')
+                                .order('display_order', { ascending: true, nullsFirst: false })
+                                .order('id', { ascending: true });
+                                
+                            if (consData && consData.length > 0) this.consultations = consData;
                         } catch (err) { console.error(err); }
                     }
                 },
@@ -1337,7 +1604,7 @@
                     if (b > 255) b = 255; else if (b < 0) b = 0;
                     let g = (num & 0x0000FF) + amt;
                     if (g > 255) g = 255; else if (g < 0) g = 0;
-                    return (usePound?"#":"") + String("000000" + (g | (b << 8) | (r << 16)).slice(-6));
+                    return (usePound?"#":"") + String("000000" + (g | (b << 8) | (r << 16)).toString(16)).slice(-6);
                 },
 
                 applyThemePreview() {
@@ -1578,7 +1845,10 @@
                             site_motto: this.sanitizeInput(this.settingsForm.site_motto),
                             hero_title: this.sanitizeInput(this.settingsForm.hero_title),
                             hero_subtitle: this.sanitizeInput(this.settingsForm.hero_subtitle),
-                            footer_description: this.sanitizeInput(this.settingsForm.footer_description)
+                            footer_description: this.sanitizeInput(this.settingsForm.footer_description),
+                            cta_title: this.sanitizeInput(this.settingsForm.cta_title),
+                            cta_description: this.sanitizeInput(this.settingsForm.cta_description),
+                            cta_button_text: this.sanitizeInput(this.settingsForm.cta_button_text)
                         };
                         
                         let response = await supabaseClient.from('site_settings').update(settingsData).eq('id', 1).select();
@@ -1605,6 +1875,9 @@
                             localStorage.setItem('nexus_hero_opacity', this.settingsForm.hero_opacity !== undefined ? this.settingsForm.hero_opacity : 80);
                             localStorage.setItem('nexus_services', JSON.stringify(this.settingsForm.services));
                             localStorage.setItem('nexus_service_features', JSON.stringify(this.settingsForm.service_features));
+                            localStorage.setItem('nexus_cta_title', this.settingsForm.cta_title || '');
+                            localStorage.setItem('nexus_cta_description', this.settingsForm.cta_description || '');
+                            localStorage.setItem('nexus_cta_button_text', this.settingsForm.cta_button_text || '');
 
                             this.newHeroImageFiles = []; this.newHeroImagePreviews = [];
                             this.newLogoFile = null; this.newLogoPreview = null;
@@ -1811,6 +2084,153 @@
                     
                     this.isDeleteModalOpen = false;
                     this.productToDeleteId = null;
+                },
+
+                // GESTIÓN DE CONSULTAS Y SESIONES
+                isConsultationModalOpen: false,
+                editingConsultationId: null,
+                consultationForm: { name: '', price: null, display_order: 0, image: '', description: '', full_description: '', cta_text: 'Coordinar lectura', is_active: true },
+                consultationModalError: '',
+                isConsultationDeleteModalOpen: false,
+                consultationToDeleteId: null,
+                consImagePreview: null,
+                consImageFile: null,
+
+                openConsultationModal(cons = null) {
+                    this.consultationModalError = '';
+                    this.removeConsImage();
+                    
+                    if (cons) {
+                        this.editingConsultationId = cons.id; 
+                        this.consultationForm = { ...cons };
+                    } else {
+                        this.editingConsultationId = null; 
+                        this.consultationForm = { name: '', price: null, display_order: 0, image: '', description: '', full_description: '', cta_text: 'Coordinar', is_active: true };
+                    }
+                    this.isConsultationModalOpen = true;
+                },
+
+                handleConsImageSelection(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    this.consImageFile = file;
+                    if (this.consImagePreview) URL.revokeObjectURL(this.consImagePreview);
+                    this.consImagePreview = URL.createObjectURL(file);
+                    event.target.value = '';
+                },
+
+                removeConsImage() {
+                    if (this.consImagePreview) URL.revokeObjectURL(this.consImagePreview);
+                    this.consImagePreview = null;
+                    this.consImageFile = null;
+                },
+
+                async saveConsultation() {
+                    this.consultationModalError = '';
+                    if (!this.consultationForm.name) { this.consultationModalError = "Falta completar el nombre de la consulta."; return; }
+                    if (!this.consultationForm.description) { this.consultationModalError = "Falta la descripción breve."; return; }
+                    if (!this.consultationForm.full_description) { this.consultationModalError = "Falta la descripción completa."; return; }
+
+                    this.isUploading = true;
+
+                    try {
+                        let imageUrl = this.consultationForm.image || '';
+                        
+                        if (this.consImageFile) {
+                            const compressedFile = await this.compressImage(this.consImageFile, false);
+                            imageUrl = await this.uploadImageToSupabase(compressedFile);
+                        }
+
+                        const consData = { 
+                            ...this.consultationForm, 
+                            image: imageUrl, 
+                            name: this.sanitizeInput(this.consultationForm.name),
+                            description: this.sanitizeInput(this.consultationForm.description),
+                            full_description: this.sanitizeInput(this.consultationForm.full_description),
+                            cta_text: this.sanitizeInput(this.consultationForm.cta_text) || 'Coordinar'
+                        };
+                        
+                        if (consData.price === '' || consData.price < 0) consData.price = null;
+                        
+                        if (!this.editingConsultationId) {
+                            consData.display_order = this.consultations.length;
+                        }
+                        
+                        let response;
+                        if (!this.editingConsultationId) {
+                            delete consData.id; 
+                            response = await supabaseClient.from('consultations').insert([consData]).select();
+                        } else {
+                            response = await supabaseClient.from('consultations').update(consData).eq('id', this.editingConsultationId).select();
+                        }
+                        
+                        const { data, error } = response;
+                        if (error) {
+                            if (error.message.includes('relation "public.consultations" does not exist')) {
+                                throw new Error('⚠️ Debes ejecutar el comando SQL en Supabase para crear la tabla "consultations" primero.');
+                            }
+                            throw new Error(error.message);
+                        }
+                        
+                        if (data && data.length > 0) {
+                            if (this.editingConsultationId) {
+                                const index = this.consultations.findIndex(c => c.id === this.editingConsultationId); 
+                                if(index !== -1) this.consultations[index] = data[0];
+                            } else {
+                                this.consultations.push(data[0]);
+                            }
+                            this.consultations.sort((a,b) => (a.display_order || 0) - (b.display_order || 0));
+                            
+                            this.isConsultationModalOpen = false;
+                        } else { throw new Error("Acción bloqueada por permisos."); }
+                    } catch (err) { 
+                        this.consultationModalError = "Error: " + err.message; 
+                    } finally {
+                        this.isUploading = false;
+                    }
+                },
+
+                async moveConsultationOrder(index, direction) {
+                    if (index + direction < 0 || index + direction >= this.consultations.length) return;
+                    
+                    const temp = this.consultations[index];
+                    this.consultations[index] = this.consultations[index + direction];
+                    this.consultations[index + direction] = temp;
+                    
+                    this.consultations.forEach((c, i) => {
+                        c.display_order = i;
+                        if (supabaseClient) {
+                            supabaseClient.from('consultations').update({ display_order: i }).eq('id', c.id).then();
+                        }
+                    });
+                },
+
+                confirmDeleteConsultation(id) {
+                    this.consultationToDeleteId = id;
+                    this.isConsultationDeleteModalOpen = true;
+                },
+
+                async executeDeleteConsultation() {
+                    if (!this.consultationToDeleteId) return;
+                    const id = this.consultationToDeleteId;
+
+                    if (this.editingConsultationId === id) {
+                        this.isConsultationModalOpen = false;
+                    }
+
+                    if (supabaseClient) {
+                        const { error } = await supabaseClient.from('consultations').delete().eq('id', id);
+                        if (error) { 
+                            this.notify('Error al eliminar: ' + error.message, true);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                            this.isConsultationDeleteModalOpen = false;
+                            return; 
+                        }
+                    }
+                    this.consultations = this.consultations.filter(c => c.id !== id);
+                    
+                    this.isConsultationDeleteModalOpen = false;
+                    this.consultationToDeleteId = null;
                 },
 
                 isCategoryModalOpen: false, editingCategoryId: null, categoryForm: { id: '', name: '' },
