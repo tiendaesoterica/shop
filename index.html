@@ -270,7 +270,20 @@
                             <path x-show="isMobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" x-cloak/>
                         </svg>
                     </button>
+                    <!-- Botón de Identidad (Login / Perfil) -->
+                    <button @click="isAuthModalOpen = true" aria-label="Portal de Identidad" class="relative p-2.5 rounded-full transition-all duration-300 hover:scale-105 border border-white/10 hover:border-accent hover:text-accent backdrop-blur-md" :class="(scrolled || isMobileMenuOpen) ? 'bg-surface/50 text-textMuted' : 'bg-surfaceHighlight/30 text-textMain'">
+    
+                    <!-- Ícono de Usuario (No logueado) -->
+                    <svg x-show="!authUser" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+    </svg>
 
+                    <!-- Avatar / Inicial (Logueado) -->
+                    <div x-show="authUser" class="w-5 h-5 flex items-center justify-center bg-accent text-darkLux rounded-full text-[10px] font-bold" x-cloak>
+                    <span x-text="authUser?.email?.charAt(0).toUpperCase()"></span>
+            </div>
+                    </button>
+                    
                     <button @click="isCartOpen = true" aria-label="Abrir carrito" class="relative p-2.5 rounded-full transition-all duration-300 hover:scale-105 border border-white/10 hover:border-accent hover:text-accent backdrop-blur-md" :class="(scrolled || isMobileMenuOpen) ? 'bg-surface/50 text-textMuted' : 'bg-surfaceHighlight/30 text-textMain'">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -1132,6 +1145,67 @@
         <img :src="fullscreenImage" @click.away="fullscreenImage = null" class="max-w-full max-h-full object-contain rounded-md shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/10" />
     </div>
 
+<!-- Modal de Autenticación (Solo Email - Glassmorphism) -->
+<div x-show="isAuthModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center p-4" x-cloak>
+    <!-- Fondo oscuro difuminado -->
+    <div x-show="isAuthModalOpen" x-transition.opacity @click="isAuthModalOpen = false" class="absolute inset-0 bg-darkLux/80 backdrop-blur-md"></div>
+    
+    <!-- Contenedor del Modal -->
+    <div x-show="isAuthModalOpen"
+         x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-8 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+         x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 translate-y-8 scale-95"
+         class="relative bg-surface/80 backdrop-blur-2xl rounded-2xl shadow-[0_0_50px_rgba(var(--color-accent),0.2)] border border-white/10 w-full max-w-md z-10 overflow-hidden">
+
+        <button @click="isAuthModalOpen = false" aria-label="Cerrar" class="absolute top-4 right-4 text-textMuted hover:text-white z-50 transition-colors bg-surface/50 p-2 rounded-full border border-white/10 backdrop-blur-sm">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+
+        <!-- Vista: Usuario Logueado -->
+        <div x-show="authUser" class="p-8 text-center flex flex-col items-center">
+            <div class="w-16 h-16 rounded-full bg-accent/20 border border-accent flex items-center justify-center text-accent text-2xl font-bold mb-4 shadow-[0_0_15px_rgba(var(--color-accent),0.3)]">
+                <span x-text="authUser?.email?.charAt(0).toUpperCase()"></span>
+            </div>
+            <h3 class="text-xl font-heading font-bold text-white mb-2">Sesión Iniciada</h3>
+            <p class="text-sm text-textMuted font-light mb-8 break-all" x-text="authUser?.email"></p>
+            
+            <button @click="logout()" class="w-full bg-danger/20 hover:bg-danger text-danger hover:text-white backdrop-blur-sm border border-danger/50 text-[10px] uppercase tracking-[0.2em] py-3.5 rounded-lg transition-all duration-300 font-bold shadow-sm">
+                Cerrar Sesión
+            </button>
+        </div>
+
+        <!-- Vista: Formulario de Login / Registro -->
+        <div x-show="!authUser" class="p-8">
+            <div class="text-center mb-8">
+                <span class="text-accent text-[10px] uppercase tracking-[0.3em] font-bold mb-2 block">✧ Identidad Sagrada ✧</span>
+                <h3 class="text-2xl font-heading font-bold text-white" x-text="authMode === 'login' ? 'Cruzar el Portal' : 'Unirse al Sendero'"></h3>
+                <p class="text-xs text-textMuted mt-2 font-light" x-text="authMode === 'login' ? 'Ingresa tus credenciales para acceder.' : 'Registra tu grimorio para iniciar.'"></p>
+            </div>
+
+            <form @submit.prevent="handleEmailAuth" class="space-y-4">
+                <div>
+                    <input type="email" x-model="authForm.email" placeholder="Correo Electrónico" required class="store-input" :disabled="authLoading">
+                </div>
+                <div>
+                    <input type="password" x-model="authForm.password" placeholder="Contraseña secreta" required minlength="6" class="store-input" :disabled="authLoading">
+                </div>
+
+                <div x-show="authError" class="text-danger text-xs font-medium text-center bg-danger/10 py-2 rounded-md border border-danger/20" x-text="authError" x-cloak></div>
+
+                <button type="submit" class="btn-primary w-full !py-3.5 mt-2 flex items-center justify-center gap-2" :disabled="authLoading">
+                    <svg x-show="authLoading" class="animate-spin h-4 w-4 text-darkLux" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span x-text="authMode === 'login' ? 'Ingresar' : 'Revelar Identidad'"></span>
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <button type="button" @click="authMode = authMode === 'login' ? 'register' : 'login'; authError = '';" class="text-textMuted hover:text-accent text-xs font-medium transition-colors">
+                    <span x-text="authMode === 'login' ? '¿No posees una identidad? Regístrate.' : '¿Ya tienes un grimorio? Ingresa.'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+    
     <!-- Lógica de Alpine.js -->
     <script>
         const SUPABASE_URL = 'https://abcqnfxyaetxkzzmwkzy.supabase.co'; 
@@ -1221,6 +1295,68 @@
                 products: [], 
                 cart: [],
                 books: [],
+
+                // --- ESTADO DE IDENTIDAD ---
+authUser: null,
+isAuthModalOpen: false,
+authMode: 'login', // 'login' o 'register'
+authForm: { email: '', password: '' },
+authLoading: false,
+authError: '',
+
+// --- MÉTODOS DE IDENTIDAD ---
+async initAuth() {
+    if (!supabaseClient) return;
+    
+    // Recuperar sesión activa al cargar
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    this.authUser = session?.user || null;
+
+    // Escuchar cambios de estado (login, logout)
+    supabaseClient.auth.onAuthStateChange((_event, session) => {
+        this.authUser = session?.user || null;
+    });
+},
+
+async handleEmailAuth() {
+    this.authLoading = true;
+    this.authError = '';
+    let error;
+
+    if (this.authMode === 'register') {
+        const { error: signUpError } = await supabaseClient.auth.signUp({
+            email: this.authForm.email,
+            password: this.authForm.password,
+        });
+        error = signUpError;
+    } else {
+        const { error: signInError } = await supabaseClient.auth.signInWithPassword({
+            email: this.authForm.email,
+            password: this.authForm.password,
+        });
+        error = signInError;
+    }
+
+    this.authLoading = false;
+    
+    if (error) {
+        // Traducción de errores comunes al español místico
+        if (error.message.includes('Invalid login')) this.authError = 'Credenciales inválidas.';
+        else if (error.message.includes('User already registered')) this.authError = 'Este grimorio (email) ya pertenece al santuario.';
+        else this.authError = error.message;
+    } else {
+        this.isAuthModalOpen = false;
+        this.authForm.password = ''; // Limpiamos por seguridad
+        if (this.authMode === 'register') {
+            alert('✧ Portal abierto. Por favor, revisa tu correo electrónico para confirmar tu identidad.');
+        }
+    }
+},
+
+async logout() {
+    await supabaseClient.auth.signOut();
+    this.isAuthModalOpen = false;
+}
 
                 async init() {
                     if (!this.settings.services) this.settings.services = [];
@@ -1460,5 +1596,6 @@
     
     <!-- Librería fundamental de Alpine.js -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    
 </body>
 </html>
