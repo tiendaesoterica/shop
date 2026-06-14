@@ -1359,6 +1359,7 @@ async logout() {
 },
 
                 async init() {
+                    this.initAuth(); // <-- ESTO ACTIVA LA SESIÓN AL ENTRAR A LA WEB
                     if (!this.settings.services) this.settings.services = [];
                     if (!this.settings.service_features) this.settings.service_features = [];
 
