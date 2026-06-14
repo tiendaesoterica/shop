@@ -270,19 +270,19 @@
                             <path x-show="isMobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" x-cloak/>
                         </svg>
                     </button>
-                    <!-- Botón de Identidad (Login / Perfil) -->
-                    <button @click="isAuthModalOpen = true" aria-label="Portal de Identidad" class="relative p-2.5 rounded-full transition-all duration-300 hover:scale-105 border border-white/10 hover:border-accent hover:text-accent backdrop-blur-md" :class="(scrolled || isMobileMenuOpen) ? 'bg-surface/50 text-textMuted' : 'bg-surfaceHighlight/30 text-textMain'">
-    
-                    <!-- Ícono de Usuario (No logueado) -->
-                    <svg x-show="!authUser" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-    </svg>
+                  <!-- Botón de Identidad (Login / Perfil) -->
+                    <button @click="openAuthModal()" aria-label="Portal de Identidad" class="relative p-2.5 rounded-full transition-all duration-300 hover:scale-105 border border-white/10 hover:border-accent hover:text-accent backdrop-blur-md" :class="(scrolled || isMobileMenuOpen) ? 'bg-surface/50 text-textMuted' : 'bg-surfaceHighlight/30 text-textMain'">
 
-                    <!-- Avatar / Inicial (Logueado) -->
-                    <div x-show="authUser" class="w-5 h-5 flex items-center justify-center bg-accent text-darkLux rounded-full text-[10px] font-bold" x-cloak>
-                    <span x-text="authUser?.email?.charAt(0).toUpperCase()"></span>
-            </div>
-                    </button>
+                   <!-- Ícono de Usuario (No logueado) -->
+                        <svg x-show="!authUser" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+
+    <!-- Avatar / Inicial (Logueado) -->
+    <div x-show="authUser" class="w-5 h-5 flex items-center justify-center bg-accent text-darkLux rounded-full text-[10px] font-bold" x-cloak>
+        <span x-text="authUser?.email?.charAt(0).toUpperCase()"></span>
+    </div>
+</button>
                     
                     <button @click="isCartOpen = true" aria-label="Abrir carrito" class="relative p-2.5 rounded-full transition-all duration-300 hover:scale-105 border border-white/10 hover:border-accent hover:text-accent backdrop-blur-md" :class="(scrolled || isMobileMenuOpen) ? 'bg-surface/50 text-textMuted' : 'bg-surfaceHighlight/30 text-textMain'">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1304,6 +1304,14 @@ authForm: { email: '', password: '' },
 authLoading: false,
 authError: '',
 
+// Nueva función para abrir y resetear el modal siempre limpio
+openAuthModal() {
+    this.authMode = 'login';
+    this.authError = '';
+    this.authForm.password = '';
+    this.isAuthModalOpen = true;
+},
+
 // --- MÉTODOS DE IDENTIDAD ---
 async initAuth() {
     if (!supabaseClient) return;
@@ -1321,20 +1329,23 @@ async initAuth() {
 async handleEmailAuth() {
     this.authLoading = true;
     this.authError = '';
-    let error;
+    let error = null;
+    let authData = null;
 
     if (this.authMode === 'register') {
-        const { error: signUpError } = await supabaseClient.auth.signUp({
+        const { data, error: signUpError } = await supabaseClient.auth.signUp({
             email: this.authForm.email,
             password: this.authForm.password,
         });
         error = signUpError;
+        authData = data;
     } else {
-        const { error: signInError } = await supabaseClient.auth.signInWithPassword({
+        const { data, error: signInError } = await supabaseClient.auth.signInWithPassword({
             email: this.authForm.email,
             password: this.authForm.password,
         });
         error = signInError;
+        authData = data;
     }
 
     this.authLoading = false;
@@ -1342,12 +1353,22 @@ async handleEmailAuth() {
     if (error) {
         // Traducción de errores comunes al español místico
         if (error.message.includes('Invalid login')) this.authError = 'Credenciales inválidas.';
-        else if (error.message.includes('User already registered')) this.authError = 'Este grimorio (email) ya pertenece al santuario.';
+        else if (error.message.includes('already registered')) this.authError = 'Este grimorio ya pertenece al santuario.';
+        else if (error.message.includes('Email not confirmed')) this.authError = 'Debes confirmar tu correo antes de entrar.';
         else this.authError = error.message;
     } else {
+        // Forzamos la actualización visual manual para que Alpine reaccione inmediatamente
+        if (authData?.session?.user) {
+            this.authUser = authData.session.user;
+        } else if (authData?.user) {
+            this.authUser = authData.user;
+        }
+        
         this.isAuthModalOpen = false;
-        this.authForm.password = ''; // Limpiamos por seguridad
-        if (this.authMode === 'register') {
+        this.authForm.password = ''; // Limpiamos la contraseña por seguridad
+        
+        // Si tiene confirmación de email activada en Supabase
+        if (this.authMode === 'register' && !authData?.session) {
             alert('✧ Portal abierto. Por favor, revisa tu correo electrónico para confirmar tu identidad.');
         }
     }
@@ -1355,6 +1376,7 @@ async handleEmailAuth() {
 
 async logout() {
     await supabaseClient.auth.signOut();
+    this.authUser = null; // Fuerza la limpieza visual inmediata
     this.isAuthModalOpen = false;
 },
 
