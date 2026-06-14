@@ -1356,7 +1356,7 @@ async handleEmailAuth() {
 async logout() {
     await supabaseClient.auth.signOut();
     this.isAuthModalOpen = false;
-}
+},
 
                 async init() {
                     if (!this.settings.services) this.settings.services = [];
