@@ -1989,27 +1989,46 @@
                     setTimeout(() => { this.globalMessage = ''; }, 4000);
                 },
                 async verifyAccess() {
-                                    try {
-                                        // 1. Identificamos exactamente quién está intentando entrar
-                                        const { data: { user } } = await supabaseClient.auth.getUser();
-                                        if (!user) return false;
-                
-                                        // 2. Buscamos únicamente el rol de ESE usuario específico
-                                        const { data, error } = await supabaseClient
-                                            .from('user_roles')
-                                            .select('role')
-                                            .eq('user_id', user.id)
-                                            .single();
-                                        
-                                        if (error || !data) return false;
-                                        
-                                        this.userRole = data.role;
-                                        
-                                        const allowedRoles = ['editor', 'admin', 'superadmin'];
-                                        return allowedRoles.includes(data.role);
-                                    } catch (e) { return false; }
-                                },
+                    try {
+                        // 1. Verificamos la identidad en la bóveda
+                        const { data: authData, error: authError } = await supabaseClient.auth.getUser();
+                        if (authError || !authData || !authData.user) {
+                            alert("FALLA A: Supabase no reconoce tu inicio de sesión.");
+                            return false;
+                        }
+                        
+                        const user = authData.user;
 
+                        // 2. Buscamos tu rol específico en la tabla pública
+                        const { data, error } = await supabaseClient
+                            .from('user_roles')
+                            .select('role')
+                            .eq('user_id', user.id);
+                        
+                        if (error) {
+                            alert("FALLA B: El escudo de seguridad (RLS) bloqueó la lectura. Error: " + error.message);
+                            return false;
+                        }
+
+                        if (!data || data.length === 0) {
+                            alert("FALLA C: Tu usuario inició sesión, pero tu ID (" + user.id + ") no existe en la tabla user_roles.");
+                            return false;
+                        }
+
+                        this.userRole = data[0].role;
+                        
+                        const allowedRoles = ['editor', 'admin', 'superadmin'];
+                        if (!allowedRoles.includes(this.userRole)) {
+                            alert("FALLA D: Tienes rol de '" + this.userRole + "'. Necesitas ser admin o superadmin para entrar.");
+                            return false;
+                        }
+
+                        return true; // Acceso concedido
+                    } catch (e) { 
+                        alert("FALLA E: Error inesperado en el código: " + e.message);
+                        return false; 
+                    }
+                },
                 async init() {
                     if (!this.settingsForm.services) this.settingsForm.services = [];
                     if (!this.settingsForm.service_features) this.settingsForm.service_features = [];
