@@ -1988,18 +1988,27 @@
                     this.isGlobalError = isError;
                     setTimeout(() => { this.globalMessage = ''; }, 4000);
                 },
-
                 async verifyAccess() {
-                    try {
-                        const { data, error } = await supabaseClient.from('user_roles').select('role').single();
-                        if (error || !data) return false;
-                        
-                        this.userRole = data.role;
-                        
-                        const allowedRoles = ['editor', 'admin', 'superadmin'];
-                        return allowedRoles.includes(data.role);
-                    } catch (e) { return false; }
-                },
+                                    try {
+                                        // 1. Identificamos exactamente quién está intentando entrar
+                                        const { data: { user } } = await supabaseClient.auth.getUser();
+                                        if (!user) return false;
+                
+                                        // 2. Buscamos únicamente el rol de ESE usuario específico
+                                        const { data, error } = await supabaseClient
+                                            .from('user_roles')
+                                            .select('role')
+                                            .eq('user_id', user.id)
+                                            .single();
+                                        
+                                        if (error || !data) return false;
+                                        
+                                        this.userRole = data.role;
+                                        
+                                        const allowedRoles = ['editor', 'admin', 'superadmin'];
+                                        return allowedRoles.includes(data.role);
+                                    } catch (e) { return false; }
+                                },
 
                 async init() {
                     if (!this.settingsForm.services) this.settingsForm.services = [];
