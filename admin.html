@@ -816,9 +816,9 @@
                                       }" x-text="usr.role"></span>
                             </td>
                             <td class="px-6 py-4 text-right">
-                                <button @click="openUserModal(usr)" class="bg-surfaceHighlight/40 hover:bg-accent border border-transparent hover:border-accent text-white hover:text-darkLux p-2 rounded-md transition-all opacity-0 group-hover:opacity-100" title="Editar Rol">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                </button>
+                             <button x-show="usr.role !== 'superadmin' || userRole === 'superadmin'" @click="openUserModal(usr)" class="bg-surfaceHighlight/40 hover:bg-accent border border-transparent hover:border-accent text-white hover:text-darkLux p-2 rounded-md transition-all opacity-0 group-hover:opacity-100" title="Editar Rol">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        </button>
                             </td>
                         </tr>
                     </template>
@@ -3211,7 +3211,12 @@
                 userForm: { user_id: '', email: '', role: '' },
                 userModalError: '',
 
-                openUserModal(usr) {
+               openUserModal(usr) {
+                    // Bloqueo estricto: Si el usuario es superadmin y tú no lo eres, rechazar.
+                    if (usr.role === 'superadmin' && this.userRole !== 'superadmin') {
+                        this.notify("Acceso denegado: No posees jerarquía para alterar a un Superadmin.", true);
+                        return;
+                    }
                     this.userModalError = '';
                     this.userForm = { ...usr };
                     this.isUserModalOpen = true;
