@@ -803,7 +803,10 @@
                                     <div class="w-8 h-8 rounded-full bg-accent/20 border border-accent/50 flex items-center justify-center text-accent font-bold shadow-inner">
                                         <span x-text="usr.email ? usr.email.charAt(0).toUpperCase() : '?'"></span>
                                     </div>
-                                    <p class="text-white font-medium drop-shadow-sm" x-text="usr.email || 'Email no registrado'"></p>
+                                    <div class="flex items-center gap-2">
+                                        <p class="text-white font-medium drop-shadow-sm" x-text="usr.email || 'Email no registrado'"></p>
+                                        <span x-show="usr.user_id === currentUserId" class="text-[8px] uppercase tracking-widest font-bold text-accent bg-accent/10 border border-accent/30 px-2 py-0.5 rounded-full">Tú</span>
+                                    </div>
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-center">
@@ -816,9 +819,10 @@
                                       }" x-text="usr.role"></span>
                             </td>
                             <td class="px-6 py-4 text-right">
-                             <button x-show="usr.role !== 'superadmin' || userRole === 'superadmin'" @click="openUserModal(usr)" class="bg-surfaceHighlight/40 hover:bg-accent border border-transparent hover:border-accent text-white hover:text-darkLux p-2 rounded-md transition-all opacity-0 group-hover:opacity-100" title="Editar Rol">
+                             <button x-show="canManageUser(usr)" @click="openUserModal(usr)" class="bg-surfaceHighlight/40 hover:bg-accent border border-transparent hover:border-accent text-white hover:text-darkLux p-2 rounded-md transition-all opacity-0 group-hover:opacity-100" title="Editar Rol">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                         </button>
+                             <span x-show="!canManageUser(usr)" class="text-white/15 text-[10px] uppercase tracking-widest font-bold" title="No tienes permisos para modificar este usuario">—</span>
                             </td>
                         </tr>
                     </template>
@@ -860,10 +864,11 @@
                         <select x-model="userForm.role" class="admin-input cursor-pointer font-bold uppercase tracking-widest text-xs" :class="{ 'text-danger': userForm.role === 'superadmin', 'text-warning': userForm.role === 'admin', 'text-success': userForm.role === 'editor', 'text-white': userForm.role === 'user' }">
                             <option value="user" class="bg-base text-white">USER (Solo cliente en tienda)</option>
                             <option value="editor" class="bg-base text-success">EDITOR (Productos y Sesiones)</option>
-                            <option value="admin" class="bg-base text-warning">ADMIN (Acceso Total)</option>
+                            <option value="admin" class="bg-base text-warning" x-show="userRole === 'superadmin'">ADMIN (Acceso Total)</option>
                             <option value="superadmin" class="bg-base text-danger" x-show="userRole === 'superadmin'">SUPERADMIN (Privilegiado)</option>
                         </select>
-                        <p class="text-[9px] text-gray-400 mt-2 ml-1">Cambiar el rol actualizará inmediatamente los permisos.</p>
+                        <p class="text-[9px] text-gray-400 mt-2 ml-1" x-show="userRole !== 'superadmin'">Como administrador, solo puedes asignar los roles USER o EDITOR.</p>
+                        <p class="text-[9px] text-gray-400 mt-2 ml-1" x-show="userRole === 'superadmin'">Cambiar el rol actualizará inmediatamente los permisos.</p>
                     </div>
                 </div>
 
@@ -1982,6 +1987,7 @@
                 categoryToDeleteId: null,
                 
                 userRole: '',
+                currentUserId: '',
 
                 notify(msg, isError = false) {
                     this.globalMessage = msg;
@@ -1998,6 +2004,7 @@
                         }
                         
                         const user = authData.user;
+                        this.currentUserId = user.id;
 
                         // 2. Buscamos tu rol específico en la tabla pública
                         const { data, error } = await supabaseClient
@@ -3211,27 +3218,69 @@
                 userForm: { user_id: '', email: '', role: '' },
                 userModalError: '',
 
+                // Determina si el usuario actual (this.userRole) puede gestionar (ver botón / abrir modal) sobre "usr".
+                // Reglas de jerarquía:
+                //  - Nadie puede gestionarse a sí mismo (ni admin ni superadmin pueden tocar su propio rol).
+                //  - Superadmin: puede gestionar a admin, editor y user (pero no existen otros superadmin).
+                //  - Admin: solo puede gestionar a editor y user. No puede tocar a otro admin ni al superadmin.
+                //  - Editor/User: no gestionan usuarios (la vista ya está oculta para ellos).
+                canManageUser(usr) {
+                    if (usr.user_id === this.currentUserId) return false; // nadie se modifica a sí mismo
+                    if (this.userRole === 'superadmin') {
+                        return ['admin', 'editor', 'user'].includes(usr.role);
+                    }
+                    if (this.userRole === 'admin') {
+                        return ['editor', 'user'].includes(usr.role);
+                    }
+                    return false;
+                },
+
+                // Determina si el usuario actual puede ASIGNAR un rol determinado al editar a un tercero.
+                canAssignRole(role) {
+                    if (this.userRole === 'superadmin') return true;
+                    if (this.userRole === 'admin') return ['editor', 'user'].includes(role);
+                    return false;
+                },
+
                openUserModal(usr) {
-                    // Bloqueo estricto: Si el usuario es superadmin y tú no lo eres, rechazar.
-                    if (usr.role === 'superadmin' && this.userRole !== 'superadmin') {
-                        this.notify("Acceso denegado: No posees jerarquía para alterar a un Superadmin.", true);
+                    this.userModalError = '';
+
+                    // Nadie puede abrir el modal para modificarse a sí mismo.
+                    if (usr.user_id === this.currentUserId) {
+                        this.notify("No puedes modificar tu propio rol.", true);
                         return;
                     }
-                    this.userModalError = '';
+
+                    // Bloqueo jerárquico: solo superadmin gestiona admins; admin solo gestiona editor/user.
+                    if (!this.canManageUser(usr)) {
+                        this.notify("Acceso denegado: no posees la jerarquía necesaria para alterar a este usuario.", true);
+                        return;
+                    }
+
                     this.userForm = { ...usr };
                     this.isUserModalOpen = true;
                 },
 
                 async saveUserRole() {
                     this.userModalError = '';
-                    this.isUploading = true;
 
-                    // Bloqueo de seguridad visual
-                    if (this.userForm.role === 'superadmin' && this.userRole !== 'superadmin') {
-                        this.userModalError = "Solo un superadmin puede otorgar el rol de superadmin.";
-                        this.isUploading = false;
+                    // Re-validación defensiva por si el estado cambió mientras el modal estaba abierto.
+                    if (this.userForm.user_id === this.currentUserId) {
+                        this.userModalError = "No puedes modificar tu propio rol.";
                         return;
                     }
+                    if (!this.canManageUser(this.userForm)) {
+                        this.userModalError = "No tienes la jerarquía necesaria para modificar a este usuario.";
+                        return;
+                    }
+                    if (!this.canAssignRole(this.userForm.role)) {
+                        this.userModalError = this.userRole === 'admin'
+                            ? "Como administrador, solo puedes asignar los roles EDITOR o USER."
+                            : "No tienes permisos para asignar este rol.";
+                        return;
+                    }
+
+                    this.isUploading = true;
 
                     try {
                         const { data, error } = await supabaseClient
