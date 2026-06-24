@@ -2240,8 +2240,8 @@
 
                 toggleSectionVisibility(index) {
                     const section = this.sectionsBuilder[index];
-                    if (this.sectionsMeta[section.key].locked) return; // secciones fijas (ej. Hero) no se pueden ocultar
-                    section.visible = !section.visible;
+                    if (this.sectionsMeta[section.key].locked) return;
+                    this.sectionsBuilder[index] = { ...section, visible: !section.visible };
                 },
 
                 onSectionDragStart(index) {
