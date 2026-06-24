@@ -926,42 +926,46 @@
                                     <!-- Tabs dinámicas: una por cada sección del constructor -->
                                     <div class="space-y-1.5">
                                         <template x-for="(section, index) in sectionsBuilder" :key="section.key">
-                                            <div
-                                                :draggable="!sectionsMeta[section.key].locked"
-                                                @dragstart="onSectionDragStart(index)"
-                                                @dragenter.prevent="onSectionDragEnter(index)"
-                                                @dragover.prevent
-                                                @drop.prevent="onSectionDrop(index)"
-                                                @dragend="onSectionDragEnd()"
-                                                @click="activeSettingsTab = section.key"
-                                                class="w-full flex items-center gap-2.5 p-3 rounded-xl border transition-all duration-200"
+                                            <div class="w-full flex items-center gap-0 rounded-xl border transition-all duration-200"
                                                 :class="[
                                                     activeSettingsTab === section.key ? 'bg-accent/10 border-accent/40 shadow-[0_0_15px_rgba(var(--color-accent),0.15)]' : (section.visible ? 'bg-base/20 border-white/5 hover:border-white/15 hover:bg-base/30' : 'bg-base/5 border-white/5 opacity-50 hover:opacity-80'),
                                                     dragOverSectionIndex === index ? 'border-accent/70 bg-accent/5' : '',
-                                                    draggedSectionIndex === index ? 'opacity-30' : '',
-                                                    sectionsMeta[section.key].locked ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'
+                                                    draggedSectionIndex === index ? 'opacity-30' : ''
                                                 ]">
 
-                                                <!-- Numero de orden -->
-                                                <span class="w-5 h-5 rounded-full bg-surface/60 border border-white/10 flex items-center justify-center text-[9px] font-bold text-textMuted flex-shrink-0" x-text="index + 1"></span>
+                                                <!-- Zona draggable + click para tab -->
+                                                <div
+                                                    :draggable="!sectionsMeta[section.key].locked"
+                                                    @dragstart="onSectionDragStart(index)"
+                                                    @dragenter.prevent="onSectionDragEnter(index)"
+                                                    @dragover.prevent
+                                                    @drop.prevent="onSectionDrop(index)"
+                                                    @dragend="onSectionDragEnd()"
+                                                    @click="activeSettingsTab = section.key"
+                                                    class="flex-grow flex items-center gap-2.5 p-3 min-w-0"
+                                                    :class="sectionsMeta[section.key].locked ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'">
 
-                                                <!-- Icono -->
-                                                <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 border transition-colors" :class="activeSettingsTab === section.key ? 'bg-accent/20 border-accent/40 text-accent' : (section.visible ? 'bg-accent/10 border-accent/20 text-accent/80' : 'bg-surface/40 border-white/5 text-textMuted')">
-                                                    <svg class="w-[16px] h-[16px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-html="serviceIcons[sectionsMeta[section.key].icon]"></svg>
+                                                    <!-- Numero de orden -->
+                                                    <span class="w-5 h-5 rounded-full bg-surface/60 border border-white/10 flex items-center justify-center text-[9px] font-bold text-textMuted flex-shrink-0" x-text="index + 1"></span>
+
+                                                    <!-- Icono -->
+                                                    <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 border transition-colors" :class="activeSettingsTab === section.key ? 'bg-accent/20 border-accent/40 text-accent' : (section.visible ? 'bg-accent/10 border-accent/20 text-accent/80' : 'bg-surface/40 border-white/5 text-textMuted')">
+                                                        <svg class="w-[16px] h-[16px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-html="serviceIcons[sectionsMeta[section.key].icon]"></svg>
+                                                    </div>
+
+                                                    <!-- Texto -->
+                                                    <div class="flex-grow min-w-0 text-left">
+                                                        <p class="text-xs font-heading font-bold truncate" :class="activeSettingsTab === section.key ? 'text-white' : 'text-textMuted'" x-text="sectionsMeta[section.key].label"></p>
+                                                        <p class="text-[10px] text-gray-400 font-light truncate" x-text="section.visible ? 'Visible en la tienda' : 'Oculta'"></p>
+                                                    </div>
                                                 </div>
 
-                                                <!-- Texto -->
-                                                <div class="flex-grow min-w-0 text-left cursor-pointer">
-                                                    <p class="text-xs font-heading font-bold truncate" :class="activeSettingsTab === section.key ? 'text-white' : 'text-textMuted'" x-text="sectionsMeta[section.key].label"></p>
-                                                    <p class="text-[10px] text-gray-400 font-light truncate" x-text="section.visible ? 'Visible en la tienda' : 'Oculta'"></p>
-                                                </div>
-
-                                                <!-- Toggle visibilidad compacto -->
+                                                <!-- Toggle visibilidad — fuera del div draggable -->
                                                 <button type="button"
-                                                        @click.stop="toggleSectionVisibility(index)"
-                                                        :disabled="sectionsMeta[section.key].locked"
+                                                        @click="toggleSectionVisibility(index)"
+                                                        :disabled="sectionsMeta[section.key].locked === true"
                                                         :title="sectionsMeta[section.key].locked ? 'Esta sección siempre está visible' : (section.visible ? 'Ocultar sección' : 'Mostrar sección')"
-                                                        class="relative w-9 h-5 rounded-full flex-shrink-0 transition-colors duration-300 border disabled:cursor-not-allowed"
+                                                        class="relative w-9 h-5 rounded-full flex-shrink-0 transition-colors duration-300 border disabled:cursor-not-allowed mr-3"
                                                         :class="section.visible ? 'bg-accent/80 border-accent' : 'bg-surface/60 border-white/10'">
                                                     <span class="absolute top-0.5 left-0.5 w-[14px] h-[14px] rounded-full bg-white shadow-md transition-transform duration-300" :class="section.visible ? 'translate-x-4' : 'translate-x-0'"></span>
                                                 </button>
