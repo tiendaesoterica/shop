@@ -258,12 +258,12 @@
                 </a>
 
                 <nav class="hidden lg:flex space-x-6 xl:space-x-10 bg-surface/30 backdrop-blur-xl px-8 py-3 rounded-full border border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.3)]" :class="(scrolled || isMobileMenuOpen) ? '' : 'hidden lg:flex'">
-                    <a href="#servicios" class="text-[10px] xl:text-xs uppercase tracking-[0.2em] font-medium text-textMuted hover:text-white transition-colors">Servicios</a>
-                    <a href="#sesiones" class="text-[10px] xl:text-xs uppercase tracking-[0.2em] font-medium text-textMuted hover:text-white transition-colors">Sesiones</a>
-                    <a href="#biblioteca" class="text-[10px] xl:text-xs uppercase tracking-[0.2em] font-medium text-textMuted hover:text-white transition-colors">Biblioteca</a>
-                    <a href="#destacados" class="text-[10px] xl:text-xs uppercase tracking-[0.2em] font-medium text-textMuted hover:text-white transition-colors">Destacados</a>
-                    <a href="#catalogo" class="text-[10px] xl:text-xs uppercase tracking-[0.2em] font-medium text-textMuted hover:text-white transition-colors">Tienda</a>
-                    <a href="#flash" class="text-[10px] xl:text-xs uppercase tracking-[0.2em] font-medium text-danger hover:text-danger/80 transition-colors flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-danger animate-pulse"></span> Especial</a>
+                    <a x-show="sectionVisibility.servicios && settings.services && settings.services.length > 0" href="#servicios" class="text-[10px] xl:text-xs uppercase tracking-[0.2em] font-medium text-textMuted hover:text-white transition-colors">Servicios</a>
+                    <a x-show="sectionVisibility.sesiones && consultations.length > 0" href="#sesiones" class="text-[10px] xl:text-xs uppercase tracking-[0.2em] font-medium text-textMuted hover:text-white transition-colors">Sesiones</a>
+                    <a x-show="sectionVisibility.biblioteca && books && books.length > 0" href="#biblioteca" class="text-[10px] xl:text-xs uppercase tracking-[0.2em] font-medium text-textMuted hover:text-white transition-colors">Biblioteca</a>
+                    <a x-show="sectionVisibility.tienda && products.length > 0 && featuredProducts.length > 0" href="#destacados" class="text-[10px] xl:text-xs uppercase tracking-[0.2em] font-medium text-textMuted hover:text-white transition-colors">Destacados</a>
+                    <a x-show="sectionVisibility.tienda && products.length > 0" href="#catalogo" class="text-[10px] xl:text-xs uppercase tracking-[0.2em] font-medium text-textMuted hover:text-white transition-colors">Tienda</a>
+                    <a x-show="sectionVisibility.flash && flashSales.length > 0" href="#flash" class="text-[10px] xl:text-xs uppercase tracking-[0.2em] font-medium text-danger hover:text-danger/80 transition-colors flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-danger animate-pulse"></span> Especial</a>
                 </nav>
                 
                 <div class="flex items-center gap-4 sm:gap-5">
@@ -308,18 +308,21 @@
                  x-transition:leave-end="opacity-0 -translate-y-4"
                  class="lg:hidden absolute top-full left-0 w-full bg-surface/80 backdrop-blur-2xl border-b border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.6)]" x-cloak>
                 <div class="px-6 py-8 flex flex-col space-y-6 text-center border-t border-white/5">
-                    <a href="#servicios" @click="isMobileMenuOpen = false" class="text-sm uppercase tracking-[0.2em] font-heading font-bold text-textMain hover:text-accent">Servicios</a>
-                    <a href="#sesiones" @click="isMobileMenuOpen = false" class="text-sm uppercase tracking-[0.2em] font-heading font-bold text-textMain hover:text-accent">Sesiones y Consultas</a>
-                    <a href="#biblioteca" @click="isMobileMenuOpen = false" class="text-sm uppercase tracking-[0.2em] font-heading font-bold text-textMain hover:text-accent">Biblioteca Oculta</a>
-                    <a href="#destacados" @click="isMobileMenuOpen = false" class="text-sm uppercase tracking-[0.2em] font-heading font-bold text-textMain hover:text-accent">Destacados</a>
-                    <a href="#catalogo" @click="isMobileMenuOpen = false" class="text-sm uppercase tracking-[0.2em] font-heading font-bold text-textMain hover:text-accent">Tienda de productos</a>
-                    <a href="#flash" @click="isMobileMenuOpen = false" class="text-sm uppercase tracking-[0.2em] font-heading font-bold text-danger flex items-center justify-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-danger animate-pulse"></span> Promociones Especiales</a>
+                    <a x-show="sectionVisibility.servicios && settings.services && settings.services.length > 0" href="#servicios" @click="isMobileMenuOpen = false" class="text-sm uppercase tracking-[0.2em] font-heading font-bold text-textMain hover:text-accent">Servicios</a>
+                    <a x-show="sectionVisibility.sesiones && consultations.length > 0" href="#sesiones" @click="isMobileMenuOpen = false" class="text-sm uppercase tracking-[0.2em] font-heading font-bold text-textMain hover:text-accent">Sesiones y Consultas</a>
+                    <a x-show="sectionVisibility.biblioteca && books && books.length > 0" href="#biblioteca" @click="isMobileMenuOpen = false" class="text-sm uppercase tracking-[0.2em] font-heading font-bold text-textMain hover:text-accent">Biblioteca Oculta</a>
+                    <a x-show="sectionVisibility.tienda && products.length > 0 && featuredProducts.length > 0" href="#destacados" @click="isMobileMenuOpen = false" class="text-sm uppercase tracking-[0.2em] font-heading font-bold text-textMain hover:text-accent">Destacados</a>
+                    <a x-show="sectionVisibility.tienda && products.length > 0" href="#catalogo" @click="isMobileMenuOpen = false" class="text-sm uppercase tracking-[0.2em] font-heading font-bold text-textMain hover:text-accent">Tienda de productos</a>
+                    <a x-show="sectionVisibility.flash && flashSales.length > 0" href="#flash" @click="isMobileMenuOpen = false" class="text-sm uppercase tracking-[0.2em] font-heading font-bold text-danger flex items-center justify-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-danger animate-pulse"></span> Promociones Especiales</a>
                 </div>
             </div>
         </header>
 
-        <!-- Hero Section (Se Mantiene Igual) -->
-        <section x-data="{
+        <!-- CONTENEDOR DE SECCIONES REORDENABLES -->
+        <div id="sections-container">
+
+        <!-- Hero Section -->
+        <section data-section="hero" x-show="sectionVisibility.hero" x-data="{
                 currentSlide: 0,
                 touchStartX: 0,
                 touchEndX: 0,
@@ -382,7 +385,7 @@
         <!-- ============================================== -->
         <!-- SECCIÓN DE SERVICIOS MÁGICOS -->
         <!-- ============================================== -->
-        <section id="servicios" class="bg-transparent py-24 relative z-20 transition-colors duration-500">
+        <section data-section="servicios" id="servicios" class="bg-transparent py-24 relative z-20 transition-colors duration-500" x-show="sectionVisibility.servicios && settings.services && settings.services.length > 0">
             
             <div class="max-w-7xl mx-auto px-4 sm:px-6 text-center mb-20 relative z-10">
                 <span class="text-accent text-[10px] tracking-[0.3em] uppercase font-bold mb-4 block flex items-center justify-center gap-3">
@@ -467,8 +470,13 @@
                     </div>
                 </div>
             </div>
+        </section>
 
-            <div class="max-w-3xl mx-auto px-4 sm:px-6 text-center mt-32 relative z-10">
+        <!-- ============================================== -->
+        <!-- SECCIÓN: CTA (CONTACTO / WHATSAPP) -->
+        <!-- ============================================== -->
+        <section data-section="cta" class="bg-transparent py-24 relative z-20 transition-colors duration-500" x-show="sectionVisibility.cta">
+            <div class="max-w-3xl mx-auto px-4 sm:px-6 text-center relative z-10">
                 <h3 class="text-2xl font-heading font-bold text-textMain mb-4" x-text="settings.cta_title || '¿Dudas sobre por dónde empezar?'"></h3>
                 <p class="text-textMuted text-sm font-light mb-8" x-text="settings.cta_description || 'El primer paso suele ser el más revelador. Escríbenos directamente y te orientaremos hacia la práctica que mejor resuene con tu momento actual.'"></p>
                 <button @click="window.open(`https://wa.me/${settings.whatsapp}?text=${encodeURIComponent('Hola, me gustaría recibir orientación sobre los servicios que ofrecen.')}`, '_blank')" class="btn-primary inline-flex items-center gap-3 px-8 py-4">
@@ -481,15 +489,15 @@
         <!-- ============================================== -->
         <!-- SECCIÓN: CONSULTAS Y SESIONES (1 a 1) -->
         <!-- ============================================== -->
-        <section id="sesiones" class="bg-surface/10 backdrop-blur-md py-24 relative z-20 border-b border-surfaceHighlight/30 transition-colors duration-500 shadow-[0_0_50px_rgba(0,0,0,0.2)]" x-show="consultations.length > 0" x-cloak>
+        <section data-section="sesiones" id="sesiones" class="bg-surface/10 backdrop-blur-md py-24 relative z-20 border-b border-surfaceHighlight/30 transition-colors duration-500 shadow-[0_0_50px_rgba(0,0,0,0.2)]" x-show="sectionVisibility.sesiones && consultations.length > 0" x-cloak>
             <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
                 <div class="text-center md:text-left mb-12 flex flex-col md:flex-row justify-between items-end gap-6">
                     <div>
                         <span class="text-accent text-[10px] tracking-[0.3em] uppercase font-bold mb-3 block flex items-center justify-center md:justify-start gap-2">
-                            ✧ Espacios 1 a 1 ✧
+                            ✧ <span x-text="settings.sec_sesiones_eyebrow || 'Espacios 1 a 1'"></span> ✧
                         </span>
-                        <h2 class="text-3xl sm:text-4xl md:text-5xl font-heading font-bold text-textMain mb-4">Consultas & Sesiones</h2>
-                        <p class="text-textMuted text-sm sm:text-base max-w-2xl font-light leading-relaxed">Reserva tu espacio personal para lecturas, análisis y orientación directa. Selecciona el servicio para ver detalles y coordinar disponibilidad.</p>
+                        <h2 class="text-3xl sm:text-4xl md:text-5xl font-heading font-bold text-textMain mb-4" x-text="settings.sec_sesiones_title || 'Consultas & Sesiones'"></h2>
+                        <p class="text-textMuted text-sm sm:text-base max-w-2xl font-light leading-relaxed" x-text="settings.sec_sesiones_desc || 'Reserva tu espacio personal para lecturas, análisis y orientación directa. Selecciona el servicio para ver detalles y coordinar disponibilidad.'"></p>
                     </div>
                 </div>
 
@@ -520,15 +528,15 @@
         <!-- ============================================== -->
         <!-- SECCIÓN: BIBLIOTECA OCULTA (LIBROS) -->
         <!-- ============================================== -->
-        <section id="biblioteca" class="bg-transparent py-24 relative z-20 border-b border-surfaceHighlight/30 transition-colors duration-500" x-show="books && books.length > 0" x-cloak>
+        <section data-section="biblioteca" id="biblioteca" class="bg-transparent py-24 relative z-20 border-b border-surfaceHighlight/30 transition-colors duration-500" x-show="sectionVisibility.biblioteca && books && books.length > 0" x-cloak>
             <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
                 
                 <div class="text-center mb-16">
                     <span class="text-accent text-[10px] tracking-[0.3em] uppercase font-bold mb-3 block flex items-center justify-center gap-2">
-                        ✧ Textos Sagrados ✧
+                        ✧ <span x-text="settings.sec_biblioteca_eyebrow || 'Textos Sagrados'"></span> ✧
                     </span>
-                    <h2 class="text-3xl sm:text-4xl md:text-5xl font-heading font-bold text-textMain mb-4">Biblioteca Oculta</h2>
-                    <p class="text-textMuted text-sm sm:text-base max-w-2xl mx-auto font-light leading-relaxed">Explora y descarga tomos, grimorios y manuscritos que hemos liberado para guiar tu camino espiritual y expandir tu conciencia.</p>
+                    <h2 class="text-3xl sm:text-4xl md:text-5xl font-heading font-bold text-textMain mb-4" x-text="settings.sec_biblioteca_title || 'Biblioteca Oculta'"></h2>
+                    <p class="text-textMuted text-sm sm:text-base max-w-2xl mx-auto font-light leading-relaxed" x-text="settings.sec_biblioteca_desc || 'Explora y descarga tomos, grimorios y manuscritos que hemos liberado para guiar tu camino espiritual y expandir tu conciencia.'"></p>
                 </div>
 
                 <!-- Grilla de Libros (Premium 2026 Vertical) -->
@@ -570,7 +578,7 @@
         <!-- ============================================== -->
         <!-- SECCIÓN: TESTIMONIOS / CLIENTES FELICES -->
         <!-- ============================================== -->
-        <section id="testimonios" class="bg-transparent py-24 relative z-20 border-b border-surfaceHighlight/30 transition-colors duration-500" x-show="testimonials && testimonials.length > 0" x-cloak
+        <section data-section="testimonios" id="testimonios" class="bg-transparent py-24 relative z-20 border-b border-surfaceHighlight/30 transition-colors duration-500" x-show="sectionVisibility.testimonios && testimonials && testimonials.length > 0" x-cloak
             x-data="{
                 current: 0,
                 timer: null,
@@ -596,10 +604,10 @@
 
                 <div class="text-center mb-16">
                     <span class="text-accent text-[10px] tracking-[0.3em] uppercase font-bold mb-3 block flex items-center justify-center gap-2">
-                        ✧ Voces del Camino ✧
+                        ✧ <span x-text="settings.sec_testimonios_eyebrow || 'Voces del Camino'"></span> ✧
                     </span>
-                    <h2 class="text-3xl sm:text-4xl md:text-5xl font-heading font-bold text-textMain mb-4">Clientes Felices</h2>
-                    <p class="text-textMuted text-sm sm:text-base max-w-2xl mx-auto font-light leading-relaxed">Testimonios de quienes ya transformaron su camino con nosotros.</p>
+                    <h2 class="text-3xl sm:text-4xl md:text-5xl font-heading font-bold text-textMain mb-4" x-text="settings.sec_testimonios_title || 'Clientes Felices'"></h2>
+                    <p class="text-textMuted text-sm sm:text-base max-w-2xl mx-auto font-light leading-relaxed" x-text="settings.sec_testimonios_desc || 'Testimonios de quienes ya transformaron su camino con nosotros.'"></p>
                 </div>
 
                 <!-- Carrusel -->
@@ -654,11 +662,11 @@
         <!-- ============================================== -->
         <!-- SECCIÓN: CATÁLOGO DE PRODUCTOS -->
         <!-- ============================================== -->
-        <div id="seccion-tienda" class="flex flex-col w-full bg-transparent z-20 relative pt-24">
+        <div data-section="tienda" id="seccion-tienda" class="flex flex-col w-full bg-transparent z-20 relative pt-24" x-show="sectionVisibility.tienda && products.length > 0">
 
             <div class="max-w-7xl mx-auto px-4 sm:px-6 w-full text-center md:text-left mb-12">
-                <span class="text-textMuted text-[10px] tracking-[0.3em] uppercase font-bold mb-2 block">Catálogo y Herramientas</span>
-                <h2 class="text-4xl sm:text-5xl font-heading font-bold text-textMain">Tienda de productos</h2>
+                <span class="text-textMuted text-[10px] tracking-[0.3em] uppercase font-bold mb-2 block" x-text="settings.sec_tienda_eyebrow || 'Catálogo y Herramientas'"></span>
+                <h2 class="text-4xl sm:text-5xl font-heading font-bold text-textMain" x-text="settings.sec_tienda_title || 'Tienda de productos'"></h2>
             </div>
 
             <!-- DESTACADOS -->
@@ -808,7 +816,7 @@
             </main>
 
             <!-- VENTAS FLASH -->
-            <section id="flash" class="w-full relative bg-surface/20 backdrop-blur-xl border-y border-danger/30 py-16 mt-8 shadow-[0_0_50px_rgba(225,29,72,0.1)] overflow-hidden transition-colors duration-500" x-show="flashSales.length > 0">
+            <section id="flash" class="w-full relative bg-surface/20 backdrop-blur-xl border-y border-danger/30 py-16 mt-8 shadow-[0_0_50px_rgba(225,29,72,0.1)] overflow-hidden transition-colors duration-500" x-show="sectionVisibility.flash && flashSales.length > 0">
                 <div class="absolute top-0 right-0 w-96 h-96 bg-danger/10 rounded-full pointer-events-none blur-[100px]"></div>
                 <div class="absolute bottom-0 left-0 w-64 h-64 bg-accent/5 rounded-full pointer-events-none blur-[80px]"></div>
                 
@@ -816,9 +824,9 @@
                     <div class="text-center mb-10 md:mb-12">
                         <span class="inline-flex items-center justify-center gap-2 text-danger text-[10px] tracking-[0.3em] uppercase font-bold mb-3">
                             <span class="w-1.5 h-1.5 rounded-full bg-danger animate-pulse"></span>
-                            Portal Temporal
+                            <span x-text="settings.sec_flash_eyebrow || 'Portal Temporal'"></span>
                         </span>
-                        <h2 class="text-3xl sm:text-4xl font-heading font-bold text-textMain">Ofertas de tiempo limitado</h2>
+                        <h2 class="text-3xl sm:text-4xl font-heading font-bold text-textMain" x-text="settings.sec_flash_title || 'Ofertas de tiempo limitado'"></h2>
                     </div>
                     
                     <div class="w-full" :class="flashSales.length === 1 ? 'flex justify-center' : 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 md:gap-8'">
@@ -853,6 +861,8 @@
         
         </div>
 
+        </div><!-- /sections-container -->
+
         <!-- Footer Dinámico -->
         <footer class="border-t border-surfaceHighlight/30 bg-surface/10 backdrop-blur-lg pt-16 pb-8 relative z-10 text-textMuted transition-colors duration-500 w-full mt-auto">
             <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-surface/50 backdrop-blur-xl rounded-full border border-white/10 flex items-center justify-center text-accent text-xs shadow-md">
@@ -878,11 +888,11 @@
                 <div>
                     <h4 class="text-white font-heading font-bold text-sm mb-5 tracking-[0.1em] uppercase drop-shadow-sm">El Sendero</h4>
                     <ul class="space-y-3 text-sm font-medium text-textMuted">
-                        <li><a href="#servicios" class="hover:text-white transition-colors flex items-center gap-2">Servicios</a></li>
-                        <li><a href="#sesiones" class="hover:text-white transition-colors flex items-center gap-2">Sesiones</a></li>
-                        <li><a href="#biblioteca" class="hover:text-white transition-colors flex items-center gap-2">Biblioteca</a></li>
-                        <li><a href="#destacados" class="hover:text-white transition-colors flex items-center gap-2">Destacados</a></li>
-                        <li><a href="#catalogo" class="hover:text-white transition-colors flex items-center gap-2">Tienda</a></li>
+                        <li x-show="sectionVisibility.servicios && settings.services && settings.services.length > 0"><a href="#servicios" class="hover:text-white transition-colors flex items-center gap-2">Servicios</a></li>
+                        <li x-show="sectionVisibility.sesiones && consultations.length > 0"><a href="#sesiones" class="hover:text-white transition-colors flex items-center gap-2">Sesiones</a></li>
+                        <li x-show="sectionVisibility.biblioteca && books && books.length > 0"><a href="#biblioteca" class="hover:text-white transition-colors flex items-center gap-2">Biblioteca</a></li>
+                        <li x-show="sectionVisibility.tienda && products.length > 0 && featuredProducts.length > 0"><a href="#destacados" class="hover:text-white transition-colors flex items-center gap-2">Destacados</a></li>
+                        <li x-show="sectionVisibility.tienda && products.length > 0"><a href="#catalogo" class="hover:text-white transition-colors flex items-center gap-2">Tienda</a></li>
                     </ul>
                 </div>
 
@@ -1343,7 +1353,13 @@
                     service_features: JSON.parse(localStorage.getItem('nexus_service_features')) || [],
                     cta_title: localStorage.getItem('nexus_cta_title') || '',
                     cta_description: localStorage.getItem('nexus_cta_description') || '',
-                    cta_button_text: localStorage.getItem('nexus_cta_button_text') || ''
+                    cta_button_text: localStorage.getItem('nexus_cta_button_text') || '',
+                    // Textos de secciones (cargados desde Supabase al init)
+                    sec_sesiones_eyebrow: '', sec_sesiones_title: '', sec_sesiones_desc: '',
+                    sec_biblioteca_eyebrow: '', sec_biblioteca_title: '', sec_biblioteca_desc: '',
+                    sec_testimonios_eyebrow: '', sec_testimonios_title: '', sec_testimonios_desc: '',
+                    sec_tienda_eyebrow: '', sec_tienda_title: '',
+                    sec_flash_eyebrow: '', sec_flash_title: '',
                 },
 
                 themePresets: {
@@ -1391,6 +1407,19 @@
                 cart: [],
                 books: [],
                 testimonials: [],
+
+                // Flags de visibilidad de secciones (se sobreescriben con site_settings de Supabase)
+                // Valores por defecto: todas las secciones visibles
+                sectionVisibility: {
+                    hero: true,
+                    servicios: true,
+                    sesiones: true,
+                    biblioteca: true,
+                    testimonios: true,
+                    tienda: true,
+                    flash: true,
+                    cta: true,
+                },
 
                 // --- ESTADO DE IDENTIDAD ---
 authUser: null,
@@ -1550,6 +1579,49 @@ async logout() {
                                 }
                                 if (!this.settings.services) this.settings.services = [];
                                 if (!this.settings.service_features) this.settings.service_features = [];
+                                
+                                // Cargar flags de visibilidad de secciones desde site_settings
+                                // Prioridad: sections_config (constructor) > campos show_* individuales > true por defecto
+                                if (setObj.sections_config && Array.isArray(setObj.sections_config) && setObj.sections_config.length > 0) {
+                                    // Usar sections_config como fuente canónica de visibilidad
+                                    const visMap = {};
+                                    setObj.sections_config.forEach(s => { visMap[s.key] = s.visible !== false; });
+                                    this.sectionVisibility = {
+                                        hero:        visMap['hero']        !== undefined ? visMap['hero']        : true,
+                                        servicios:   visMap['servicios']   !== undefined ? visMap['servicios']   : true,
+                                        sesiones:    visMap['sesiones']    !== undefined ? visMap['sesiones']    : true,
+                                        biblioteca:  visMap['biblioteca']  !== undefined ? visMap['biblioteca']  : true,
+                                        testimonios: visMap['testimonios'] !== undefined ? visMap['testimonios'] : true,
+                                        tienda:      visMap['tienda']      !== undefined ? visMap['tienda']      : true,
+                                        flash:       visMap['flash']       !== undefined ? visMap['flash']       : true,
+                                        cta:         visMap['cta']         !== undefined ? visMap['cta']         : true,
+                                    };
+                                } else {
+                                    // Fallback a campos show_* individuales si no hay sections_config
+                                    this.sectionVisibility = {
+                                        hero:        setObj.show_hero        !== false,
+                                        servicios:   setObj.show_servicios   !== false,
+                                        sesiones:    setObj.show_sesiones    !== false,
+                                        biblioteca:  setObj.show_biblioteca  !== false,
+                                        testimonios: setObj.show_testimonios !== false,
+                                        tienda:      setObj.show_tienda      !== false,
+                                        flash:       setObj.show_flash       !== false,
+                                        cta:         setObj.show_cta         !== false,
+                                    };
+                                }
+
+                                // Aplicar el orden de secciones desde sections_config del constructor
+                                if (setObj.sections_config && Array.isArray(setObj.sections_config) && setObj.sections_config.length > 0) {
+                                    const container = document.getElementById('sections-container');
+                                    if (container) {
+                                        // Ordenar según el campo 'order' guardado en el constructor
+                                        const ordered = [...setObj.sections_config].sort((a, b) => a.order - b.order);
+                                        ordered.forEach(({ key }) => {
+                                            const el = container.querySelector(`[data-section="${key}"]`);
+                                            if (el) container.appendChild(el);
+                                        });
+                                    }
+                                }
                                 
                                 localStorage.setItem('nexus_site_name', this.settings.site_name || '');
                                 localStorage.setItem('nexus_site_motto', this.settings.site_motto || '');
