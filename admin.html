@@ -360,7 +360,7 @@
                 </div>
             </header>
 
-            <div class="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6 md:p-10 z-10">
+            <div id="main-scroll" class="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6 md:p-10 z-10">
                 
                 <!-- VISTA: DASHBOARD -->
                 <div x-show="currentView === 'dashboard'" x-transition.opacity x-cloak>
@@ -884,338 +884,606 @@
 </div>
 
                 <!-- VISTA: CONFIGURACIÓN DEL SITIO -->
-                <div x-show="currentView === 'settings'" x-transition.opacity x-cloak>
-                    <div class="mb-8 mt-2 md:mt-0">
-                        <p class="text-sm text-textMuted font-light">Gestiona la información de contacto, identidad visual, textos principales y portadas de tu tienda digital.</p>
+                <div x-show="currentView === 'settings'" x-transition.opacity x-cloak x-data="{ activeSettingsTab: 'general' }">
+                    <div class="mb-6 mt-2 md:mt-0">
+                        <p class="text-sm text-textMuted font-light">Gestiona la estructura, identidad visual y contenido de cada sección de tu tienda digital desde un solo lugar.</p>
                     </div>
 
-                    <form @submit.prevent="saveSettings" class="space-y-8 pb-10">
-                        
-                        <!-- SECCIÓN: Identidad de Marca -->
-                        <div class="glass-panel rounded-2xl p-6 md:p-8 relative overflow-hidden">
-                            <h4 class="text-lg font-heading font-bold text-white mb-6 border-b border-white/10 pb-4">Identidad de Marca</h4>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10 mb-8">
-                                <div class="space-y-6">
-                                    <div>
-                                        <label class="admin-label">Nombre de la Tienda</label>
-                                        <input type="text" x-model="settingsForm.site_name" class="admin-input font-heading font-bold text-lg" placeholder="Ej: NEXUS">
+                    <form @submit.prevent="saveSettings" class="pb-10">
+
+                        <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 lg:items-start">
+
+                            <!-- ===================================================== -->
+                            <!-- CONSTRUCTOR DE SECCIONES: navegación maestra (tabs)  -->
+                            <!-- ===================================================== -->
+                            <div class="w-full lg:w-[320px] flex-shrink-0 lg:sticky lg:top-6">
+                                <div class="glass-panel rounded-2xl p-4 sm:p-5 relative overflow-hidden">
+                                    <div class="flex items-center justify-between gap-2 mb-1 px-1">
+                                        <h4 class="text-sm font-heading font-bold text-white flex items-center gap-2">
+                                            <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 8h16M4 16h16M8 4v16M16 4v16"/></svg>
+                                            Constructor
+                                        </h4>
+                                        <span class="text-[8px] text-gray-400 font-bold uppercase tracking-widest" x-text="sectionsBuilder.filter(s => s.visible).length + '/' + sectionsBuilder.length + ' activas'"></span>
                                     </div>
-                                    <div>
-                                        <label class="admin-label">Lema (Motto)</label>
-                                        <input type="text" x-model="settingsForm.site_motto" class="admin-input" placeholder="Ej: El velo se levanta">
-                                        <p class="text-[9px] text-gray-400 mt-1.5 ml-1">Frase corta que aparecerá encima del título en la portada.</p>
-                                    </div>
-                                </div>
-                                
-                                <div>
-                                    <label class="admin-label">Logotipo de la Tienda</label>
-                                    <div class="w-full h-36 rounded-xl border-2 border-dashed border-white/20 hover:border-accent overflow-hidden bg-surface/20 flex flex-col items-center justify-center relative cursor-pointer group transition-colors" @click="document.getElementById('logoUpload').click()">
-                                        
-                                        <template x-if="newLogoPreview || settingsForm.logo_url">
-                                            <div class="absolute inset-0 p-4 flex items-center justify-center bg-base/80 backdrop-blur-md z-10">
-                                                <img :src="newLogoPreview || settingsForm.logo_url" class="max-w-full max-h-full object-contain drop-shadow-md">
-                                                <button type="button" @click.stop="removeLogo()" class="absolute top-2 right-2 bg-danger/90 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-danger shadow-[0_0_15px_rgba(225,29,72,0.5)]">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    <p class="text-[10px] text-gray-400 font-light px-1 mb-4">Arrastra para ordenar. Tocá una sección para editarla.</p>
+
+                                    <!-- Tab fija: General -->
+                                    <button type="button" @click="activeSettingsTab = 'general'"
+                                            class="w-full flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 mb-2"
+                                            :class="activeSettingsTab === 'general' ? 'bg-accent/10 border-accent/40 shadow-[0_0_15px_rgba(var(--color-accent),0.15)]' : 'bg-base/20 border-white/5 hover:border-white/15 hover:bg-base/30'">
+                                        <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 border" :class="activeSettingsTab === 'general' ? 'bg-accent/20 border-accent/40 text-accent' : 'bg-surface/40 border-white/5 text-textMuted'">
+                                            <svg class="w-[16px] h-[16px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        </div>
+                                        <div class="flex-grow min-w-0 text-left">
+                                            <p class="text-xs font-heading font-bold truncate" :class="activeSettingsTab === 'general' ? 'text-white' : 'text-textMuted'">General</p>
+                                            <p class="text-[10px] text-gray-400 font-light truncate">Marca y contacto</p>
+                                        </div>
+                                        <span class="text-[8px] uppercase tracking-widest font-bold text-textMuted/60 flex-shrink-0">Fija</span>
+                                    </button>
+
+                                    <div class="h-px bg-white/5 my-3"></div>
+
+                                    <!-- Tabs dinámicas: una por cada sección del constructor -->
+                                    <div class="space-y-1.5">
+                                        <template x-for="(section, index) in sectionsBuilder" :key="section.key">
+                                            <div
+                                                :draggable="!sectionsMeta[section.key].locked"
+                                                @dragstart="onSectionDragStart(index)"
+                                                @dragenter.prevent="onSectionDragEnter(index)"
+                                                @dragover.prevent
+                                                @drop.prevent="onSectionDrop(index)"
+                                                @dragend="onSectionDragEnd()"
+                                                @click="activeSettingsTab = section.key"
+                                                class="w-full flex items-center gap-2.5 p-3 rounded-xl border transition-all duration-200"
+                                                :class="[
+                                                    activeSettingsTab === section.key ? 'bg-accent/10 border-accent/40 shadow-[0_0_15px_rgba(var(--color-accent),0.15)]' : (section.visible ? 'bg-base/20 border-white/5 hover:border-white/15 hover:bg-base/30' : 'bg-base/5 border-white/5 opacity-50 hover:opacity-80'),
+                                                    dragOverSectionIndex === index ? 'border-accent/70 bg-accent/5' : '',
+                                                    draggedSectionIndex === index ? 'opacity-30' : '',
+                                                    sectionsMeta[section.key].locked ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'
+                                                ]">
+
+                                                <!-- Numero de orden -->
+                                                <span class="w-5 h-5 rounded-full bg-surface/60 border border-white/10 flex items-center justify-center text-[9px] font-bold text-textMuted flex-shrink-0" x-text="index + 1"></span>
+
+                                                <!-- Icono -->
+                                                <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 border transition-colors" :class="activeSettingsTab === section.key ? 'bg-accent/20 border-accent/40 text-accent' : (section.visible ? 'bg-accent/10 border-accent/20 text-accent/80' : 'bg-surface/40 border-white/5 text-textMuted')">
+                                                    <svg class="w-[16px] h-[16px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-html="serviceIcons[sectionsMeta[section.key].icon]"></svg>
+                                                </div>
+
+                                                <!-- Texto -->
+                                                <div class="flex-grow min-w-0 text-left cursor-pointer">
+                                                    <p class="text-xs font-heading font-bold truncate" :class="activeSettingsTab === section.key ? 'text-white' : 'text-textMuted'" x-text="sectionsMeta[section.key].label"></p>
+                                                    <p class="text-[10px] text-gray-400 font-light truncate" x-text="section.visible ? 'Visible en la tienda' : 'Oculta'"></p>
+                                                </div>
+
+                                                <!-- Toggle visibilidad compacto -->
+                                                <button type="button"
+                                                        @click.stop="toggleSectionVisibility(index)"
+                                                        :disabled="sectionsMeta[section.key].locked"
+                                                        :title="sectionsMeta[section.key].locked ? 'Esta sección siempre está visible' : (section.visible ? 'Ocultar sección' : 'Mostrar sección')"
+                                                        class="relative w-9 h-5 rounded-full flex-shrink-0 transition-colors duration-300 border disabled:cursor-not-allowed"
+                                                        :class="section.visible ? 'bg-accent/80 border-accent' : 'bg-surface/60 border-white/10'">
+                                                    <span class="absolute top-0.5 left-0.5 w-[14px] h-[14px] rounded-full bg-white shadow-md transition-transform duration-300" :class="section.visible ? 'translate-x-4' : 'translate-x-0'"></span>
                                                 </button>
                                             </div>
                                         </template>
-
-                                        <div class="text-center" x-show="!newLogoPreview && !settingsForm.logo_url">
-                                            <svg class="w-8 h-8 text-textMuted group-hover:text-accent transition-colors mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                            <span class="text-[10px] text-textMuted uppercase font-bold tracking-widest group-hover:text-accent transition-colors">Subir Logotipo</span>
-                                        </div>
                                     </div>
-                                    <input type="file" id="logoUpload" accept="image/*" class="hidden" @change="handleLogoSelection">
-                                    <p class="text-[9px] text-gray-400 mt-2 ml-1">Sugerimos un archivo PNG con fondo transparente.</p>
+
+                                    <p class="text-[9px] text-gray-500 font-light mt-4 px-1 flex items-start gap-1.5 leading-relaxed">
+                                        <svg class="w-3 h-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        Algunas secciones también requieren contenido publicado (ej. productos cargados) para mostrarse, incluso si están activas aquí.
+                                    </p>
                                 </div>
                             </div>
 
-                            <!-- GESTOR DE TEMAS Y COLORES -->
-                            <div class="pt-6 border-t border-white/5 relative z-10">
-                                <label class="admin-label mb-4">Esquema de Colores (Tema)</label>
-                                
-                                <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
-                                    <template x-for="(preset, key) in themePresets" :key="key">
-                                        <button type="button" @click="selectTheme(key)" class="flex flex-col items-center justify-center p-4 rounded-xl border transition-all" :class="settingsForm.theme === key ? 'border-accent bg-accent/10 shadow-[0_0_15px_rgba(var(--color-accent),0.2)]' : 'border-white/10 hover:border-accent/50 bg-surface/30'">
-                                            <div class="flex gap-1.5 mb-3">
-                                                <div class="w-4 h-4 rounded-full border border-white/20 shadow-sm" :style="'background-color: ' + preset.base"></div>
-                                                <div class="w-4 h-4 rounded-full border border-white/20 shadow-sm" :style="'background-color: ' + preset.surface"></div>
-                                                <div class="w-4 h-4 rounded-full border border-white/20 shadow-sm" :style="'background-color: ' + preset.accent"></div>
+                            <!-- ===================================================== -->
+                            <!-- PANEL DE EDICIÓN: contenido de la pestaña activa     -->
+                            <!-- ===================================================== -->
+                            <div class="flex-grow min-w-0 space-y-6">
+
+                                <!-- TAB: GENERAL (Identidad + Contacto) -->
+                                <template x-if="activeSettingsTab === 'general'">
+                                    <div class="space-y-6" x-transition.opacity>
+
+                                        <!-- Identidad de Marca -->
+                                        <div class="glass-panel rounded-2xl p-6 md:p-8 relative overflow-hidden">
+                                            <h4 class="text-lg font-heading font-bold text-white mb-6 border-b border-white/10 pb-4">Identidad de Marca</h4>
+
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10 mb-8">
+                                                <div class="space-y-6">
+                                                    <div>
+                                                        <label class="admin-label">Nombre de la Tienda</label>
+                                                        <input type="text" x-model="settingsForm.site_name" class="admin-input font-heading font-bold text-lg" placeholder="Ej: NEXUS">
+                                                    </div>
+                                                    <div>
+                                                        <label class="admin-label">Lema (Motto)</label>
+                                                        <input type="text" x-model="settingsForm.site_motto" class="admin-input" placeholder="Ej: El velo se levanta">
+                                                        <p class="text-[9px] text-gray-400 mt-1.5 ml-1">Frase corta que aparecerá encima del título en la portada.</p>
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <label class="admin-label">Logotipo de la Tienda</label>
+                                                    <div class="w-full h-36 rounded-xl border-2 border-dashed border-white/20 hover:border-accent overflow-hidden bg-surface/20 flex flex-col items-center justify-center relative cursor-pointer group transition-colors" @click="document.getElementById('logoUpload').click()">
+
+                                                        <template x-if="newLogoPreview || settingsForm.logo_url">
+                                                            <div class="absolute inset-0 p-4 flex items-center justify-center bg-base/80 backdrop-blur-md z-10">
+                                                                <img :src="newLogoPreview || settingsForm.logo_url" class="max-w-full max-h-full object-contain drop-shadow-md">
+                                                                <button type="button" @click.stop="removeLogo()" class="absolute top-2 right-2 bg-danger/90 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-danger shadow-[0_0_15px_rgba(225,29,72,0.5)]">
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                                </button>
+                                                            </div>
+                                                        </template>
+
+                                                        <div class="text-center" x-show="!newLogoPreview && !settingsForm.logo_url">
+                                                            <svg class="w-8 h-8 text-textMuted group-hover:text-accent transition-colors mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                            <span class="text-[10px] text-textMuted uppercase font-bold tracking-widest group-hover:text-accent transition-colors">Subir Logotipo</span>
+                                                        </div>
+                                                    </div>
+                                                    <input type="file" id="logoUpload" accept="image/*" class="hidden" @change="handleLogoSelection">
+                                                    <p class="text-[9px] text-gray-400 mt-2 ml-1">Sugerimos un archivo PNG con fondo transparente.</p>
+                                                </div>
                                             </div>
-                                            <span class="text-[9px] uppercase tracking-widest font-bold" :class="settingsForm.theme === key ? 'text-accent drop-shadow-sm' : 'text-textMuted'" x-text="preset.name"></span>
-                                        </button>
-                                    </template>
-                                </div>
 
-                                <div x-show="settingsForm.theme === 'custom'" x-transition class="mt-4 p-5 bg-base/50 backdrop-blur-md rounded-xl border border-white/10 grid grid-cols-1 md:grid-cols-3 gap-6 shadow-inner" x-cloak>
-                                    <div>
-                                        <label class="admin-label">Fondo Principal (Base)</label>
-                                        <div class="flex items-center gap-3">
-                                            <input type="color" x-model="settingsForm.color_base" class="h-10 w-16 rounded cursor-pointer bg-transparent border-0 p-0 shadow-inner">
-                                            <span class="text-xs font-mono text-white uppercase" x-text="settingsForm.color_base"></span>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label class="admin-label">Tarjetas (Surface)</label>
-                                        <div class="flex items-center gap-3">
-                                            <input type="color" x-model="settingsForm.color_surface" class="h-10 w-16 rounded cursor-pointer bg-transparent border-0 p-0 shadow-inner">
-                                            <span class="text-xs font-mono text-white uppercase" x-text="settingsForm.color_surface"></span>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label class="admin-label">Destacados (Acento)</label>
-                                        <div class="flex items-center gap-3">
-                                            <input type="color" x-model="settingsForm.color_accent" class="h-10 w-16 rounded cursor-pointer bg-transparent border-0 p-0 shadow-inner">
-                                            <span class="text-xs font-mono text-white uppercase" x-text="settingsForm.color_accent"></span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="mt-6 pt-6 border-t border-white/5">
-                                    <div class="flex justify-between items-center mb-4">
-                                        <label class="admin-label !mb-0">Opacidad de la Portada</label>
-                                        <span class="text-xs font-mono text-accent font-bold" x-text="(settingsForm.hero_opacity !== undefined ? settingsForm.hero_opacity : 80) + '%'"></span>
-                                    </div>
-                                    <input type="range" x-model="settingsForm.hero_opacity" min="0" max="100" step="5" class="w-full accent-accent h-2 bg-surfaceHighlight/50 rounded-lg cursor-pointer">
-                                    <p class="text-[9px] text-gray-400 mt-2 ml-1">Controla qué tan oscurecida se ve la imagen de la tienda. 0% es totalmente transparente.</p>
-                                </div>
-                            </div>
-                        </div>
+                                            <!-- GESTOR DE TEMAS Y COLORES -->
+                                            <div class="pt-6 border-t border-white/5 relative z-10">
+                                                <label class="admin-label mb-4">Esquema de Colores (Tema)</label>
 
-                        <!-- Sección: Contacto -->
-                        <div class="glass-panel rounded-2xl p-6 md:p-8 relative overflow-hidden">
-                            <h4 class="text-lg font-heading font-bold text-white mb-6 border-b border-white/10 pb-4">Vías de Contacto</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-                                <div>
-                                    <label class="admin-label">Número de WhatsApp (Ventas)</label>
-                                    <div class="relative">
-                                        <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-success drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                                        <input type="text" x-model="settingsForm.whatsapp" class="admin-input !pl-12 font-mono" placeholder="Ej: 5491123456789">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="admin-label">Correo Electrónico (Footer)</label>
-                                    <div class="relative">
-                                        <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-textMuted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                                        <input type="email" x-model="settingsForm.email" class="admin-input !pl-12 font-mono" placeholder="contacto@mitienda.com">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Sección: Textos y Portada -->
-                        <div class="glass-panel rounded-2xl p-6 md:p-8 relative overflow-hidden">
-                            <h4 class="text-lg font-heading font-bold text-white mb-6 border-b border-white/10 pb-4">Textos y Portada (Hero)</h4>
-                            
-                            <div class="space-y-6 relative z-10">
-                                <div>
-                                    <label class="admin-label">Título Principal (H1)</label>
-                                    <input type="text" x-model="settingsForm.hero_title" class="admin-input text-lg font-heading font-bold" placeholder="El título gigante al entrar a la web...">
-                                </div>
-                                
-                                <div>
-                                    <label class="admin-label">Subtítulo de la Portada</label>
-                                    <textarea x-model="settingsForm.hero_subtitle" rows="2" class="admin-input font-light resize-none" placeholder="El texto debajo del título gigante..."></textarea>
-                                </div>
-
-                                <div>
-                                    <label class="admin-label">Descripción de la Tienda (Footer)</label>
-                                    <textarea x-model="settingsForm.footer_description" rows="3" class="admin-input font-light resize-none" placeholder="Pequeño resumen sobre qué es la tienda que va al fondo de la web..."></textarea>
-                                </div>
-
-                                <div class="pt-4 border-t border-white/5">
-                                    <div class="flex justify-between items-baseline mb-3 ml-1">
-                                        <label class="admin-label !mb-0">Imágenes del Carrusel de Portada (Hero)</label>
-                                        <span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">(Max 3 imágenes)</span>
-                                    </div>
-                                    
-                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <template x-for="(url, index) in settingsForm.hero_images" :key="'hero-exist-'+index">
-                                            <div class="relative aspect-video sm:aspect-square md:aspect-video rounded-xl border border-white/10 overflow-hidden group bg-base/50 shadow-inner">
-                                                <img :src="url" class="w-full h-full object-cover">
-                                                <button type="button" @click="removeExistingHeroImage(index)" class="absolute top-2 right-2 bg-danger/90 backdrop-blur-md text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-danger shadow-md">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                                </button>
-                                            </div>
-                                        </template>
-
-                                        <template x-for="(preview, index) in newHeroImagePreviews" :key="'hero-new-'+index">
-                                            <div class="relative aspect-video sm:aspect-square md:aspect-video rounded-xl border border-white/10 overflow-hidden group bg-base/50 shadow-inner">
-                                                <img :src="preview" class="w-full h-full object-cover opacity-70">
-                                                <span class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-accent text-darkLux text-[8px] font-bold px-2 py-0.5 rounded-full shadow-[0_0_10px_rgba(var(--color-accent),0.5)]">NUEVA</span>
-                                                <button type="button" @click="removeNewHeroImage(index)" class="absolute top-2 right-2 bg-danger/90 backdrop-blur-md text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-danger shadow-md">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                                </button>
-                                            </div>
-                                        </template>
-
-                                        <div x-show="(settingsForm.hero_images?.length || 0) + newHeroImagePreviews.length < 3" 
-                                             class="aspect-video sm:aspect-square md:aspect-video rounded-xl border-2 border-dashed border-white/20 hover:border-accent flex flex-col items-center justify-center cursor-pointer transition-colors group bg-surface/20 hover:bg-surface/40"
-                                             @click="document.getElementById('heroImageUpload').click()">
-                                            <svg class="w-8 h-8 text-textMuted group-hover:text-accent transition-colors mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                            <span class="text-[10px] text-textMuted uppercase font-bold tracking-widest group-hover:text-accent transition-colors text-center px-2">Añadir Portada</span>
-                                        </div>
-                                    </div>
-                                    <input type="file" id="heroImageUpload" accept="image/*" multiple class="hidden" @change="handleHeroImageSelection">
-                                    <p class="text-[10px] text-gray-400 font-light mt-3 ml-1">Sugerimos utilizar imágenes horizontales en alta calidad (ej. 1920x1080px).</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- SECCIÓN: GESTOR DE SERVICIOS -->
-                        <div class="glass-panel rounded-2xl p-6 md:p-8 relative overflow-visible">
-                            <div class="flex justify-between items-center border-b border-white/10 pb-4 mb-6">
-                                <h4 class="text-lg font-heading font-bold text-white">Servicios Destacados</h4>
-                                <span class="text-[10px] text-textMuted uppercase tracking-widest font-bold bg-surface/50 border border-white/5 px-3 py-1 rounded-full shadow-sm" x-text="(settingsForm.services ? settingsForm.services.length : 0) + '/4'"></span>
-                            </div>
-                            <p class="text-xs text-gray-400 font-light mb-6">Añade hasta 4 tarjetas de servicios o pilares de tu marca. Usa imágenes panorámicas o elige un ícono de la librería universal si decides no subir fotos.</p>
-                            
-                            <div class="space-y-4 relative z-10">
-                                <template x-for="(service, index) in settingsForm.services" :key="service.id">
-                                    <div x-data="{ showIconSelector: false }" class="p-4 bg-base/30 backdrop-blur-md rounded-xl border border-white/10 relative group flex flex-col sm:flex-row gap-5 items-start transition-colors hover:border-accent/40 hover:bg-base/50">
-                                        
-                                        <div class="w-full sm:w-36 flex-shrink-0 flex flex-col gap-2 relative">
-                                            <div class="w-full aspect-video rounded-lg border border-dashed border-white/20 hover:border-accent overflow-hidden bg-surface/40 flex flex-col items-center justify-center relative cursor-pointer transition-colors shadow-inner" @click="document.getElementById('svcImg_' + service.id).click()">
-                                                <template x-if="newServicePreviews[service.id] || service.image">
-                                                    <div class="absolute inset-0 flex items-center justify-center bg-base/80 z-10">
-                                                        <img :src="newServicePreviews[service.id] || service.image" class="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500">
-                                                        <button type="button" @click.stop="removeServiceImage(service.id)" class="absolute top-1 right-1 bg-danger/90 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-danger shadow-[0_0_10px_rgba(225,29,72,0.5)]" title="Eliminar imagen">
-                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                                    <template x-for="(preset, key) in themePresets" :key="key">
+                                                        <button type="button" @click="selectTheme(key)" class="flex flex-col items-center justify-center p-4 rounded-xl border transition-all" :class="settingsForm.theme === key ? 'border-accent bg-accent/10 shadow-[0_0_15px_rgba(var(--color-accent),0.2)]' : 'border-white/10 hover:border-accent/50 bg-surface/30'">
+                                                            <div class="flex gap-1.5 mb-3">
+                                                                <div class="w-4 h-4 rounded-full border border-white/20 shadow-sm" :style="'background-color: ' + preset.base"></div>
+                                                                <div class="w-4 h-4 rounded-full border border-white/20 shadow-sm" :style="'background-color: ' + preset.surface"></div>
+                                                                <div class="w-4 h-4 rounded-full border border-white/20 shadow-sm" :style="'background-color: ' + preset.accent"></div>
+                                                            </div>
+                                                            <span class="text-[9px] uppercase tracking-widest font-bold" :class="settingsForm.theme === key ? 'text-accent drop-shadow-sm' : 'text-textMuted'" x-text="preset.name"></span>
                                                         </button>
+                                                    </template>
+                                                </div>
+
+                                                <div x-show="settingsForm.theme === 'custom'" x-transition class="mt-4 p-5 bg-base/50 backdrop-blur-md rounded-xl border border-white/10 grid grid-cols-1 md:grid-cols-3 gap-6 shadow-inner" x-cloak>
+                                                    <div>
+                                                        <label class="admin-label">Fondo Principal (Base)</label>
+                                                        <div class="flex items-center gap-3">
+                                                            <input type="color" x-model="settingsForm.color_base" class="h-10 w-16 rounded cursor-pointer bg-transparent border-0 p-0 shadow-inner">
+                                                            <span class="text-xs font-mono text-white uppercase" x-text="settingsForm.color_base"></span>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label class="admin-label">Tarjetas (Surface)</label>
+                                                        <div class="flex items-center gap-3">
+                                                            <input type="color" x-model="settingsForm.color_surface" class="h-10 w-16 rounded cursor-pointer bg-transparent border-0 p-0 shadow-inner">
+                                                            <span class="text-xs font-mono text-white uppercase" x-text="settingsForm.color_surface"></span>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label class="admin-label">Destacados (Acento)</label>
+                                                        <div class="flex items-center gap-3">
+                                                            <input type="color" x-model="settingsForm.color_accent" class="h-10 w-16 rounded cursor-pointer bg-transparent border-0 p-0 shadow-inner">
+                                                            <span class="text-xs font-mono text-white uppercase" x-text="settingsForm.color_accent"></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mt-6 pt-6 border-t border-white/5">
+                                                    <div class="flex justify-between items-center mb-4">
+                                                        <label class="admin-label !mb-0">Opacidad de la Portada</label>
+                                                        <span class="text-xs font-mono text-accent font-bold" x-text="(settingsForm.hero_opacity !== undefined ? settingsForm.hero_opacity : 80) + '%'"></span>
+                                                    </div>
+                                                    <input type="range" x-model="settingsForm.hero_opacity" min="0" max="100" step="5" class="w-full accent-accent h-2 bg-surfaceHighlight/50 rounded-lg cursor-pointer">
+                                                    <p class="text-[9px] text-gray-400 mt-2 ml-1">Controla qué tan oscurecida se ve la imagen de la tienda. 0% es totalmente transparente.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Vías de Contacto -->
+                                        <div class="glass-panel rounded-2xl p-6 md:p-8 relative overflow-hidden">
+                                            <h4 class="text-lg font-heading font-bold text-white mb-6 border-b border-white/10 pb-4">Vías de Contacto</h4>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                                                <div>
+                                                    <label class="admin-label">Número de WhatsApp (Ventas)</label>
+                                                    <div class="relative">
+                                                        <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-success drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                                                        <input type="text" x-model="settingsForm.whatsapp" class="admin-input !pl-12 font-mono" placeholder="Ej: 5491123456789">
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label class="admin-label">Correo Electrónico (Footer)</label>
+                                                    <div class="relative">
+                                                        <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-textMuted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                                        <input type="email" x-model="settingsForm.email" class="admin-input !pl-12 font-mono" placeholder="contacto@mitienda.com">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Descripción de Footer -->
+                                        <div class="glass-panel rounded-2xl p-6 md:p-8 relative overflow-hidden">
+                                            <h4 class="text-lg font-heading font-bold text-white mb-6 border-b border-white/10 pb-4">Descripción de la Tienda (Footer)</h4>
+                                            <textarea x-model="settingsForm.footer_description" rows="3" class="admin-input font-light resize-none" placeholder="Pequeño resumen sobre qué es la tienda que va al fondo de la web..."></textarea>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- TAB: PORTADA (HERO) -->
+                                <template x-if="activeSettingsTab === 'hero'">
+                                    <div class="space-y-6" x-transition.opacity>
+                                        <div class="glass-panel rounded-2xl p-6 md:p-8 relative overflow-hidden">
+                                            <div class="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+                                                <h4 class="text-lg font-heading font-bold text-white">Textos de la Portada</h4>
+                                                <span class="text-[8px] uppercase tracking-widest font-bold text-accent bg-accent/10 border border-accent/30 px-2 py-1 rounded-full">Siempre visible</span>
+                                            </div>
+
+                                            <div class="space-y-6 relative z-10">
+                                                <div>
+                                                    <label class="admin-label">Título Principal (H1)</label>
+                                                    <input type="text" x-model="settingsForm.hero_title" class="admin-input text-lg font-heading font-bold" placeholder="El título gigante al entrar a la web...">
+                                                </div>
+
+                                                <div>
+                                                    <label class="admin-label">Subtítulo de la Portada</label>
+                                                    <textarea x-model="settingsForm.hero_subtitle" rows="2" class="admin-input font-light resize-none" placeholder="El texto debajo del título gigante..."></textarea>
+                                                </div>
+
+                                                <div class="pt-4 border-t border-white/5">
+                                                    <div class="flex justify-between items-baseline mb-3 ml-1">
+                                                        <label class="admin-label !mb-0">Imágenes del Carrusel de Portada (Hero)</label>
+                                                        <span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">(Max 3 imágenes)</span>
+                                                    </div>
+
+                                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                                        <template x-for="(url, index) in settingsForm.hero_images" :key="'hero-exist-'+index">
+                                                            <div class="relative aspect-video sm:aspect-square md:aspect-video rounded-xl border border-white/10 overflow-hidden group bg-base/50 shadow-inner">
+                                                                <img :src="url" class="w-full h-full object-cover">
+                                                                <button type="button" @click="removeExistingHeroImage(index)" class="absolute top-2 right-2 bg-danger/90 backdrop-blur-md text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-danger shadow-md">
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                                </button>
+                                                            </div>
+                                                        </template>
+
+                                                        <template x-for="(preview, index) in newHeroImagePreviews" :key="'hero-new-'+index">
+                                                            <div class="relative aspect-video sm:aspect-square md:aspect-video rounded-xl border border-white/10 overflow-hidden group bg-base/50 shadow-inner">
+                                                                <img :src="preview" class="w-full h-full object-cover opacity-70">
+                                                                <span class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-accent text-darkLux text-[8px] font-bold px-2 py-0.5 rounded-full shadow-[0_0_10px_rgba(var(--color-accent),0.5)]">NUEVA</span>
+                                                                <button type="button" @click="removeNewHeroImage(index)" class="absolute top-2 right-2 bg-danger/90 backdrop-blur-md text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-danger shadow-md">
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                                </button>
+                                                            </div>
+                                                        </template>
+
+                                                        <div x-show="(settingsForm.hero_images?.length || 0) + newHeroImagePreviews.length < 3"
+                                                             class="aspect-video sm:aspect-square md:aspect-video rounded-xl border-2 border-dashed border-white/20 hover:border-accent flex flex-col items-center justify-center cursor-pointer transition-colors group bg-surface/20 hover:bg-surface/40"
+                                                             @click="document.getElementById('heroImageUpload').click()">
+                                                            <svg class="w-8 h-8 text-textMuted group-hover:text-accent transition-colors mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                            <span class="text-[10px] text-textMuted uppercase font-bold tracking-widest group-hover:text-accent transition-colors text-center px-2">Añadir Portada</span>
+                                                        </div>
+                                                    </div>
+                                                    <input type="file" id="heroImageUpload" accept="image/*" multiple class="hidden" @change="handleHeroImageSelection">
+                                                    <p class="text-[10px] text-gray-400 font-light mt-3 ml-1">Sugerimos utilizar imágenes horizontales en alta calidad (ej. 1920x1080px).</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- TAB: SERVICIOS -->
+                                <template x-if="activeSettingsTab === 'servicios'">
+                                    <div class="space-y-6" x-transition.opacity>
+
+                                        <!-- Gestor de Servicios -->
+                                        <div class="glass-panel rounded-2xl p-6 md:p-8 relative overflow-visible">
+                                            <div class="flex justify-between items-center border-b border-white/10 pb-4 mb-6">
+                                                <h4 class="text-lg font-heading font-bold text-white">Servicios Destacados</h4>
+                                                <span class="text-[10px] text-textMuted uppercase tracking-widest font-bold bg-surface/50 border border-white/5 px-3 py-1 rounded-full shadow-sm" x-text="(settingsForm.services ? settingsForm.services.length : 0) + '/4'"></span>
+                                            </div>
+                                            <p class="text-xs text-gray-400 font-light mb-6">Añade hasta 4 tarjetas de servicios o pilares de tu marca. Usa imágenes panorámicas o elige un ícono de la librería universal si decides no subir fotos.</p>
+
+                                            <div class="space-y-4 relative z-10">
+                                                <template x-for="(service, index) in settingsForm.services" :key="service.id">
+                                                    <div x-data="{ showIconSelector: false, iconPickerPos: {top:0,left:0} }" x-init="$nextTick(() => { document.getElementById('main-scroll').addEventListener('scroll', () => { showIconSelector=false }) })" class="p-4 bg-base/30 backdrop-blur-md rounded-xl border border-white/10 relative group flex flex-col sm:flex-row gap-5 items-start transition-colors hover:border-accent/40 hover:bg-base/50">
+
+                                                        <div class="w-full sm:w-36 flex-shrink-0 flex flex-col gap-2 relative" style="isolation: isolate;">
+                                                            <div class="w-full aspect-video rounded-lg border border-dashed border-white/20 hover:border-accent overflow-hidden bg-surface/40 flex flex-col items-center justify-center relative cursor-pointer transition-colors shadow-inner" @click="document.getElementById('svcImg_' + service.id).click()">
+                                                                <template x-if="newServicePreviews[service.id] || service.image">
+                                                                    <div class="absolute inset-0 flex items-center justify-center bg-base/80 z-10">
+                                                                        <img :src="newServicePreviews[service.id] || service.image" class="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500">
+                                                                        <button type="button" @click.stop="removeServiceImage(service.id)" class="absolute top-1 right-1 bg-danger/90 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-danger shadow-[0_0_10px_rgba(225,29,72,0.5)]" title="Eliminar imagen">
+                                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                                        </button>
+                                                                    </div>
+                                                                </template>
+                                                                <div class="text-center" x-show="!newServicePreviews[service.id] && !service.image">
+                                                                    <svg class="w-5 h-5 text-textMuted group-hover:text-accent transition-colors mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                                    <span class="text-[8px] text-textMuted uppercase font-bold tracking-widest group-hover:text-accent transition-colors block">Subir Foto</span>
+                                                                </div>
+                                                            </div>
+                                                            <input type="file" :id="'svcImg_' + service.id" accept="image/*" class="hidden" @change="handleServiceImage($event, service.id)">
+
+                                                            <p class="text-[8px] text-gray-500 text-center font-medium">Rec: 800x450px</p>
+
+                                                            <!-- Botón Desplegable de Íconos -->
+                                                            <div x-show="!newServicePreviews[service.id] && !service.image" class="w-full relative mt-1">
+                                                                <button type="button" @click="iconPickerPos={top:$el.getBoundingClientRect().bottom+4,left:$el.getBoundingClientRect().left}; showIconSelector=!showIconSelector" class="w-full flex items-center justify-between px-2.5 py-1.5 bg-surface/50 border border-white/10 rounded-md text-[10px] text-textMuted hover:border-accent hover:text-white transition-colors shadow-sm">
+                                                                    <span class="flex items-center gap-1.5">
+                                                                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" x-html="serviceIcons[service.icon || 'star']"></svg>
+                                                                        <span class="font-medium">Elegir Ícono</span>
+                                                                    </span>
+                                                                    <svg class="w-3.5 h-3.5 transition-transform" :class="showIconSelector ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                                </button>
+                                                            </div>
+
+                                                            <template x-teleport="body">
+                                                                <div x-show="showIconSelector" @click.away="showIconSelector = false" class="fixed w-[220px] p-2 bg-surface/90 backdrop-blur-xl border border-white/10 rounded-lg grid grid-cols-5 gap-1.5 shadow-[0_15px_40px_rgba(0,0,0,0.5)] max-h-48 overflow-y-auto custom-scrollbar" :style="'z-index:99999;top:'+iconPickerPos.top+'px;left:'+iconPickerPos.left+'px'" x-transition>
+                                                                    <template x-for="(svgContent, iconName) in serviceIcons" :key="iconName">
+                                                                        <button type="button" @click="service.icon = iconName; showIconSelector = false" class="aspect-square rounded border flex items-center justify-center transition-colors hover:scale-110" :class="(service.icon === iconName || (!service.icon && iconName === 'star')) ? 'bg-accent/20 border-accent text-accent shadow-sm' : 'bg-base/50 border-white/5 text-textMuted hover:text-accent hover:border-accent/50'" :title="iconName">
+                                                                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" x-html="svgContent"></svg>
+                                                                        </button>
+                                                                    </template>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+
+                                                        <div class="flex-grow w-full space-y-2.5 relative z-0">
+                                                            <input type="text" x-model="service.title" class="admin-input !py-2.5 !px-3 font-heading font-bold text-sm" placeholder="Título del Servicio (Obligatorio)" required>
+                                                            <textarea x-model="service.description" rows="3" class="admin-input !py-2.5 !px-3 font-light resize-none text-xs leading-relaxed" placeholder="Breve descripción obligatoria (2-3 líneas)..." required></textarea>
+                                                        </div>
+
+                                                        <div class="absolute sm:static top-2 right-2 sm:mt-1 flex-shrink-0 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                                            <button type="button" @click="removeService(index)" class="text-textMuted hover:text-white p-1.5 rounded-md transition-colors bg-surface/50 sm:bg-transparent border sm:border-transparent border-white/10 hover:bg-danger/80 hover:border-danger shadow-sm" title="Eliminar tarjeta">
+                                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </template>
-                                                <div class="text-center" x-show="!newServicePreviews[service.id] && !service.image">
-                                                    <svg class="w-5 h-5 text-textMuted group-hover:text-accent transition-colors mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                                    <span class="text-[8px] text-textMuted uppercase font-bold tracking-widest group-hover:text-accent transition-colors block">Subir Foto</span>
-                                                </div>
-                                            </div>
-                                            <input type="file" :id="'svcImg_' + service.id" accept="image/*" class="hidden" @change="handleServiceImage($event, service.id)">
-                                            
-                                            <p class="text-[8px] text-gray-500 text-center font-medium">Rec: 800x450px</p>
 
-                                            <!-- Botón Desplegable de Íconos -->
-                                            <div x-show="!newServicePreviews[service.id] && !service.image" class="w-full relative mt-1">
-                                                <button type="button" @click="showIconSelector = !showIconSelector" class="w-full flex items-center justify-between px-2.5 py-1.5 bg-surface/50 border border-white/10 rounded-md text-[10px] text-textMuted hover:border-accent hover:text-white transition-colors shadow-sm">
-                                                    <span class="flex items-center gap-1.5">
-                                                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" x-html="serviceIcons[service.icon || 'star']"></svg>
-                                                        <span class="font-medium">Elegir Ícono</span>
-                                                    </span>
-                                                    <svg class="w-3.5 h-3.5 transition-transform" :class="showIconSelector ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                <button type="button" @click="addService" x-show="!settingsForm.services || settingsForm.services.length < 4" class="w-full py-3.5 border border-dashed border-white/20 hover:border-accent text-textMuted hover:text-accent font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 bg-surface/20 hover:bg-surface/40 shadow-sm backdrop-blur-md">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                                    Añadir Tarjeta de Servicio
                                                 </button>
-                                                
-                                                <div x-show="showIconSelector" @click.away="showIconSelector = false" class="absolute left-0 w-[200px] sm:w-[220px] p-2 bg-surface/90 backdrop-blur-xl border border-white/10 rounded-lg grid grid-cols-5 gap-1.5 z-[50] shadow-[0_15px_40px_rgba(0,0,0,0.5)] max-h-48 overflow-y-auto custom-scrollbar" :class="index >= 2 ? 'bottom-full mb-1' : 'top-full mt-1'" x-transition>
-                                                    <template x-for="(svgContent, iconName) in serviceIcons" :key="iconName">
-                                                        <button type="button" @click="service.icon = iconName; showIconSelector = false" class="aspect-square rounded border flex items-center justify-center transition-colors hover:scale-110" :class="(service.icon === iconName || (!service.icon && iconName === 'star')) ? 'bg-accent/20 border-accent text-accent shadow-sm' : 'bg-base/50 border-white/5 text-textMuted hover:text-accent hover:border-accent/50'" :title="iconName">
-                                                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" x-html="svgContent"></svg>
-                                                        </button>
-                                                    </template>
-                                                </div>
                                             </div>
                                         </div>
 
-                                        <div class="flex-grow w-full space-y-2.5 relative z-0">
-                                            <input type="text" x-model="service.title" class="admin-input !py-2.5 !px-3 font-heading font-bold text-sm" placeholder="Título del Servicio (Obligatorio)" required>
-                                            <textarea x-model="service.description" rows="3" class="admin-input !py-2.5 !px-3 font-light resize-none text-xs leading-relaxed" placeholder="Breve descripción obligatoria (2-3 líneas)..." required></textarea>
-                                        </div>
+                                        <!-- Pilares de Confianza -->
+                                        <div class="glass-panel rounded-2xl p-6 md:p-8 relative overflow-visible">
+                                            <div class="flex justify-between items-center border-b border-white/10 pb-4 mb-6">
+                                                <h4 class="text-lg font-heading font-bold text-white">Pilares de Confianza</h4>
+                                                <span class="text-[10px] text-textMuted uppercase tracking-widest font-bold bg-surface/50 border border-white/5 px-3 py-1 rounded-full shadow-sm" x-text="(settingsForm.service_features ? settingsForm.service_features.length : 0) + '/3'"></span>
+                                            </div>
+                                            <p class="text-xs text-gray-400 font-light mb-6">Edita los 3 pilares que aparecen en la barra inferior (Cápsula Flotante) para transmitir confianza y seguridad a tus clientes.</p>
 
-                                        <div class="absolute sm:static top-2 right-2 sm:mt-1 flex-shrink-0 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                            <button type="button" @click="removeService(index)" class="text-textMuted hover:text-white p-1.5 rounded-md transition-colors bg-surface/50 sm:bg-transparent border sm:border-transparent border-white/10 hover:bg-danger/80 hover:border-danger shadow-sm" title="Eliminar tarjeta">
-                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                            </button>
+                                            <div class="space-y-4 relative z-10">
+                                                <template x-for="(feature, index) in settingsForm.service_features" :key="feature.id">
+                                                    <div x-data="{ showFeatureIconSelector: false, featurePickerPos: {top:0,left:0} }" x-init="$nextTick(() => { document.getElementById('main-scroll').addEventListener('scroll', () => { showFeatureIconSelector=false }) })" class="p-4 bg-base/30 backdrop-blur-md rounded-xl border border-white/10 relative group flex flex-col sm:flex-row gap-5 items-start transition-colors hover:border-accent/40 hover:bg-base/50">
+
+                                                        <div class="w-full sm:w-36 flex-shrink-0 flex flex-col gap-2 relative" style="isolation: isolate;">
+                                                            <div class="w-full aspect-video rounded-lg border border-white/10 bg-surface/50 flex flex-col items-center justify-center relative shadow-[inset_0_0_15px_rgba(0,0,0,0.5)] text-accent">
+                                                                <svg class="w-8 h-8 drop-shadow-[0_0_8px_rgba(var(--color-accent),0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-html="serviceIcons[feature.icon || 'star']"></svg>
+                                                            </div>
+
+                                                            <div class="w-full relative mt-1">
+                                                                <button type="button" @click="featurePickerPos={top:$el.getBoundingClientRect().bottom+4,left:$el.getBoundingClientRect().left}; showFeatureIconSelector=!showFeatureIconSelector" class="w-full flex items-center justify-between px-2.5 py-1.5 bg-surface/50 border border-white/10 rounded-md text-[10px] text-textMuted hover:border-accent hover:text-white transition-colors shadow-sm">
+                                                                    <span class="flex items-center gap-1.5">
+                                                                        <span class="font-medium">Cambiar Ícono</span>
+                                                                    </span>
+                                                                    <svg class="w-3.5 h-3.5 transition-transform" :class="showFeatureIconSelector ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                                </button>
+
+                                                                <template x-teleport="body">
+                                                                    <div x-show="showFeatureIconSelector" @click.away="showFeatureIconSelector = false" class="fixed w-[220px] p-2 bg-surface/90 backdrop-blur-xl border border-white/10 rounded-lg grid grid-cols-5 gap-1.5 shadow-[0_15px_40px_rgba(0,0,0,0.5)] max-h-48 overflow-y-auto custom-scrollbar" :style="'z-index:99999;top:'+featurePickerPos.top+'px;left:'+featurePickerPos.left+'px'" x-transition>
+                                                                        <template x-for="(svgContent, iconName) in serviceIcons" :key="iconName">
+                                                                            <button type="button" @click="feature.icon = iconName; showFeatureIconSelector = false" class="aspect-square rounded border flex items-center justify-center transition-colors hover:scale-110" :class="(feature.icon === iconName || (!feature.icon && iconName === 'star')) ? 'bg-accent/20 border-accent text-accent shadow-sm' : 'bg-base/50 border-white/5 text-textMuted hover:text-accent hover:border-accent/50'" :title="iconName">
+                                                                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" x-html="svgContent"></svg>
+                                                                            </button>
+                                                                        </template>
+                                                                    </div>
+                                                                </template>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="flex-grow w-full space-y-2.5 relative z-0">
+                                                            <input type="text" x-model="feature.title" class="admin-input !py-2.5 !px-3 font-heading font-bold text-sm uppercase tracking-widest" placeholder="Título del Pilar (Obligatorio)" required>
+                                                            <textarea x-model="feature.description" rows="3" class="admin-input !py-2.5 !px-3 font-light resize-none text-xs leading-relaxed" placeholder="Breve descripción obligatoria..." required></textarea>
+                                                        </div>
+
+                                                        <div class="absolute sm:static top-2 right-2 sm:mt-1 flex-shrink-0 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                                            <button type="button" @click="removeFeature(index)" class="text-textMuted hover:text-white p-1.5 rounded-md transition-colors bg-surface/50 sm:bg-transparent border sm:border-transparent border-white/10 hover:bg-danger/80 hover:border-danger shadow-sm" title="Eliminar pilar">
+                                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </template>
+
+                                                <button type="button" @click="addFeature" x-show="!settingsForm.service_features || settingsForm.service_features.length < 3" class="w-full py-3.5 border border-dashed border-white/20 hover:border-accent text-textMuted hover:text-accent font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 bg-surface/20 hover:bg-surface/40 shadow-sm backdrop-blur-md">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                                    Añadir Pilar
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </template>
 
-                                <button type="button" @click="addService" x-show="!settingsForm.services || settingsForm.services.length < 4" class="w-full py-3.5 border border-dashed border-white/20 hover:border-accent text-textMuted hover:text-accent font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 bg-surface/20 hover:bg-surface/40 shadow-sm backdrop-blur-md">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                                    Añadir Tarjeta de Servicio
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- SECCIÓN: PILARES DE CONFIANZA -->
-                        <div class="glass-panel rounded-2xl p-6 md:p-8 relative overflow-visible mt-8">
-                            <div class="flex justify-between items-center border-b border-white/10 pb-4 mb-6">
-                                <h4 class="text-lg font-heading font-bold text-white">Pilares de Confianza</h4>
-                                <span class="text-[10px] text-textMuted uppercase tracking-widest font-bold bg-surface/50 border border-white/5 px-3 py-1 rounded-full shadow-sm" x-text="(settingsForm.service_features ? settingsForm.service_features.length : 0) + '/3'"></span>
-                            </div>
-                            <p class="text-xs text-gray-400 font-light mb-6">Edita los 3 pilares que aparecen en la barra inferior (Cápsula Flotante) para transmitir confianza y seguridad a tus clientes.</p>
-                            
-                            <div class="space-y-4 relative z-10">
-                                <template x-for="(feature, index) in settingsForm.service_features" :key="feature.id">
-                                    <div x-data="{ showFeatureIconSelector: false }" class="p-4 bg-base/30 backdrop-blur-md rounded-xl border border-white/10 relative group flex flex-col sm:flex-row gap-5 items-start transition-colors hover:border-accent/40 hover:bg-base/50">
-                                        
-                                        <div class="w-full sm:w-36 flex-shrink-0 flex flex-col gap-2 relative">
-                                            <div class="w-full aspect-video rounded-lg border border-white/10 bg-surface/50 flex flex-col items-center justify-center relative shadow-[inset_0_0_15px_rgba(0,0,0,0.5)] text-accent">
-                                                <svg class="w-8 h-8 drop-shadow-[0_0_8px_rgba(var(--color-accent),0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-html="serviceIcons[feature.icon || 'star']"></svg>
-                                            </div>
-
-                                            <div class="w-full relative mt-1">
-                                                <button type="button" @click="showFeatureIconSelector = !showFeatureIconSelector" class="w-full flex items-center justify-between px-2.5 py-1.5 bg-surface/50 border border-white/10 rounded-md text-[10px] text-textMuted hover:border-accent hover:text-white transition-colors shadow-sm">
-                                                    <span class="flex items-center gap-1.5">
-                                                        <span class="font-medium">Cambiar Ícono</span>
-                                                    </span>
-                                                    <svg class="w-3.5 h-3.5 transition-transform" :class="showFeatureIconSelector ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                <!-- TAB: SESIONES -->
+                                <template x-if="activeSettingsTab === 'sesiones'">
+                                    <div class="space-y-6" x-transition.opacity>
+                                        <div class="glass-panel rounded-2xl p-6 md:p-8 relative overflow-hidden">
+                                            <div class="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+                                                <h4 class="text-lg font-heading font-bold text-white">Encabezado de Sesiones y Consultas</h4>
+                                                <button type="button" @click="currentView = 'consultations'" class="text-[9px] uppercase tracking-widest font-bold text-accent hover:text-white border border-accent/30 hover:border-accent hover:bg-accent/10 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 flex-shrink-0">
+                                                    Gestionar consultas
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
                                                 </button>
-                                                
-                                                <div x-show="showFeatureIconSelector" @click.away="showFeatureIconSelector = false" class="absolute left-0 w-[200px] sm:w-[220px] p-2 bg-surface/90 backdrop-blur-xl border border-white/10 rounded-lg grid grid-cols-5 gap-1.5 z-[50] shadow-[0_15px_40px_rgba(0,0,0,0.5)] max-h-48 overflow-y-auto custom-scrollbar" :class="index >= 1 ? 'bottom-full mb-1' : 'top-full mt-1'" x-transition>
-                                                    <template x-for="(svgContent, iconName) in serviceIcons" :key="iconName">
-                                                        <button type="button" @click="feature.icon = iconName; showFeatureIconSelector = false" class="aspect-square rounded border flex items-center justify-center transition-colors hover:scale-110" :class="(feature.icon === iconName || (!feature.icon && iconName === 'star')) ? 'bg-accent/20 border-accent text-accent shadow-sm' : 'bg-base/50 border-white/5 text-textMuted hover:text-accent hover:border-accent/50'" :title="iconName">
-                                                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" x-html="svgContent"></svg>
-                                                        </button>
-                                                    </template>
+                                            </div>
+                                            <p class="text-xs text-gray-400 font-light mb-6">Estos textos aparecen arriba del listado de consultas. El alta, edición y borrado de cada consulta individual se hace en "Gestionar consultas".</p>
+
+                                            <div class="space-y-6 relative z-10">
+                                                <div>
+                                                    <label class="admin-label">Texto Pequeño (Eyebrow)</label>
+                                                    <input type="text" x-model="settingsForm.sec_sesiones_eyebrow" class="admin-input" placeholder="Ej: Espacios 1 a 1">
+                                                </div>
+                                                <div>
+                                                    <label class="admin-label">Título de la Sección</label>
+                                                    <input type="text" x-model="settingsForm.sec_sesiones_title" class="admin-input font-heading font-bold" placeholder="Ej: Consultas & Sesiones">
+                                                </div>
+                                                <div>
+                                                    <label class="admin-label">Descripción</label>
+                                                    <textarea x-model="settingsForm.sec_sesiones_desc" rows="2" class="admin-input font-light resize-none" placeholder="Ej: Reserva tu espacio personal para lecturas..."></textarea>
                                                 </div>
                                             </div>
-                                        </div>
-
-                                        <div class="flex-grow w-full space-y-2.5 relative z-0">
-                                            <input type="text" x-model="feature.title" class="admin-input !py-2.5 !px-3 font-heading font-bold text-sm uppercase tracking-widest" placeholder="Título del Pilar (Obligatorio)" required>
-                                            <textarea x-model="feature.description" rows="3" class="admin-input !py-2.5 !px-3 font-light resize-none text-xs leading-relaxed" placeholder="Breve descripción obligatoria..." required></textarea>
-                                        </div>
-
-                                        <div class="absolute sm:static top-2 right-2 sm:mt-1 flex-shrink-0 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                            <button type="button" @click="removeFeature(index)" class="text-textMuted hover:text-white p-1.5 rounded-md transition-colors bg-surface/50 sm:bg-transparent border sm:border-transparent border-white/10 hover:bg-danger/80 hover:border-danger shadow-sm" title="Eliminar pilar">
-                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                            </button>
                                         </div>
                                     </div>
                                 </template>
 
-                                <button type="button" @click="addFeature" x-show="!settingsForm.service_features || settingsForm.service_features.length < 3" class="w-full py-3.5 border border-dashed border-white/20 hover:border-accent text-textMuted hover:text-accent font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 bg-surface/20 hover:bg-surface/40 shadow-sm backdrop-blur-md">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                                    Añadir Pilar
-                                </button>
-                            </div>
-                        </div>
+                                <!-- TAB: BIBLIOTECA -->
+                                <template x-if="activeSettingsTab === 'biblioteca'">
+                                    <div class="space-y-6" x-transition.opacity>
+                                        <div class="glass-panel rounded-2xl p-6 md:p-8 relative overflow-hidden">
+                                            <div class="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+                                                <h4 class="text-lg font-heading font-bold text-white">Encabezado de Biblioteca Oculta</h4>
+                                                <button type="button" @click="currentView = 'books'" class="text-[9px] uppercase tracking-widest font-bold text-accent hover:text-white border border-accent/30 hover:border-accent hover:bg-accent/10 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 flex-shrink-0">
+                                                    Gestionar libros
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                                                </button>
+                                            </div>
+                                            <p class="text-xs text-gray-400 font-light mb-6">Estos textos aparecen arriba de la grilla de libros. El alta, edición y borrado de cada libro se hace en "Gestionar libros".</p>
 
-                        <!-- SECCIÓN: LLAMADO A LA ACCIÓN (CTA) -->
-                        <div class="glass-panel rounded-2xl p-6 md:p-8 relative overflow-hidden mt-8">
-                            <h4 class="text-lg font-heading font-bold text-white mb-6 border-b border-white/10 pb-4">Llamado a la Acción (Servicios)</h4>
-                            <p class="text-xs text-gray-400 font-light mb-6">Personaliza el mensaje que invita a los usuarios a contactarte al final de la sección de servicios.</p>
-                            
-                            <div class="space-y-6 relative z-10">
-                                <div>
-                                    <label class="admin-label">Título del Mensaje</label>
-                                    <input type="text" x-model="settingsForm.cta_title" class="admin-input font-heading font-bold" placeholder="Ej: ¿Dudas sobre por dónde empezar?">
-                                </div>
-                                
-                                <div>
-                                    <label class="admin-label">Texto Descriptivo</label>
-                                    <textarea x-model="settingsForm.cta_description" rows="2" class="admin-input font-light resize-none" placeholder="Ej: Escríbenos directamente y te orientaremos..."></textarea>
-                                </div>
-
-                                <div>
-                                    <div class="flex justify-between items-baseline mb-2 ml-1">
-                                        <label class="admin-label !mb-0">Texto del Botón</label>
-                                        <span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">(Sugerido: Máx 25 caracteres)</span>
+                                            <div class="space-y-6 relative z-10">
+                                                <div>
+                                                    <label class="admin-label">Texto Pequeño (Eyebrow)</label>
+                                                    <input type="text" x-model="settingsForm.sec_biblioteca_eyebrow" class="admin-input" placeholder="Ej: Textos Sagrados">
+                                                </div>
+                                                <div>
+                                                    <label class="admin-label">Título de la Sección</label>
+                                                    <input type="text" x-model="settingsForm.sec_biblioteca_title" class="admin-input font-heading font-bold" placeholder="Ej: Biblioteca Oculta">
+                                                </div>
+                                                <div>
+                                                    <label class="admin-label">Descripción</label>
+                                                    <textarea x-model="settingsForm.sec_biblioteca_desc" rows="2" class="admin-input font-light resize-none" placeholder="Ej: Explora y descarga tomos, grimorios..."></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <input type="text" x-model="settingsForm.cta_button_text" maxlength="30" class="admin-input font-medium" placeholder="Ej: Contactar al Oráculo">
-                                </div>
+                                </template>
+
+                                <!-- TAB: TESTIMONIOS -->
+                                <template x-if="activeSettingsTab === 'testimonios'">
+                                    <div class="space-y-6" x-transition.opacity>
+                                        <div class="glass-panel rounded-2xl p-6 md:p-8 relative overflow-hidden">
+                                            <div class="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+                                                <h4 class="text-lg font-heading font-bold text-white">Encabezado de Testimonios</h4>
+                                                <button type="button" @click="currentView = 'testimonials'" class="text-[9px] uppercase tracking-widest font-bold text-accent hover:text-white border border-accent/30 hover:border-accent hover:bg-accent/10 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 flex-shrink-0">
+                                                    Gestionar testimonios
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                                                </button>
+                                            </div>
+                                            <p class="text-xs text-gray-400 font-light mb-6">Estos textos aparecen arriba del carrusel de testimonios. El alta, edición y borrado de cada testimonio se hace en "Gestionar testimonios".</p>
+
+                                            <div class="space-y-6 relative z-10">
+                                                <div>
+                                                    <label class="admin-label">Texto Pequeño (Eyebrow)</label>
+                                                    <input type="text" x-model="settingsForm.sec_testimonios_eyebrow" class="admin-input" placeholder="Ej: Voces del Camino">
+                                                </div>
+                                                <div>
+                                                    <label class="admin-label">Título de la Sección</label>
+                                                    <input type="text" x-model="settingsForm.sec_testimonios_title" class="admin-input font-heading font-bold" placeholder="Ej: Clientes Felices">
+                                                </div>
+                                                <div>
+                                                    <label class="admin-label">Descripción</label>
+                                                    <textarea x-model="settingsForm.sec_testimonios_desc" rows="2" class="admin-input font-light resize-none" placeholder="Ej: Testimonios de quienes ya transformaron su camino..."></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- TAB: TIENDA -->
+                                <template x-if="activeSettingsTab === 'tienda'">
+                                    <div class="space-y-6" x-transition.opacity>
+                                        <div class="glass-panel rounded-2xl p-6 md:p-8 relative overflow-hidden">
+                                            <div class="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+                                                <h4 class="text-lg font-heading font-bold text-white">Encabezado de la Tienda</h4>
+                                                <button type="button" @click="currentView = 'products'" class="text-[9px] uppercase tracking-widest font-bold text-accent hover:text-white border border-accent/30 hover:border-accent hover:bg-accent/10 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 flex-shrink-0">
+                                                    Gestionar productos
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                                                </button>
+                                            </div>
+                                            <p class="text-xs text-gray-400 font-light mb-6">Estos textos aparecen arriba del catálogo y los destacados. El alta, edición y borrado de cada producto se hace en "Gestionar productos".</p>
+
+                                            <div class="space-y-6 relative z-10">
+                                                <div>
+                                                    <label class="admin-label">Texto Pequeño (Eyebrow)</label>
+                                                    <input type="text" x-model="settingsForm.sec_tienda_eyebrow" class="admin-input" placeholder="Ej: Catálogo y Herramientas">
+                                                </div>
+                                                <div>
+                                                    <label class="admin-label">Título de la Sección</label>
+                                                    <input type="text" x-model="settingsForm.sec_tienda_title" class="admin-input font-heading font-bold" placeholder="Ej: Tienda de productos">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- TAB: FLASH (Promociones especiales) -->
+                                <template x-if="activeSettingsTab === 'flash'">
+                                    <div class="space-y-6" x-transition.opacity>
+                                        <div class="glass-panel rounded-2xl p-6 md:p-8 relative overflow-hidden">
+                                            <div class="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+                                                <h4 class="text-lg font-heading font-bold text-white">Encabezado de Promociones Especiales</h4>
+                                                <button type="button" @click="currentView = 'products'" class="text-[9px] uppercase tracking-widest font-bold text-accent hover:text-white border border-accent/30 hover:border-accent hover:bg-accent/10 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 flex-shrink-0">
+                                                    Gestionar productos
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                                                </button>
+                                            </div>
+                                            <p class="text-xs text-gray-400 font-light mb-6">Estos textos aparecen arriba de las ofertas de tiempo limitado. Las ofertas en sí (Flash Sales) se marcan desde cada producto en "Gestionar productos".</p>
+
+                                            <div class="space-y-6 relative z-10">
+                                                <div>
+                                                    <label class="admin-label">Texto Pequeño (Eyebrow)</label>
+                                                    <input type="text" x-model="settingsForm.sec_flash_eyebrow" class="admin-input" placeholder="Ej: Portal Temporal">
+                                                </div>
+                                                <div>
+                                                    <label class="admin-label">Título de la Sección</label>
+                                                    <input type="text" x-model="settingsForm.sec_flash_title" class="admin-input font-heading font-bold" placeholder="Ej: Ofertas de tiempo limitado">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- TAB: LLAMADO A LA ACCIÓN (CTA) -->
+                                <template x-if="activeSettingsTab === 'cta'">
+                                    <div class="space-y-6" x-transition.opacity>
+                                        <div class="glass-panel rounded-2xl p-6 md:p-8 relative overflow-hidden">
+                                            <h4 class="text-lg font-heading font-bold text-white mb-6 border-b border-white/10 pb-4">Llamado a la Acción (Servicios)</h4>
+                                            <p class="text-xs text-gray-400 font-light mb-6">Personaliza el mensaje que invita a los usuarios a contactarte al final de la sección de servicios.</p>
+
+                                            <div class="space-y-6 relative z-10">
+                                                <div>
+                                                    <label class="admin-label">Título del Mensaje</label>
+                                                    <input type="text" x-model="settingsForm.cta_title" class="admin-input font-heading font-bold" placeholder="Ej: ¿Dudas sobre por dónde empezar?">
+                                                </div>
+
+                                                <div>
+                                                    <label class="admin-label">Texto Descriptivo</label>
+                                                    <textarea x-model="settingsForm.cta_description" rows="2" class="admin-input font-light resize-none" placeholder="Ej: Escríbenos directamente y te orientaremos..."></textarea>
+                                                </div>
+
+                                                <div>
+                                                    <div class="flex justify-between items-baseline mb-2 ml-1">
+                                                        <label class="admin-label !mb-0">Texto del Botón</label>
+                                                        <span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">(Sugerido: Máx 25 caracteres)</span>
+                                                    </div>
+                                                    <input type="text" x-model="settingsForm.cta_button_text" maxlength="30" class="admin-input font-medium" placeholder="Ej: Contactar al Oráculo">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+
                             </div>
                         </div>
 
-                        <div class="flex justify-end pt-4">
+                        <div class="flex justify-end pt-8">
                             <button type="submit" class="btn-primary w-full sm:w-auto flex items-center justify-center gap-3 px-10 py-4 shadow-[0_0_20px_rgba(var(--color-accent),0.4)]" :disabled="isSavingSettings">
                                 <svg x-show="isSavingSettings" class="animate-spin -ml-1 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                 <span x-text="isSavingSettings ? 'Aplicando...' : 'Guardar Configuración Global'"></span>
@@ -1919,7 +2187,104 @@
                     service_features: JSON.parse(localStorage.getItem('nexus_service_features')) || [],
                     cta_title: localStorage.getItem('nexus_cta_title') || '',
                     cta_description: localStorage.getItem('nexus_cta_description') || '',
-                    cta_button_text: localStorage.getItem('nexus_cta_button_text') || ''
+                    cta_button_text: localStorage.getItem('nexus_cta_button_text') || '',
+                    sections_config: null, // Se hidrata en init() con hydrateSectionsConfig()
+
+                    // Textos editables de encabezado por sección (eyebrow / título / descripción).
+                    // Hero, Servicios y CTA ya tienen sus propios campos arriba; estos cubren el resto.
+                    sec_sesiones_eyebrow: '', sec_sesiones_title: '', sec_sesiones_desc: '',
+                    sec_biblioteca_eyebrow: '', sec_biblioteca_title: '', sec_biblioteca_desc: '',
+                    sec_testimonios_eyebrow: '', sec_testimonios_title: '', sec_testimonios_desc: '',
+                    sec_tienda_eyebrow: '', sec_tienda_title: '',
+                    sec_flash_eyebrow: '', sec_flash_title: ''
+                },
+
+                // --- CONSTRUCTOR DE SECCIONES ---
+                // Metadata fija (no se guarda en BD): etiquetas, iconos y descripciones para la UI.
+                // Lo único persistido por sección es { key, visible, order } dentro de settingsForm.sections_config.
+                sectionsMeta: {
+                    hero:        { label: 'Portada (Hero)',          desc: 'Carrusel principal con título, subtítulo y CTA inicial.', icon: 'sparkles', locked: true },
+                    servicios:   { label: 'Servicios Destacados',     desc: 'Tarjetas de servicios y pilares de confianza.',           icon: 'star' },
+                    sesiones:    { label: 'Sesiones y Consultas',     desc: 'Listado de consultas y sesiones agendables.',             icon: 'compass' },
+                    biblioteca:  { label: 'Biblioteca Oculta',        desc: 'Catálogo de libros y grimorios.',                         icon: 'book' },
+                    testimonios: { label: 'Testimonios',              desc: 'Opiniones y experiencias de clientes.',                   icon: 'heart' },
+                    tienda:      { label: 'Tienda de Productos',      desc: 'Catálogo y destacados de productos a la venta.',          icon: 'store' },
+                    flash:       { label: 'Promociones Especiales',   desc: 'Ofertas por tiempo limitado (Flash Sales).',              icon: 'fire' },
+                    cta:         { label: 'Llamado a la Acción',      desc: 'Bloque final invitando a contactar al asesor.',           icon: 'chat' },
+                },
+                sectionsBuilder: [], // Array reactivo y ordenable: [{ key, visible, order }, ...] construido desde settingsForm.sections_config
+                draggedSectionIndex: null,
+                dragOverSectionIndex: null,
+
+                // Reconstruye sectionsBuilder a partir de settingsForm.sections_config (o valores por defecto si no existe aún en la BD).
+                hydrateSectionsConfig() {
+                    const defaultOrder = ['hero', 'servicios', 'sesiones', 'biblioteca', 'testimonios', 'tienda', 'flash', 'cta'];
+                    const saved = this.settingsForm.sections_config;
+
+                    if (Array.isArray(saved) && saved.length > 0) {
+                        // Partimos de lo guardado, pero nos asegura que cualquier sección nueva quede incluida si aún no existe en la config guardada.
+                        const savedKeys = saved.map(s => s.key);
+                        const merged = [...saved];
+                        defaultOrder.forEach(key => {
+                            if (!savedKeys.includes(key)) merged.push({ key, visible: true, order: merged.length });
+                        });
+                        this.sectionsBuilder = merged
+                            .filter(s => this.sectionsMeta[s.key]) // descarta claves desconocidas/obsoletas
+                            .sort((a, b) => a.order - b.order)
+                            .map((s, i) => ({ key: s.key, visible: s.visible !== false, order: i }));
+                    } else {
+                        // Primera vez: todas visibles, en el orden por defecto.
+                        this.sectionsBuilder = defaultOrder.map((key, i) => ({ key, visible: true, order: i }));
+                    }
+                },
+
+                toggleSectionVisibility(index) {
+                    const section = this.sectionsBuilder[index];
+                    if (this.sectionsMeta[section.key].locked) return; // secciones fijas (ej. Hero) no se pueden ocultar
+                    section.visible = !section.visible;
+                },
+
+                onSectionDragStart(index) {
+                    this.draggedSectionIndex = index;
+                },
+                onSectionDragEnter(index) {
+                    if (this.draggedSectionIndex === null || this.draggedSectionIndex === index) return;
+                    this.dragOverSectionIndex = index;
+                },
+                onSectionDragEnd() {
+                    this.draggedSectionIndex = null;
+                    this.dragOverSectionIndex = null;
+                },
+                onSectionDrop(index) {
+                    if (this.draggedSectionIndex === null || this.draggedSectionIndex === index) {
+                        this.draggedSectionIndex = null;
+                        this.dragOverSectionIndex = null;
+                        return;
+                    }
+                    const draggedSection = this.sectionsBuilder[this.draggedSectionIndex];
+                    const targetSection = this.sectionsBuilder[index];
+                    if (this.sectionsMeta[draggedSection.key].locked || this.sectionsMeta[targetSection.key].locked) {
+                        // Las secciones fijas (ej. Hero) siempre quedan en su lugar, no se reordenan ni se desplazan.
+                        this.draggedSectionIndex = null;
+                        this.dragOverSectionIndex = null;
+                        return;
+                    }
+                    const list = [...this.sectionsBuilder];
+                    const [moved] = list.splice(this.draggedSectionIndex, 1);
+                    list.splice(index, 0, moved);
+                    this.sectionsBuilder = list.map((s, i) => ({ ...s, order: i }));
+                    this.draggedSectionIndex = null;
+                    this.dragOverSectionIndex = null;
+                },
+                moveSection(index, direction) {
+                    // Alternativa accesible al drag-and-drop (botones arriba/abajo), útil en mobile/teclado.
+                    const targetIndex = index + direction;
+                    if (targetIndex < 0 || targetIndex >= this.sectionsBuilder.length) return;
+                    if (this.sectionsMeta[this.sectionsBuilder[index].key].locked) return;
+                    if (this.sectionsMeta[this.sectionsBuilder[targetIndex].key].locked) return;
+                    const list = [...this.sectionsBuilder];
+                    [list[index], list[targetIndex]] = [list[targetIndex], list[index]];
+                    this.sectionsBuilder = list.map((s, i) => ({ ...s, order: i }));
                 },
                 
                 themePresets: {
@@ -2039,6 +2404,7 @@
                 async init() {
                     if (!this.settingsForm.services) this.settingsForm.services = [];
                     if (!this.settingsForm.service_features) this.settingsForm.service_features = [];
+                    this.hydrateSectionsConfig(); // valores por defecto mientras llega la respuesta de Supabase
 
                     this.applyThemePreview();
                     this.initParticles(); // Inicializar el fondo mágico de partículas
@@ -2056,6 +2422,15 @@
                                 if (!this.settingsForm.hero_images) this.settingsForm.hero_images = [];
                                 if (!this.settingsForm.services) this.settingsForm.services = [];
                                 if (!this.settingsForm.service_features) this.settingsForm.service_features = [];
+                                // Los textos de encabezado por sección pueden venir null si la columna existe pero está vacía.
+                                ['sec_sesiones_eyebrow','sec_sesiones_title','sec_sesiones_desc',
+                                 'sec_biblioteca_eyebrow','sec_biblioteca_title','sec_biblioteca_desc',
+                                 'sec_testimonios_eyebrow','sec_testimonios_title','sec_testimonios_desc',
+                                 'sec_tienda_eyebrow','sec_tienda_title',
+                                 'sec_flash_eyebrow','sec_flash_title'].forEach(field => {
+                                    if (this.settingsForm[field] === null || this.settingsForm[field] === undefined) this.settingsForm[field] = '';
+                                });
+                                this.hydrateSectionsConfig(); // ahora con los datos reales de la BD (o defaults si la columna no existe aún)
                                 
                                 localStorage.setItem('nexus_site_name', this.settingsForm.site_name || '');
                                 localStorage.setItem('nexus_site_motto', this.settingsForm.site_motto || '');
@@ -2457,7 +2832,22 @@
                             footer_description: this.sanitizeInput(this.settingsForm.footer_description),
                             cta_title: this.sanitizeInput(this.settingsForm.cta_title),
                             cta_description: this.sanitizeInput(this.settingsForm.cta_description),
-                            cta_button_text: this.sanitizeInput(this.settingsForm.cta_button_text)
+                            cta_button_text: this.sanitizeInput(this.settingsForm.cta_button_text),
+                            sec_sesiones_eyebrow: this.sanitizeInput(this.settingsForm.sec_sesiones_eyebrow),
+                            sec_sesiones_title: this.sanitizeInput(this.settingsForm.sec_sesiones_title),
+                            sec_sesiones_desc: this.sanitizeInput(this.settingsForm.sec_sesiones_desc),
+                            sec_biblioteca_eyebrow: this.sanitizeInput(this.settingsForm.sec_biblioteca_eyebrow),
+                            sec_biblioteca_title: this.sanitizeInput(this.settingsForm.sec_biblioteca_title),
+                            sec_biblioteca_desc: this.sanitizeInput(this.settingsForm.sec_biblioteca_desc),
+                            sec_testimonios_eyebrow: this.sanitizeInput(this.settingsForm.sec_testimonios_eyebrow),
+                            sec_testimonios_title: this.sanitizeInput(this.settingsForm.sec_testimonios_title),
+                            sec_testimonios_desc: this.sanitizeInput(this.settingsForm.sec_testimonios_desc),
+                            sec_tienda_eyebrow: this.sanitizeInput(this.settingsForm.sec_tienda_eyebrow),
+                            sec_tienda_title: this.sanitizeInput(this.settingsForm.sec_tienda_title),
+                            sec_flash_eyebrow: this.sanitizeInput(this.settingsForm.sec_flash_eyebrow),
+                            sec_flash_title: this.sanitizeInput(this.settingsForm.sec_flash_title),
+                            // Constructor de secciones: persistimos solo lo esencial (key/visible/order), sin la metadata de UI.
+                            sections_config: this.sectionsBuilder.map(s => ({ key: s.key, visible: s.visible, order: s.order }))
                         };
                         
                         let response = await supabaseClient.from('site_settings').update(settingsData).eq('id', 1).select();
@@ -2473,6 +2863,7 @@
                             this.settingsForm = response.data[0];
                             if (!this.settingsForm.services) this.settingsForm.services = [];
                             if (!this.settingsForm.service_features) this.settingsForm.service_features = [];
+                            this.hydrateSectionsConfig();
                             
                             localStorage.setItem('nexus_site_name', this.settingsForm.site_name || '');
                             localStorage.setItem('nexus_site_motto', this.settingsForm.site_motto || '');
