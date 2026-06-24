@@ -285,6 +285,8 @@
     <div x-show="authUser" class="w-5 h-5 flex items-center justify-center bg-accent text-darkLux rounded-full text-[10px] font-bold" x-cloak>
         <span x-text="authUser?.email?.charAt(0).toUpperCase()"></span>
     </div>
+    <!-- Indicador de acceso al panel de administración -->
+    <span x-show="authUser && canAccessAdmin" x-cloak class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-accent border border-darkLux shadow-[0_0_6px_rgba(var(--color-accent),0.8)]"></span>
 </button>
                     
                     <button @click="isCartOpen = true" aria-label="Abrir carrito" class="relative p-2.5 rounded-full transition-all duration-300 hover:scale-105 border border-white/10 hover:border-accent hover:text-accent backdrop-blur-md" :class="(scrolled || isMobileMenuOpen) ? 'bg-surface/50 text-textMuted' : 'bg-surfaceHighlight/30 text-textMain'">
@@ -1255,6 +1257,11 @@
             <h3 class="text-xl font-heading font-bold text-white mb-2">Sesión Iniciada</h3>
             <p class="text-sm text-textMuted font-light mb-8 break-all" x-text="authUser?.email"></p>
             
+            <a x-show="canAccessAdmin" x-cloak href="admin.html" class="w-full mb-3 flex items-center justify-center gap-2 bg-accent/15 hover:bg-accent text-accent hover:text-darkLux backdrop-blur-sm border border-accent/40 hover:border-accent text-[10px] uppercase tracking-[0.2em] py-3.5 rounded-lg transition-all duration-300 font-bold shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Panel de Admin
+            </a>
+
             <button @click="logout()" class="w-full bg-danger/20 hover:bg-danger text-danger hover:text-white backdrop-blur-sm border border-danger/50 text-[10px] uppercase tracking-[0.2em] py-3.5 rounded-lg transition-all duration-300 font-bold shadow-sm">
                 Cerrar Sesión
             </button>
@@ -1387,6 +1394,7 @@
 
                 // --- ESTADO DE IDENTIDAD ---
 authUser: null,
+currentUserRole: null, // Rol del usuario logueado (consultado en user_roles). null = sin rol / no logueado.
 isAuthModalOpen: false,
 authMode: 'login', // 'login' o 'register'
 authForm: { email: '', password: '' },
@@ -1401,6 +1409,29 @@ openAuthModal() {
     this.isAuthModalOpen = true;
 },
 
+// Determina si el usuario logueado tiene permiso para entrar al panel de administración.
+get canAccessAdmin() {
+    return ['editor', 'admin', 'superadmin'].includes(this.currentUserRole);
+},
+
+// Consulta el rol del usuario actual en la tabla user_roles (misma tabla que usa el panel de admin).
+async checkAdminRole() {
+    if (!supabaseClient || !this.authUser) {
+        this.currentUserRole = null;
+        return;
+    }
+    try {
+        const { data, error } = await supabaseClient
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', this.authUser.id);
+
+        this.currentUserRole = (!error && data && data.length > 0) ? data[0].role : null;
+    } catch (e) {
+        this.currentUserRole = null;
+    }
+},
+
 // --- MÉTODOS DE IDENTIDAD ---
 async initAuth() {
     if (!supabaseClient) return;
@@ -1408,10 +1439,12 @@ async initAuth() {
     // Recuperar sesión activa al cargar
     const { data: { session } } = await supabaseClient.auth.getSession();
     this.authUser = session?.user || null;
+    await this.checkAdminRole();
 
     // Escuchar cambios de estado (login, logout)
     supabaseClient.auth.onAuthStateChange((_event, session) => {
         this.authUser = session?.user || null;
+        this.checkAdminRole();
     });
 },
 
@@ -1452,6 +1485,7 @@ async handleEmailAuth() {
         } else if (authData?.user) {
             this.authUser = authData.user;
         }
+        await this.checkAdminRole();
         
         this.isAuthModalOpen = false;
         this.authForm.password = ''; // Limpiamos la contraseña por seguridad
@@ -1466,6 +1500,7 @@ async handleEmailAuth() {
 async logout() {
     await supabaseClient.auth.signOut();
     this.authUser = null; // Fuerza la limpieza visual inmediata
+    this.currentUserRole = null;
     this.isAuthModalOpen = false;
 },
 
