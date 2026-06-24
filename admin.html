@@ -2423,6 +2423,7 @@
                             const { data: setObj } = await supabaseClient.from('site_settings').select('*').single();
                             if (setObj) {
                                 this.settingsForm = { ...this.settingsForm, ...setObj };
+                                this.decodeSettingsForm(this.settingsForm);
                                 if (!this.settingsForm.hero_images) this.settingsForm.hero_images = [];
                                 if (!this.settingsForm.services) this.settingsForm.services = [];
                                 if (!this.settingsForm.service_features) this.settingsForm.service_features = [];
@@ -2746,8 +2747,40 @@
 
                 sanitizeInput(str) {
                     if (typeof str !== 'string') return str;
-                    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', "/": '&#x2F;', "`": '&#x60;', "=": '&#x3D;' };
-                    return str.replace(/[&<>"'`=\/]/ig, (match) => (map[match]));
+                    return str.trim();
+                },
+
+                decodeEntities(str) {
+                    if (typeof str !== 'string') return str;
+                    const txt = document.createElement('textarea');
+                    txt.innerHTML = str;
+                    return txt.value;
+                },
+
+                decodeSettingsForm(obj) {
+                    const textFields = [
+                        'site_name','site_motto','hero_title','hero_subtitle','footer_description',
+                        'cta_title','cta_description','cta_button_text',
+                        'sec_sesiones_eyebrow','sec_sesiones_title','sec_sesiones_desc',
+                        'sec_biblioteca_eyebrow','sec_biblioteca_title','sec_biblioteca_desc',
+                        'sec_testimonios_eyebrow','sec_testimonios_title','sec_testimonios_desc',
+                        'sec_tienda_eyebrow','sec_tienda_title',
+                        'sec_flash_eyebrow','sec_flash_title'
+                    ];
+                    textFields.forEach(f => { if (obj[f]) obj[f] = this.decodeEntities(obj[f]); });
+                    if (Array.isArray(obj.services)) {
+                        obj.services.forEach(s => {
+                            if (s.title) s.title = this.decodeEntities(s.title);
+                            if (s.description) s.description = this.decodeEntities(s.description);
+                        });
+                    }
+                    if (Array.isArray(obj.service_features)) {
+                        obj.service_features.forEach(f => {
+                            if (f.title) f.title = this.decodeEntities(f.title);
+                            if (f.description) f.description = this.decodeEntities(f.description);
+                        });
+                    }
+                    return obj;
                 },
 
                 async saveSettings() {
@@ -2865,6 +2898,7 @@
                         
                         if (response.data && response.data.length > 0) {
                             this.settingsForm = response.data[0];
+                            this.decodeSettingsForm(this.settingsForm);
                             if (!this.settingsForm.services) this.settingsForm.services = [];
                             if (!this.settingsForm.service_features) this.settingsForm.service_features = [];
                             this.hydrateSectionsConfig();
