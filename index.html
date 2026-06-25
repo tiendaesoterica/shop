@@ -1568,7 +1568,58 @@ authMode: 'login', // 'login' o 'register'
 authForm: { email: '', password: '' },
 authLoading: false,
 authError: '',
+ userAccessMap: {},
 
+ // Consulta los privilegios del cliente en user_book_access
+async loadUserBookAccess() {
+    if (!supabaseClient || !this.authUser) {
+        this.userAccessMap = {};
+        return;
+    }
+    try {
+        const { data, error } = await supabaseClient
+            .from('user_book_access')
+            .select('is_vip, book_ids')
+            .eq('user_id', this.authUser.id)
+            .single();
+
+        if (!error && data) {
+            this.userAccessMap = {
+                is_vip: data.is_vip || false,
+                book_ids: Array.isArray(data.book_ids) ? data.book_ids : []
+            };
+        } else {
+            this.userAccessMap = { is_vip: false, book_ids: [] };
+        }
+    } catch (e) {
+        console.warn('Error cargando permisos de biblioteca:', e);
+        this.userAccessMap = { is_vip: false, book_ids: [] };
+    }
+},
+
+// Determina dinámicamente si el usuario actual tiene acceso al libro
+userHasBookAccess(book) {
+    // 1. Los libros gratuitos siempre son accesibles
+    if (!book.access_type || book.access_type === 'free') return true;
+
+    // 2. Roles de gestión tienen bypass total
+    if (['admin', 'superadmin', 'editor'].includes(this.currentUserRole)) return true;
+
+    // Si no está logueado y el libro requiere accesos, se bloquea
+    if (!this.authUser) return false;
+
+    // Obtener los accesos del mapa local
+    const access = this.userAccessMap;
+    if (!access) return false;
+
+    // 3. Si es VIP, desbloquea categorías con flag premium (premium y paid_premium)
+    if (access.is_vip && (book.access_type === 'premium' || book.access_type === 'paid_premium')) return true;
+
+    // 4. Si el ID del libro está explícitamente concedido en sus compras/accesos individuales
+    if (access.book_ids && access.book_ids.includes(book.id)) return true;
+
+    return false;
+},               
 // Nueva función para abrir y resetear el modal siempre limpio
 openAuthModal() {
     this.authMode = 'login';
@@ -1608,6 +1659,7 @@ async initAuth() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     this.authUser = session?.user || null;
     await this.checkAdminRole();
+    await this.loadUserBookAccess();
 
     // Escuchar cambios de estado (login, logout)
     supabaseClient.auth.onAuthStateChange((_event, session) => {
@@ -1669,6 +1721,7 @@ async logout() {
     await supabaseClient.auth.signOut();
     this.authUser = null; // Fuerza la limpieza visual inmediata
     this.currentUserRole = null;
+    this.userAccessMap = {}; // <-- Limpia el mapa al cerrar sesión
     this.isAuthModalOpen = false;
 },
 
