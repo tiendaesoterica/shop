@@ -1036,25 +1036,36 @@
                 async initAuth() {
                     if (!supabaseClient) return;
                     try {
-                        const { data: { session } } = await supabaseClient.auth.getSession();
-                        this.authUser = session?.user || null;
+                        // getUser() valida el JWT contra el servidor (necesario para sb_publishable_*)
+                        const { data: authData, error } = await supabaseClient.auth.getUser();
+                        this.authUser = (!error && authData?.user) ? authData.user : null;
                     } catch(e) { this.authUser = null; }
-                    // checkAdminRole y loadUserBookAccess solo corren si hay sesión.
-                    // Los 401 en esas tablas (RLS sin policy anon) no deben interrumpir nada.
+
                     if (this.authUser) {
                         await this.checkAdminRole();
                         await this.loadUserBookAccess();
                     }
-                    supabaseClient.auth.onAuthStateChange((_event, session) => {
-                        this.authUser = session?.user || null;
+
+                    supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+                        if (session?.user) {
+                            // Revalidar con getUser() para no confiar ciegamente en el storage
+                            try {
+                                const { data: authData, error } = await supabaseClient.auth.getUser();
+                                this.authUser = (!error && authData?.user) ? authData.user : null;
+                            } catch(e) { this.authUser = null; }
+                        } else {
+                            this.authUser = null;
+                        }
+
                         if (this.authUser) {
-                            this.checkAdminRole();
-                            this.loadUserBookAccess();
+                            await this.checkAdminRole();
+                            await this.loadUserBookAccess();
                         } else {
                             this.currentUserRole = null;
                             this.userAccessMap = {};
                         }
-                        // Recargar items si el hub ya está cargado (el rol puede cambiar el filtro)
+
+                        // Recargar items solo si el hub ya cargó
                         if (this.hub) this.loadItems(this.hub.id);
                     });
                 },
