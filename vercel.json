@@ -1,8 +1,6 @@
 {
   "rewrites": [
-    {
-      "source": "/:hub((?!.*\\.html$|.*\\.js$|.*\\.css$|.*\\.png$|.*\\.jpg$|.*\\.svg$|.*\\.ico$|.*\\.webp$|api/).*)",
-      "destination": "/hub.html"
-    }
+    { "source": "/:hub/:item", "destination": "/hub.html" },
+    { "source": "/:hub", "destination": "/hub.html" }
   ]
 }
