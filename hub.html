@@ -202,7 +202,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 flex justify-between items-center relative z-50">
 
             <!-- Logo / Nombre -->
-            <a href="index.html" class="flex items-center gap-3 group">
+            <a href="/index.html" class="flex items-center gap-3 group">
                 <template x-if="settings.logo_url">
                     <img :src="settings.logo_url" class="h-9 w-auto object-contain transition-transform duration-500 group-hover:scale-110">
                 </template>
@@ -217,7 +217,7 @@
 
             <!-- Nav centro: nombre del hub + breadcrumb -->
             <div class="hidden lg:flex items-center gap-2 bg-surface/30 backdrop-blur-xl px-6 py-2.5 rounded-full border border-white/10">
-                <a href="index.html" class="text-[10px] uppercase tracking-[0.2em] font-medium text-textMuted hover:text-white transition-colors">Inicio</a>
+                <a href="/index.html" class="text-[10px] uppercase tracking-[0.2em] font-medium text-textMuted hover:text-white transition-colors">Inicio</a>
                 <span class="text-white/20 text-xs">›</span>
                 <span class="text-[10px] uppercase tracking-[0.2em] font-medium text-accent" x-text="hub ? hub.nombre : '...'"></span>
                 <template x-if="currentView === 'item' && currentItem">
@@ -276,13 +276,13 @@
              x-transition:leave-end="opacity-0 -translate-y-4"
              class="lg:hidden absolute top-full left-0 w-full bg-surface/80 backdrop-blur-2xl border-b border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.6)]">
             <div class="px-6 py-6 flex flex-col space-y-4 text-center">
-                <a href="index.html" class="text-sm uppercase tracking-[0.2em] font-heading font-bold text-textMain hover:text-accent">← Inicio</a>
+                <a href="/index.html" class="text-sm uppercase tracking-[0.2em] font-heading font-bold text-textMain hover:text-accent">← Inicio</a>
                 <span class="text-accent text-sm font-heading font-bold" x-text="hub ? hub.nombre : ''"></span>
                 <button x-show="currentView === 'item'" @click="openHubView(); mobileOpen=false" class="text-sm uppercase tracking-[0.2em] font-heading font-bold text-textMuted hover:text-accent">
                     Ver todos los items
                 </button>
                 <template x-if="canAccessAdmin">
-                    <a href="admin.html" class="text-sm uppercase tracking-[0.2em] font-heading font-bold text-accent/70 hover:text-accent">Panel Admin</a>
+                    <a href="/admin.html" class="text-sm uppercase tracking-[0.2em] font-heading font-bold text-accent/70 hover:text-accent">Panel Admin</a>
                 </template>
             </div>
         </div>
@@ -616,7 +616,7 @@
 
             <!-- Marca -->
             <div class="col-span-1">
-                <a href="index.html" class="flex items-center gap-3 group mb-5">
+                <a href="/index.html" class="flex items-center gap-3 group mb-5">
                     <template x-if="settings.logo_url">
                         <img :src="settings.logo_url" class="h-6 w-auto object-contain group-hover:scale-110 transition-transform">
                     </template>
@@ -655,7 +655,7 @@
                         <a :href="'https://wa.me/' + settings.whatsapp" target="_blank" class="hover:text-white transition-colors" x-text="'+' + settings.whatsapp"></a>
                     </li>
                     <li class="pt-2">
-                        <a href="index.html" class="text-textMuted/50 hover:text-accent transition-colors text-[10px] uppercase tracking-widest font-bold flex items-center gap-2">
+                        <a href="/index.html" class="text-textMuted/50 hover:text-accent transition-colors text-[10px] uppercase tracking-widest font-bold flex items-center gap-2">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                             Volver a la tienda
                         </a>
@@ -694,7 +694,7 @@
                 <h3 class="text-xl font-heading font-bold text-white mb-2">Sesión Iniciada</h3>
                 <p class="text-sm text-textMuted font-light mb-8 break-all" x-text="authUser?.email"></p>
                 <template x-if="canAccessAdmin">
-                    <a href="admin.html" class="w-full mb-3 flex items-center justify-center gap-2 bg-accent/15 hover:bg-accent text-accent hover:text-darkLux border border-accent/40 hover:border-accent text-[10px] uppercase tracking-[0.2em] py-3.5 rounded-lg transition-all font-bold">
+                    <a href="/admin.html" class="w-full mb-3 flex items-center justify-center gap-2 bg-accent/15 hover:bg-accent text-accent hover:text-darkLux border border-accent/40 hover:border-accent text-[10px] uppercase tracking-[0.2em] py-3.5 rounded-lg transition-all font-bold">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         Panel de Admin
                     </a>
@@ -803,17 +803,23 @@
                     await this.resolveHubFromURL();
                     this.applyHubAccentColor();
                     this.initParticles();
+                    window.addEventListener('popstate', () => {
+                        const itemSlug = window.location.pathname.split('/').filter(Boolean)[1] || null;
+                        const found = itemSlug ? this.items.find(i => i.slug === itemSlug) : null;
+                        if (found) this.openItemView(found, false);
+                        else this.openHubView(false);
+                    });
                     setTimeout(() => { this.isLoading = false; }, 600);
                 },
 
-                // Resuelve el hub por ?hub=slug o por hub_id en query
+                // Resuelve el hub por /slug-hub/slug-item (o por ?hub_id= para previews del admin)
                 async resolveHubFromURL() {
                     if (!supabaseClient) { this.isLoadingItems = false; return; }
 
-                    const params  = new URLSearchParams(window.location.search);
-                    const hubSlug = params.get('hub');
-                    const itemSlug= params.get('item');
-                    const hubId   = params.get('hub_id');
+                    const segments = window.location.pathname.split('/').filter(Boolean);
+                    const hubSlug  = segments[0] || null;
+                    const itemSlug = segments[1] || null;
+                    const hubId    = new URLSearchParams(window.location.search).get('hub_id');
 
                     let hubQuery = supabaseClient.from('hubs').select('*').eq('activo', true);
                     if      (hubSlug) hubQuery = hubQuery.eq('slug', hubSlug);
@@ -865,9 +871,7 @@
                     window.scrollTo({ top: 0, behavior: 'smooth' });
 
                     if (pushState && this.hub) {
-                        const url = new URL(window.location);
-                        url.searchParams.set('item', item.slug);
-                        window.history.pushState({}, '', url.toString());
+                        window.history.pushState({}, '', `/${this.hub.slug}/${item.slug}`);
                     }
 
                     // Meta dinámica SEO del item
@@ -875,16 +879,14 @@
                     else document.title = `${item.nombre} | ${this.hub?.nombre || ''} | ${this.settings.site_name || ''}`;
                 },
 
-                openHubView() {
+                openHubView(pushState = true) {
                     this.currentItem = null;
                     this.currentView = 'hub';
                     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-                    // Restaurar URL sin el param item
+                    // Restaurar la URL del hub (sin el item)
                     if (this.hub) {
-                        const url = new URL(window.location);
-                        url.searchParams.delete('item');
-                        window.history.pushState({}, '', url.toString());
+                        if (pushState) window.history.pushState({}, '', `/${this.hub.slug}`);
                         document.title = `${this.hub.nombre} | ${this.settings.site_name || ''}`;
                     }
                 },
@@ -1066,4 +1068,3 @@
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </body>
 </html>
-Listo
