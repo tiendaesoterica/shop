@@ -1035,38 +1035,33 @@
                 // ── Auth ──
                 async initAuth() {
                     if (!supabaseClient) return;
-                    try {
-                        // getUser() valida el JWT contra el servidor (necesario para sb_publishable_*)
-                        const { data: authData, error } = await supabaseClient.auth.getUser();
-                        this.authUser = (!error && authData?.user) ? authData.user : null;
-                    } catch(e) { this.authUser = null; }
 
-                    if (this.authUser) {
-                        await this.checkAdminRole();
-                        await this.loadUserBookAccess();
-                    }
-
-                    supabaseClient.auth.onAuthStateChange(async (_event, session) => {
-                        if (session?.user) {
-                            // Revalidar con getUser() para no confiar ciegamente en el storage
-                            try {
-                                const { data: authData, error } = await supabaseClient.auth.getUser();
-                                this.authUser = (!error && authData?.user) ? authData.user : null;
-                            } catch(e) { this.authUser = null; }
-                        } else {
-                            this.authUser = null;
-                        }
-
-                        if (this.authUser) {
-                            await this.checkAdminRole();
-                            await this.loadUserBookAccess();
-                        } else {
-                            this.currentUserRole = null;
-                            this.userAccessMap = {};
-                        }
-
-                        // Recargar items solo si el hub ya cargó
-                        if (this.hub) this.loadItems(this.hub.id);
+                    // Esperamos a que Supabase restaure la sesión desde storage
+                    // antes de hacer cualquier query. Usamos una Promise que resuelve
+                    // en el primer evento de onAuthStateChange (INITIAL_SESSION).
+                    await new Promise(resolve => {
+                        const unsub = supabaseClient.auth.onAuthStateChange(async (event, session) => {
+                            if (event === 'INITIAL_SESSION') {
+                                this.authUser = session?.user || null;
+                                if (this.authUser) {
+                                    await this.checkAdminRole();
+                                    await this.loadUserBookAccess();
+                                }
+                                resolve();
+                                // Seguir escuchando cambios de sesión posteriores
+                                supabaseClient.auth.onAuthStateChange(async (ev, s) => {
+                                    this.authUser = s?.user || null;
+                                    if (this.authUser) {
+                                        await this.checkAdminRole();
+                                        await this.loadUserBookAccess();
+                                    } else {
+                                        this.currentUserRole = null;
+                                        this.userAccessMap = {};
+                                    }
+                                    if (this.hub) this.loadItems(this.hub.id);
+                                });
+                            }
+                        });
                     });
                 },
 
