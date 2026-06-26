@@ -798,9 +798,10 @@
 
                 // ── Init ──
                 async init() {
-                    // Auth primero: hay que saber el rol antes de cargar items
-                    // para que canAccessAdmin sea correcto al filtrar por estado.
-                    await this.initAuth();
+                    // Settings y hub cargan primero — no bloqueamos por auth.
+                    // initAuth corre en paralelo; si hay rol admin/editor,
+                    // onAuthStateChange recarga los items automáticamente.
+                    this.initAuth(); // sin await, no bloquea
                     await this.loadSettings();
                     await this.resolveHubFromURL();
                     this.applyHubAccentColor();
@@ -1034,15 +1035,26 @@
                 // ── Auth ──
                 async initAuth() {
                     if (!supabaseClient) return;
-                    const { data: { session } } = await supabaseClient.auth.getSession();
-                    this.authUser = session?.user || null;
-                    await this.checkAdminRole();
-                    await this.loadUserBookAccess();
+                    try {
+                        const { data: { session } } = await supabaseClient.auth.getSession();
+                        this.authUser = session?.user || null;
+                    } catch(e) { this.authUser = null; }
+                    // checkAdminRole y loadUserBookAccess solo corren si hay sesión.
+                    // Los 401 en esas tablas (RLS sin policy anon) no deben interrumpir nada.
+                    if (this.authUser) {
+                        await this.checkAdminRole();
+                        await this.loadUserBookAccess();
+                    }
                     supabaseClient.auth.onAuthStateChange((_event, session) => {
                         this.authUser = session?.user || null;
-                        this.checkAdminRole();
-                        this.loadUserBookAccess();
-                        // Recargar items (puede cambiar si editor/admin ve más)
+                        if (this.authUser) {
+                            this.checkAdminRole();
+                            this.loadUserBookAccess();
+                        } else {
+                            this.currentUserRole = null;
+                            this.userAccessMap = {};
+                        }
+                        // Recargar items si el hub ya está cargado (el rol puede cambiar el filtro)
                         if (this.hub) this.loadItems(this.hub.id);
                     });
                 },
