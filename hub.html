@@ -798,91 +798,56 @@
 
                 // ── Init ──
                 async init() {
-                    // Settings y hub cargan primero — no bloqueamos por auth.
-                    // initAuth corre en paralelo; si hay rol admin/editor,
-                    // onAuthStateChange recarga los items automáticamente.
-                    this.initAuth(); // sin await, no bloquea
+                    this.initAuth();
                     await this.loadSettings();
                     await this.resolveHubFromURL();
                     this.applyHubAccentColor();
                     this.initParticles();
-
-                    // popstate: el browser navegó con botones atrás/adelante
                     window.addEventListener('popstate', () => {
-                        const segs = window.location.pathname.split('/').filter(Boolean);
-                        // segs[0] = hubSlug, segs[1] = itemSlug (o undefined)
+                        const segs     = window.location.pathname.split('/').filter(Boolean);
+                        const hubSlug  = segs[0] || null;
                         const itemSlug = segs[1] || null;
-                        if (itemSlug) {
-                            const found = this.items.find(i => i.slug === itemSlug);
-                            if (found) { this.openItemView(found, false); return; }
-                        }
-                        this.openHubView(false);
-                    });
 
+                        // Si cambiaron de hub (raro pero posible), re-resolver todo
+                        if (hubSlug && this.hub && hubSlug !== this.hub.slug) {
+                            this.resolveHubFromURL();
+                            return;
+                        }
+
+                        const found = itemSlug ? this.items.find(i => i.slug === itemSlug) : null;
+                        if (found) this.openItemView(found, false);
+                        else this.openHubView(false);
+                    });
                     setTimeout(() => { this.isLoading = false; }, 600);
                 },
 
-                // Resuelve el hub desde la URL (Vercel reescribe /:hub y /:hub/:item → hub.html)
+                // Resuelve el hub por /slug-hub/slug-item (o por ?hub_id= para previews del admin)
                 async resolveHubFromURL() {
                     if (!supabaseClient) { this.isLoadingItems = false; return; }
 
                     const segments = window.location.pathname.split('/').filter(Boolean);
-                    // Con el vercel.json: midominio.com/articulos → segments[0]='articulos'
-                    //                    midominio.com/articulos/pendulo-rosa → segments[0]='articulos', segments[1]='pendulo-rosa'
                     const hubSlug  = segments[0] || null;
                     const itemSlug = segments[1] || null;
                     const hubId    = new URLSearchParams(window.location.search).get('hub_id');
 
-                    // Construir query SIN .single() para evitar error cuando no hay resultado
-                    let hubQuery = supabaseClient.from('hubs').select('*');
+                    let hubQuery = supabaseClient.from('hubs').select('*').eq('activo', true);
+                    if      (hubSlug) hubQuery = hubQuery.eq('slug', hubSlug);
+                    else if (hubId)   hubQuery = hubQuery.eq('id', hubId);
+                    else              hubQuery = hubQuery.limit(1); // fallback: primer hub activo
 
-                    if (hubSlug) {
-                        // Buscar por slug; no filtrar por activo aquí para dar mejor mensaje de error
-                        hubQuery = hubQuery.eq('slug', hubSlug).limit(1);
-                    } else if (hubId) {
-                        hubQuery = hubQuery.eq('id', hubId).limit(1);
-                    } else {
-                        // Fallback: primer hub activo
-                        hubQuery = hubQuery.eq('activo', true).order('orden', { ascending: true }).limit(1);
-                    }
-
-                    const { data: hubRows, error: hubErr } = await hubQuery;
-
-                    if (hubErr) {
-                        console.error('[hub] Error consultando hub:', hubErr.message);
-                        this.isLoadingItems = false;
-                        return;
-                    }
-
-                    const hubData = hubRows?.[0] || null;
-
-                    if (!hubData) {
-                        console.warn('[hub] Hub no encontrado para slug:', hubSlug || hubId);
-                        this.isLoadingItems = false;
-                        return;
-                    }
-
-                    // Hub inactivo: solo admins/editors pueden verlo
-                    if (!hubData.activo && !this.canAccessAdmin) {
-                        console.warn('[hub] Hub inactivo y usuario sin rol gestor.');
-                        this.isLoadingItems = false;
-                        return;
-                    }
+                    const { data: hubData, error: hubErr } = await hubQuery.single();
+                    if (hubErr || !hubData) { this.isLoadingItems = false; return; }
 
                     this.hub = hubData;
                     document.title = `${hubData.nombre} | ${this.settings.site_name || 'Hub'}`;
 
-                    // Cargar items (el filtro de estado/activo se aplica dentro)
+                    // Cargar items publicados (o todos si es admin/editor)
                     await this.loadItems(hubData.id);
 
-                    // Si la URL ya traía un slug de item, abrirlo directamente
+                    // Si hay ?item= en URL, abrir directo
                     if (itemSlug) {
                         const found = this.items.find(i => i.slug === itemSlug);
-                        if (found) {
-                            this.openItemView(found, false);
-                        } else {
-                            console.warn('[hub] Item no encontrado para slug:', itemSlug);
-                        }
+                        if (found) this.openItemView(found, false);
                     }
                 },
 
@@ -890,8 +855,7 @@
                     this.isLoadingItems = true;
                     if (!supabaseClient) { this.isLoadingItems = false; return; }
 
-                    // Admins/editors ven todos los activos (cualquier estado).
-                    // El público solo ve los publicados y activos.
+                    // Usuarios con rol gestor ven todos; el público solo ve publicados y activos
                     let query = supabaseClient
                         .from('hub_items')
                         .select('*')
@@ -905,11 +869,6 @@
                     }
 
                     const { data, error } = await query;
-
-                    if (error) {
-                        console.error('[hub] Error cargando items:', error.message);
-                    }
-
                     this.items = (!error && data) ? data : [];
                     this.isLoadingItems = false;
                 },
@@ -1035,33 +994,16 @@
                 // ── Auth ──
                 async initAuth() {
                     if (!supabaseClient) return;
-
-                    // Esperamos a que Supabase restaure la sesión desde storage
-                    // antes de hacer cualquier query. Usamos una Promise que resuelve
-                    // en el primer evento de onAuthStateChange (INITIAL_SESSION).
-                    await new Promise(resolve => {
-                        const unsub = supabaseClient.auth.onAuthStateChange(async (event, session) => {
-                            if (event === 'INITIAL_SESSION') {
-                                this.authUser = session?.user || null;
-                                if (this.authUser) {
-                                    await this.checkAdminRole();
-                                    await this.loadUserBookAccess();
-                                }
-                                resolve();
-                                // Seguir escuchando cambios de sesión posteriores
-                                supabaseClient.auth.onAuthStateChange(async (ev, s) => {
-                                    this.authUser = s?.user || null;
-                                    if (this.authUser) {
-                                        await this.checkAdminRole();
-                                        await this.loadUserBookAccess();
-                                    } else {
-                                        this.currentUserRole = null;
-                                        this.userAccessMap = {};
-                                    }
-                                    if (this.hub) this.loadItems(this.hub.id);
-                                });
-                            }
-                        });
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    this.authUser = session?.user || null;
+                    await this.checkAdminRole();
+                    await this.loadUserBookAccess();
+                    supabaseClient.auth.onAuthStateChange((_event, session) => {
+                        this.authUser = session?.user || null;
+                        this.checkAdminRole();
+                        this.loadUserBookAccess();
+                        // Recargar items (puede cambiar si editor/admin ve más)
+                        if (this.hub) this.loadItems(this.hub.id);
                     });
                 },
 
