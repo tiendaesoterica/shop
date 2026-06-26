@@ -804,16 +804,7 @@
                     this.applyHubAccentColor();
                     this.initParticles();
                     window.addEventListener('popstate', () => {
-                        const segs     = window.location.pathname.split('/').filter(Boolean);
-                        const hubSlug  = segs[0] || null;
-                        const itemSlug = segs[1] || null;
-
-                        // Si cambiaron de hub (raro pero posible), re-resolver todo
-                        if (hubSlug && this.hub && hubSlug !== this.hub.slug) {
-                            this.resolveHubFromURL();
-                            return;
-                        }
-
+                        const itemSlug = window.location.pathname.split('/').filter(Boolean)[1] || null;
                         const found = itemSlug ? this.items.find(i => i.slug === itemSlug) : null;
                         if (found) this.openItemView(found, false);
                         else this.openHubView(false);
@@ -823,30 +814,38 @@
 
                 // Resuelve el hub por /slug-hub/slug-item (o por ?hub_id= para previews del admin)
                 async resolveHubFromURL() {
-                    if (!supabaseClient) { this.isLoadingItems = false; return; }
+                    console.log('[HUB DEBUG] resolveHubFromURL start');
+                    console.log('[HUB DEBUG] supabaseClient:', !!supabaseClient);
+                    if (!supabaseClient) { this.isLoadingItems = false; console.log('[HUB DEBUG] no supabaseClient, abort'); return; }
 
                     const segments = window.location.pathname.split('/').filter(Boolean);
                     const hubSlug  = segments[0] || null;
                     const itemSlug = segments[1] || null;
                     const hubId    = new URLSearchParams(window.location.search).get('hub_id');
 
+                    console.log('[HUB DEBUG] pathname:', window.location.pathname);
+                    console.log('[HUB DEBUG] segments:', segments);
+                    console.log('[HUB DEBUG] hubSlug:', hubSlug, '| itemSlug:', itemSlug, '| hubId:', hubId);
+
                     let hubQuery = supabaseClient.from('hubs').select('*').eq('activo', true);
                     if      (hubSlug) hubQuery = hubQuery.eq('slug', hubSlug);
                     else if (hubId)   hubQuery = hubQuery.eq('id', hubId);
-                    else              hubQuery = hubQuery.limit(1); // fallback: primer hub activo
+                    else              hubQuery = hubQuery.limit(1);
 
                     const { data: hubData, error: hubErr } = await hubQuery.single();
-                    if (hubErr || !hubData) { this.isLoadingItems = false; return; }
+                    console.log('[HUB DEBUG] hubData:', hubData, '| hubErr:', hubErr);
+
+                    if (hubErr || !hubData) { this.isLoadingItems = false; console.log('[HUB DEBUG] hub not found or error, abort'); return; }
 
                     this.hub = hubData;
                     document.title = `${hubData.nombre} | ${this.settings.site_name || 'Hub'}`;
 
-                    // Cargar items publicados (o todos si es admin/editor)
                     await this.loadItems(hubData.id);
+                    console.log('[HUB DEBUG] items loaded:', this.items.length);
 
-                    // Si hay ?item= en URL, abrir directo
                     if (itemSlug) {
                         const found = this.items.find(i => i.slug === itemSlug);
+                        console.log('[HUB DEBUG] itemSlug:', itemSlug, '| found:', !!found);
                         if (found) this.openItemView(found, false);
                     }
                 },
@@ -855,7 +854,8 @@
                     this.isLoadingItems = true;
                     if (!supabaseClient) { this.isLoadingItems = false; return; }
 
-                    // Usuarios con rol gestor ven todos; el público solo ve publicados y activos
+                    console.log('[HUB DEBUG] loadItems hubId:', hubId, '| canAccessAdmin:', this.canAccessAdmin, '| currentUserRole:', this.currentUserRole);
+
                     let query = supabaseClient
                         .from('hub_items')
                         .select('*')
@@ -869,6 +869,7 @@
                     }
 
                     const { data, error } = await query;
+                    console.log('[HUB DEBUG] loadItems result:', data, '| error:', error);
                     this.items = (!error && data) ? data : [];
                     this.isLoadingItems = false;
                 },
