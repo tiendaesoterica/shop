@@ -763,28 +763,55 @@
                             <div class="glass-panel rounded-2xl p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                                 <div>
                                     <p class="text-[9px] uppercase tracking-[0.3em] font-bold text-textMuted mb-2">Intercambio</p>
-                                    <template x-if="currentItem.precio">
+
+                                    <!-- Precio desde producto vinculado (siempre tiene prioridad) -->
+                                    <template x-if="linkedProduct && linkedProduct.price">
+                                        <div class="flex items-baseline gap-3 flex-wrap">
+                                            <span class="text-3xl md:text-4xl font-heading font-bold"
+                                                  style="color: rgb(var(--hub-accent))"
+                                                  x-text="formatPrice(linkedProduct.price, currentItem.moneda)"></span>
+                                            <span x-show="linkedProduct.originalPrice"
+                                                  class="text-sm line-through text-textMuted/50"
+                                                  x-text="formatPrice(linkedProduct.originalPrice, currentItem.moneda)"></span>
+                                            <!-- Badge stock -->
+                                            <template x-if="linkedProduct.stock !== null">
+                                                <span class="text-[9px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full border"
+                                                      :class="linkedProduct.stock > 0 ? 'text-success border-success/30 bg-success/10' : 'text-danger border-danger/30 bg-danger/10'"
+                                                      x-text="linkedProduct.stock > 0 ? linkedProduct.stock + ' disponibles' : 'Sin stock'"></span>
+                                            </template>
+                                        </div>
+                                    </template>
+
+                                    <!-- Precio desde hub_item (sin producto vinculado) -->
+                                    <template x-if="!linkedProduct && currentItem.precio">
                                         <div class="flex items-baseline gap-3">
                                             <span class="text-3xl md:text-4xl font-heading font-bold"
                                                   style="color: rgb(var(--hub-accent))"
                                                   x-text="formatPrice(currentItem.precio, currentItem.moneda)"></span>
                                             <span x-show="currentItem.precio_oferta"
-                                                  class="text-sm price-original text-textMuted"
+                                                  class="text-sm line-through text-textMuted/50"
                                                   x-text="formatPrice(currentItem.precio_oferta, currentItem.moneda)"></span>
                                         </div>
                                     </template>
-                                    <template x-if="!currentItem.precio">
+
+                                    <!-- Sin precio -->
+                                    <template x-if="!linkedProduct && !currentItem.precio">
+                                        <p class="text-lg text-textMuted/60 font-light italic">A convenir</p>
+                                    </template>
+                                    <template x-if="linkedProduct && !linkedProduct.price">
                                         <p class="text-lg text-textMuted/60 font-light italic">A convenir</p>
                                     </template>
                                 </div>
-                                <!-- CTA WhatsApp -->
-                                <a :href="buildWhatsappLink(currentItem)"
+
+                                <!-- CTA WhatsApp (deshabilitado si sin stock) -->
+                                <a :href="linkedProduct && linkedProduct.stock === 0 ? '#' : buildWhatsappLink(currentItem)"
+                                   :class="linkedProduct && linkedProduct.stock === 0 ? 'opacity-40 pointer-events-none' : ''"
                                    target="_blank" rel="noopener noreferrer"
                                    class="btn-primary flex items-center gap-3 flex-shrink-0">
                                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
                                     </svg>
-                                    <span x-text="currentItem.precio ? 'Consultar por este item' : 'Contactar'"></span>
+                                    <span x-text="linkedProduct && linkedProduct.stock === 0 ? 'Sin stock' : (currentItem.precio || linkedProduct?.price ? 'Consultar por este item' : 'Contactar')"></span>
                                 </a>
                             </div>
                         </template>
@@ -952,6 +979,7 @@
                 items:            [],      // items del nivel actual (raíces o hijos)
                 currentCategory:  null,    // hub_item que actúa como categoría (nivel 2)
                 currentItem:      null,    // hub_item hoja (nivel 3)
+                linkedProduct:    null,    // producto de tienda asociado al item actual
                 searchQuery:      '',
                 filterTipo:       'todos',
 
@@ -1132,17 +1160,16 @@
                 },
 
                 // ── Navegación entre vistas ──
-                openItemView(item, pushState = true) {
+                async openItemView(item, pushState = true) {
                     this.currentItem = item;
+                    this.linkedProduct = null;
                     this.currentView = 'item';
                     window.scrollTo({ top: 0, behavior: 'smooth' });
 
                     if (pushState && this.hub) {
                         if (this.currentCategory) {
-                            // Nivel 3: /hub/categoria/item
                             window.history.pushState({}, '', `/${this.hub.slug}/${this.currentCategory.slug}/${item.slug}`);
                         } else {
-                            // Nivel 2 directo: /hub/item
                             window.history.pushState({}, '', `/${this.hub.slug}/${item.slug}`);
                         }
                     }
@@ -1150,11 +1177,24 @@
                     // Meta dinámica SEO del item
                     if (item.seo_json?.title) document.title = item.seo_json.title;
                     else document.title = `${item.nombre} | ${this.currentCategory?.nombre || this.hub?.nombre || ''} | ${this.settings.site_name || ''}`;
+
+                    // Fetch producto vinculado si existe
+                    if (item.product_id && supabaseClient) {
+                        try {
+                            const { data, error } = await supabaseClient
+                                .from('products')
+                                .select('id, name, price, originalPrice, stock, image, images')
+                                .eq('id', item.product_id)
+                                .single();
+                            if (!error && data) this.linkedProduct = data;
+                        } catch(e) {}
+                    }
                 },
 
                 async openCategoryView(category, pushState = true) {
                     this.currentCategory = category;
                     this.currentItem     = null;
+                    this.linkedProduct   = null;
                     this.currentView     = 'category';
                     this.searchQuery     = '';
                     this.filterTipo      = 'todos';
@@ -1178,6 +1218,7 @@
                 async openHubView(pushState = true) {
                     this.currentItem     = null;
                     this.currentCategory = null;
+                    this.linkedProduct   = null;
                     this.currentView     = 'hub';
                     this.searchQuery     = '';
                     this.filterTipo      = 'todos';
