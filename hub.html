@@ -164,7 +164,7 @@
 <body class="text-textMuted font-sans antialiased min-h-screen flex flex-col relative selection:bg-accent/30 selection:text-textMain overflow-x-hidden"
       x-data="hubPage()"
       x-init="init()"
-      :class="(isLoading || selectedProduct || fullscreenImage || isAuthModalOpen) ? 'overflow-hidden' : ''">
+      :class="(isLoading || fullscreenImage || isAuthModalOpen) ? 'overflow-hidden' : ''">
 
     <!-- Partículas -->
     <div id="tsparticles"></div>
@@ -680,11 +680,10 @@
             <!-- Hero mínimo del item: portada full + info superpuesta -->
             <section x-show="currentItem" class="relative w-full min-h-[65vh] flex items-end overflow-hidden bg-base">
 
-                <!-- Si hay linkedProduct, al clickear abre el modal. Si no, amplía la imagen -->
                 <template x-if="currentItem && currentItem.portada_url">
                     <div class="absolute inset-0 bg-cover bg-center cursor-pointer transition-transform hover:scale-105 duration-[2s]"
-                         title="Ampliar imagen / Ver detalles"
-                         @click="linkedProduct ? selectedProduct = linkedProduct : fullscreenImage = currentItem.portada_url"
+                         title="Ampliar imagen"
+                         @click="fullscreenImage = currentItem.portada_url"
                          :style="`background-image: url('${currentItem.portada_url}')`"></div>
                 </template>
 
@@ -724,8 +723,8 @@
 
                     <!-- Tipo badge -->
                     <template x-if="currentItem">
-                        <div class="flex items-center gap-3 mb-4">
-                            <span class="badge pointer-events-auto"
+                        <div class="flex items-center gap-3 mb-4 pointer-events-auto">
+                            <span class="badge"
                                   style="color: rgb(var(--hub-accent)); border-color: rgba(var(--hub-accent),0.4); background: rgba(var(--hub-accent),0.1)"
                                   x-text="currentItem.tipo_item"></span>
                         </div>
@@ -742,13 +741,13 @@
                 <div class="absolute bottom-0 left-0 right-0 h-px z-20 hub-accent-line"></div>
             </section>
 
-            <!-- Contenido del item: secciones habilitadas según secciones_json -->
+            <!-- Contenido del item -->
             <section x-show="currentItem" class="max-w-5xl mx-auto px-4 sm:px-6 py-12 md:py-16">
 
                 <template x-if="currentItem">
                     <div class="space-y-8">
 
-                        <!-- SECCIÓN DESCRIPCIÓN (si está activa en secciones_json) -->
+                        <!-- SECCIÓN DESCRIPCIÓN (del Hub Item) -->
                         <template x-if="currentItem.secciones_json && currentItem.secciones_json.descripcion && currentItem.descripcion_html">
                             <div class="glass-panel rounded-2xl p-8 md:p-12">
                                 <h2 class="text-xl font-heading font-bold text-white mb-6 pb-4 border-b border-white/10">Descripción</h2>
@@ -757,39 +756,150 @@
                             </div>
                         </template>
 
-                        <!-- Fallback si solo hay descripción breve -->
+                        <!-- Fallback si solo hay descripción breve (y no se renderizó la sección anterior) -->
                         <template x-if="currentItem.descripcion_breve && (!currentItem.secciones_json || !currentItem.secciones_json.descripcion || !currentItem.descripcion_html)">
                             <div class="glass-panel rounded-2xl p-8 md:p-12">
                                 <p class="text-textMuted/90 leading-relaxed font-light text-sm" x-text="currentItem.descripcion_breve"></p>
                             </div>
                         </template>
 
-                        <!-- SECCIÓN PRECIO + CTA (si está activa) -->
-                        <template x-if="currentItem.secciones_json && currentItem.secciones_json.precio_cta">
-                            <div class="glass-panel rounded-2xl p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                                <div>
-                                    <p class="text-[9px] uppercase tracking-[0.3em] font-bold text-textMuted mb-2">Intercambio</p>
+                        <!-- ───────────────────────────────────────────────────────── -->
+                        <!-- SECCIÓN PRODUCTO VINCULADO (INLINE E-COMMERCE VIEW)       -->
+                        <!-- ───────────────────────────────────────────────────────── -->
+                        <template x-if="linkedProduct">
+                            <div class="glass-panel rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-[0_8px_32px_rgba(0,0,0,0.5)] border border-white/10">
+                                
+                                <!-- LADO DE LA IMAGEN (Carrusel) -->
+                                <div class="w-full md:w-1/2 relative bg-base/50 min-h-[350px] md:min-h-[450px] flex-shrink-0 group/carousel"
+                                     x-data="{
+                                        activeImage: 0,
+                                        autoSlide: null,
+                                        get currentImages() {
+                                            if (!linkedProduct) return [];
+                                            return linkedProduct.images && linkedProduct.images.length > 0 ? linkedProduct.images.slice(0, 3) : [linkedProduct.image];
+                                        },
+                                        startAutoSlide() {
+                                            this.stopAutoSlide();
+                                            if (this.currentImages.length > 1) {
+                                                this.autoSlide = setInterval(() => { this.nextImage(true); }, 4000);
+                                            }
+                                        },
+                                        stopAutoSlide() {
+                                            if (this.autoSlide) clearInterval(this.autoSlide);
+                                            this.autoSlide = null;
+                                        },
+                                        nextImage(auto = false) {
+                                            if (this.currentImages.length <= 1) return;
+                                            let slider = this.$refs.inlineImageSlider;
+                                            if(!slider) return;
+                                            let maxScroll = slider.scrollWidth - slider.clientWidth;
+                                            if (slider.scrollLeft >= maxScroll - 10) {
+                                                if(auto) slider.scrollTo({ left: 0, behavior: 'smooth' });
+                                            } else {
+                                                slider.scrollBy({ left: slider.clientWidth, behavior: 'smooth' });
+                                            }
+                                        },
+                                        prevImage() {
+                                            if (this.currentImages.length <= 1) return;
+                                            let slider = this.$refs.inlineImageSlider;
+                                            if(!slider) return;
+                                            slider.scrollBy({ left: -slider.clientWidth, behavior: 'smooth' });
+                                        },
+                                        scrollToImage() {
+                                            let slider = this.$refs.inlineImageSlider;
+                                            if(slider) {
+                                                slider.scrollTo({ left: slider.clientWidth * this.activeImage, behavior: 'smooth' });
+                                            }
+                                        },
+                                        onScroll() {
+                                            let slider = this.$refs.inlineImageSlider;
+                                            if(slider) {
+                                                this.activeImage = Math.round(slider.scrollLeft / slider.clientWidth);
+                                            }
+                                        }
+                                     }"
+                                     x-init="$watch('linkedProduct', value => { if(value) { activeImage = 0; if($refs.inlineImageSlider) $refs.inlineImageSlider.scrollLeft = 0; startAutoSlide(); } else { stopAutoSlide(); } }); if(linkedProduct) startAutoSlide();"
+                                     @mouseenter="stopAutoSlide()" @mouseleave="startAutoSlide()"
+                                     @touchstart="stopAutoSlide()" @touchend="startAutoSlide()">
 
-                                    <!-- Precio desde producto vinculado (siempre tiene prioridad) -->
-                                    <template x-if="linkedProduct && linkedProduct.price">
-                                        <div class="flex items-baseline gap-3 flex-wrap">
-                                            <span class="text-3xl md:text-4xl font-heading font-bold"
-                                                  style="color: rgb(var(--hub-accent))"
-                                                  x-text="formatPrice(linkedProduct.price, currentItem.moneda)"></span>
-                                            <span x-show="linkedProduct.originalPrice"
-                                                  class="text-sm line-through text-textMuted/50"
-                                                  x-text="formatPrice(linkedProduct.originalPrice, currentItem.moneda)"></span>
-                                            <!-- Badge stock -->
-                                            <template x-if="linkedProduct.stock !== null">
-                                                <span class="text-[9px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full border"
-                                                      :class="linkedProduct.stock > 0 ? 'text-success border-success/30 bg-success/10' : 'text-danger border-danger/30 bg-danger/10'"
-                                                      x-text="linkedProduct.stock > 0 ? linkedProduct.stock + ' disponibles' : 'Sin stock'"></span>
+                                    <div x-ref="inlineImageSlider" @scroll.passive="onScroll" class="flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory w-full h-full absolute inset-0 z-10 scrollbar-hide scroll-smooth">
+                                        <template x-for="(img, index) in currentImages" :key="index">
+                                            <div class="w-full h-full flex-shrink-0 snap-center relative cursor-pointer" @click="fullscreenImage = img" title="Ver imagen a pantalla completa">
+                                                <img :src="img" :alt="linkedProduct?.name" class="w-full h-full object-cover opacity-90 transition-transform duration-700 hover:scale-105" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x800/1A112A/A78BFA?text=Img';">
+                                                <div class="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-surface/90 to-transparent pointer-events-none"></div>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <template x-if="currentImages.length > 1">
+                                        <div class="absolute inset-x-4 sm:inset-x-6 top-1/2 -translate-y-1/2 flex justify-between z-20 pointer-events-none">
+                                            <button @click.stop="prevImage()" aria-label="Foto anterior" class="w-8 h-8 rounded-full bg-surface/60 backdrop-blur-md border border-white/10 text-white hover:text-accent flex items-center justify-center pointer-events-auto shadow-md transition-transform hover:scale-110 opacity-0 group-hover/carousel:opacity-100">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                                            </button>
+                                            <button @click.stop="nextImage()" aria-label="Siguiente foto" class="w-8 h-8 rounded-full bg-surface/60 backdrop-blur-md border border-white/10 text-white hover:text-accent flex items-center justify-center pointer-events-auto shadow-md transition-transform hover:scale-110 opacity-0 group-hover/carousel:opacity-100">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                                            </button>
+                                        </div>
+                                    </template>
+
+                                    <template x-if="currentImages.length > 1">
+                                        <div class="absolute bottom-6 w-full flex justify-center gap-2 z-20">
+                                            <template x-for="(img, index) in currentImages" :key="index">
+                                                <button @click.stop="activeImage = index; scrollToImage()" 
+                                                        class="transition-all duration-300 rounded-full" 
+                                                        :class="activeImage === index ? 'w-2 h-2 bg-accent shadow-[0_0_8px_rgba(var(--color-accent),0.8)]' : 'w-1.5 h-1.5 bg-white/50 hover:bg-white'">
+                                                </button>
                                             </template>
                                         </div>
                                     </template>
 
-                                    <!-- Precio desde hub_item (sin producto vinculado) -->
-                                    <template x-if="!linkedProduct && currentItem.precio">
+                                    <div class="absolute top-4 left-4 z-30 pointer-events-none flex flex-col gap-2">
+                                        <span x-show="linkedProduct?.stock !== null && linkedProduct?.stock <= 5 && linkedProduct?.stock > 0" class="bg-warning/90 backdrop-blur-md text-darkLux text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-sm shadow-lg w-max border border-white/10">Últimas <span x-text="linkedProduct?.stock"></span></span>
+                                        <span x-show="linkedProduct?.stock === 0" class="bg-danger/90 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-sm shadow-lg w-max border border-white/10">Agotado</span>
+                                    </div>
+                                </div>
+
+                                <!-- LADO DEL CONTENIDO (Detalles) -->
+                                <div class="w-full md:w-1/2 p-6 sm:p-8 flex flex-col md:border-l border-white/10 min-w-0">
+                                    <span class="text-accent text-[10px] uppercase tracking-[0.3em] font-bold mb-4 flex items-center gap-2">
+                                        ✧ <span x-text="currentItem?.tipo_item || 'Producto'"></span> ✧
+                                    </span>
+                                    
+                                    <h2 class="text-2xl sm:text-3xl font-heading font-bold text-white mb-6 leading-tight break-words drop-shadow-sm" x-text="linkedProduct.name"></h2>
+                                    
+                                    <div class="text-gray-200 text-sm leading-relaxed mb-8 flex-grow font-light space-y-4 break-words" x-html="linkedProduct.description?.replace(/\n/g, '<br>')"></div>
+
+                                    <div class="flex items-end gap-4 mb-8 bg-surfaceHighlight/30 backdrop-blur-sm p-4 rounded-lg border border-white/5 mt-auto shadow-inner">
+                                        <div class="flex flex-col">
+                                            <span class="text-[9px] uppercase tracking-widest text-textMuted font-bold mb-1">Intercambio</span>
+                                            <span class="text-accent font-heading font-bold text-2xl sm:text-3xl drop-shadow-md" x-text="formatPrice(linkedProduct.price, currentItem?.moneda || 'ARS')"></span>
+                                        </div>
+                                        <span x-show="linkedProduct.originalPrice" class="text-gray-400 line-through text-sm font-medium mb-1.5" x-text="formatPrice(linkedProduct.originalPrice, currentItem?.moneda || 'ARS')"></span>
+                                    </div>
+
+                                    <div class="flex flex-col gap-4">
+                                        <a :href="linkedProduct.stock === 0 ? '#' : buildProductWhatsappLink(linkedProduct)"
+                                           target="_blank" rel="noopener noreferrer"
+                                           :class="linkedProduct.stock === 0 ? 'opacity-50 cursor-not-allowed' : ''"
+                                           class="btn-primary w-full !py-4 flex items-center justify-center gap-2 shadow-lg">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
+                                            <span x-text="linkedProduct.stock === 0 ? 'Agotado' : 'Contactar por este producto'"></span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        <!-- ───────────────────────────────────────────────────────── -->
+
+
+                        <!-- SECCIÓN PRECIO + CTA (Fallback si NO hay producto vinculado, pero sí precio manual) -->
+                        <template x-if="!linkedProduct && currentItem.secciones_json && currentItem.secciones_json.precio_cta">
+                            <div class="glass-panel rounded-2xl p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                                <div>
+                                    <p class="text-[9px] uppercase tracking-[0.3em] font-bold text-textMuted mb-2">Intercambio</p>
+
+                                    <!-- Precio desde hub_item -->
+                                    <template x-if="currentItem.precio">
                                         <div class="flex items-baseline gap-3">
                                             <span class="text-3xl md:text-4xl font-heading font-bold"
                                                   style="color: rgb(var(--hub-accent))"
@@ -801,43 +911,27 @@
                                     </template>
 
                                     <!-- Sin precio -->
-                                    <template x-if="!linkedProduct && !currentItem.precio">
-                                        <p class="text-lg text-textMuted/60 font-light italic">A convenir</p>
-                                    </template>
-                                    <template x-if="linkedProduct && !linkedProduct.price">
+                                    <template x-if="!currentItem.precio">
                                         <p class="text-lg text-textMuted/60 font-light italic">A convenir</p>
                                     </template>
                                 </div>
 
-                                <!-- Botones de CTA -->
-                                <div class="flex flex-col w-full sm:w-auto gap-3 flex-shrink-0">
-                                    
-                                    <!-- Botón de Galería Modal (Solo si es un producto vinculado) -->
-                                    <template x-if="linkedProduct">
-                                        <button @click="selectedProduct = linkedProduct" class="btn-primary w-full flex items-center justify-center gap-2 bg-accent/10 text-accent hover:bg-accent hover:text-darkLux border-accent/40 hover:border-accent">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                            Ver Galería y Detalles
-                                        </button>
-                                    </template>
-
-                                    <!-- CTA WhatsApp (deshabilitado si sin stock) -->
-                                    <a :href="linkedProduct && linkedProduct.stock === 0 ? '#' : buildWhatsappLink(currentItem)"
-                                       :class="linkedProduct && linkedProduct.stock === 0 ? 'opacity-40 pointer-events-none' : ''"
-                                       target="_blank" rel="noopener noreferrer"
-                                       class="btn-primary w-full flex items-center justify-center gap-3">
-                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                                        </svg>
-                                        <span x-text="linkedProduct && linkedProduct.stock === 0 ? 'Sin stock' : (currentItem.precio || linkedProduct?.price ? 'Consultar por este item' : 'Contactar')"></span>
-                                    </a>
-                                </div>
+                                <!-- CTA WhatsApp (Directo al item) -->
+                                <a :href="buildWhatsappLink(currentItem)"
+                                   target="_blank" rel="noopener noreferrer"
+                                   class="btn-primary flex items-center gap-3 flex-shrink-0">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                                    </svg>
+                                    <span x-text="currentItem.precio ? 'Consultar por este item' : 'Contactar'"></span>
+                                </a>
                             </div>
                         </template>
 
                         <!-- Aviso "más secciones en Parte 2" -->
                         <template x-if="hasPendingSections(currentItem)">
                             <div class="border border-dashed border-white/10 rounded-xl p-6 text-center text-textMuted/40 text-xs font-light">
-                                Las secciones adicionales de este item (galería, características, planes, testimonios, FAQ, relacionados) se construirán en la Parte 2.
+                                Las secciones adicionales de este item (características, planes, testimonios, FAQ, relacionados) se construirán en la Parte 2.
                             </div>
                         </template>
 
@@ -975,142 +1069,6 @@
     </div>
 
     <!-- ═══════════════════════════════════════════════════
-         MODAL DE VISTA DE PRODUCTO (E-COMMERCE)
-    ═══════════════════════════════════════════════════ -->
-    <div x-show="selectedProduct" class="fixed inset-0 z-[80] flex items-center justify-center p-2 sm:p-6" x-cloak>
-        <div x-show="selectedProduct" x-transition.opacity @click="selectedProduct = null" class="fixed inset-0 bg-darkLux/80 backdrop-blur-md"></div>
-        
-        <div x-show="selectedProduct"
-             x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-8 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-             x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-8 sm:scale-95"
-             class="relative bg-surface/80 backdrop-blur-2xl sm:rounded-2xl text-left shadow-[0_0_50px_rgba(var(--color-accent),0.2)] transform transition-all w-full h-full sm:h-auto sm:max-h-[90vh] max-w-4xl z-10 flex flex-col md:flex-row border border-white/10 overflow-y-auto md:overflow-hidden custom-scrollbar">
-
-            <button @click="selectedProduct = null" aria-label="Cerrar" class="fixed sm:absolute top-3 right-3 sm:top-4 sm:right-4 text-textMuted hover:text-white z-50 transition-colors bg-surface/50 p-2.5 rounded-full border border-white/10 backdrop-blur-sm shadow-md">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-
-            <!-- LADO DE LA IMAGEN (Carrusel) -->
-            <div class="w-full md:w-1/2 relative bg-base/50 h-[50vh] md:h-auto md:min-h-[500px] flex-shrink-0 group/carousel"
-                 x-data="{
-                    activeImage: 0,
-                    autoSlide: null,
-                    get currentImages() {
-                        if (!selectedProduct) return [];
-                        return selectedProduct.images && selectedProduct.images.length > 0 ? selectedProduct.images.slice(0, 3) : [selectedProduct.image];
-                    },
-                    startAutoSlide() {
-                        this.stopAutoSlide();
-                        if (this.currentImages.length > 1) {
-                            this.autoSlide = setInterval(() => { this.nextImage(true); }, 4000);
-                        }
-                    },
-                    stopAutoSlide() {
-                        if (this.autoSlide) clearInterval(this.autoSlide);
-                        this.autoSlide = null;
-                    },
-                    nextImage(auto = false) {
-                        if (this.currentImages.length <= 1) return;
-                        let slider = this.$refs.modalImageSlider;
-                        if(!slider) return;
-                        let maxScroll = slider.scrollWidth - slider.clientWidth;
-                        if (slider.scrollLeft >= maxScroll - 10) {
-                            if(auto) slider.scrollTo({ left: 0, behavior: 'smooth' });
-                        } else {
-                            slider.scrollBy({ left: slider.clientWidth, behavior: 'smooth' });
-                        }
-                    },
-                    prevImage() {
-                        if (this.currentImages.length <= 1) return;
-                        let slider = this.$refs.modalImageSlider;
-                        if(!slider) return;
-                        slider.scrollBy({ left: -slider.clientWidth, behavior: 'smooth' });
-                    },
-                    scrollToImage() {
-                        let slider = this.$refs.modalImageSlider;
-                        if(slider) {
-                            slider.scrollTo({ left: slider.clientWidth * this.activeImage, behavior: 'smooth' });
-                        }
-                    },
-                    onScroll() {
-                        let slider = this.$refs.modalImageSlider;
-                        if(slider) {
-                            this.activeImage = Math.round(slider.scrollLeft / slider.clientWidth);
-                        }
-                    }
-                 }"
-                 x-init="$watch('selectedProduct', value => { if(value) { activeImage = 0; if($refs.modalImageSlider) $refs.modalImageSlider.scrollLeft = 0; startAutoSlide(); } else { stopAutoSlide(); } })"
-                 @mouseenter="stopAutoSlide()" @mouseleave="startAutoSlide()"
-                 @touchstart="stopAutoSlide()" @touchend="startAutoSlide()">
-
-                <div x-ref="modalImageSlider" @scroll.passive="onScroll" class="flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory w-full h-full z-10 scrollbar-hide scroll-smooth relative">
-                    <template x-for="(img, index) in currentImages" :key="index">
-                        <div class="w-full h-full flex-shrink-0 snap-center relative cursor-pointer" @click="fullscreenImage = img" title="Ver imagen a pantalla completa">
-                            <img :src="img" :alt="selectedProduct?.name" class="w-full h-full object-cover opacity-90 transition-transform duration-700 hover:scale-105" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x800/1A112A/A78BFA?text=Img';">
-                            <div class="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-surface/90 to-transparent pointer-events-none"></div>
-                        </div>
-                    </template>
-                </div>
-
-                <template x-if="currentImages.length > 1">
-                    <div class="absolute inset-x-6 sm:inset-x-8 md:inset-x-12 top-1/2 -translate-y-1/2 flex justify-between z-20 pointer-events-none">
-                        <button @click.stop="prevImage()" aria-label="Foto anterior" class="w-8 h-8 rounded-full bg-surface/60 backdrop-blur-md border border-white/10 text-white hover:text-accent flex items-center justify-center pointer-events-auto shadow-md transition-transform hover:scale-110 opacity-0 group-hover/carousel:opacity-100">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
-                        </button>
-                        <button @click.stop="nextImage()" aria-label="Siguiente foto" class="w-8 h-8 rounded-full bg-surface/60 backdrop-blur-md border border-white/10 text-white hover:text-accent flex items-center justify-center pointer-events-auto shadow-md transition-transform hover:scale-110 opacity-0 group-hover/carousel:opacity-100">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
-                        </button>
-                    </div>
-                </template>
-
-                <template x-if="currentImages.length > 1">
-                    <div class="absolute bottom-6 w-full flex justify-center gap-2 z-20">
-                        <template x-for="(img, index) in currentImages" :key="index">
-                            <button @click.stop="activeImage = index; scrollToImage()" 
-                                    class="transition-all duration-300 rounded-full" 
-                                    :class="activeImage === index ? 'w-2 h-2 bg-accent shadow-[0_0_8px_rgba(var(--color-accent),0.8)]' : 'w-1.5 h-1.5 bg-white/50 hover:bg-white'">
-                            </button>
-                        </template>
-                    </div>
-                </template>
-
-                <div class="absolute top-4 left-4 z-30 pointer-events-none flex flex-col gap-2">
-                    <span x-show="selectedProduct?.stock !== null && selectedProduct?.stock <= 5 && selectedProduct?.stock > 0" class="bg-warning/90 backdrop-blur-md text-darkLux text-[10px] sm:text-[11px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-sm shadow-lg w-max border border-white/10">Últimas <span x-text="selectedProduct?.stock"></span></span>
-                    <span x-show="selectedProduct?.stock === 0" class="bg-danger/90 backdrop-blur-md text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-sm shadow-lg w-max border border-white/10">Agotado</span>
-                </div>
-            </div>
-
-            <!-- LADO DEL CONTENIDO -->
-            <div class="w-full md:w-1/2 p-6 sm:p-8 md:p-10 flex flex-col md:border-l border-white/10 min-w-0 md:overflow-y-auto custom-scrollbar">
-                <span class="text-accent text-[10px] uppercase tracking-[0.3em] font-bold mb-4 flex items-center gap-2">
-                    ✧ <span x-text="currentItem?.tipo_item || 'Producto Especial'"></span> ✧
-                </span>
-                
-                <h2 class="text-2xl sm:text-3xl font-heading font-bold text-white mb-6 leading-tight break-words drop-shadow-sm" x-text="selectedProduct?.name"></h2>
-                
-                <div class="text-gray-200 text-sm leading-relaxed mb-8 flex-grow font-light space-y-4 break-words" x-html="selectedProduct?.description?.replace(/\n/g, '<br>') || currentItem?.descripcion_breve"></div>
-
-                <div class="flex items-end gap-4 mb-8 bg-surfaceHighlight/30 backdrop-blur-sm p-4 rounded-lg border border-white/5 mt-auto shadow-inner">
-                    <div class="flex flex-col">
-                        <span class="text-[9px] uppercase tracking-widest text-textMuted font-bold mb-1">Intercambio</span>
-                        <span class="text-accent font-heading font-bold text-2xl sm:text-3xl drop-shadow-md" x-text="selectedProduct ? formatPrice(selectedProduct.price, currentItem?.moneda || 'ARS') : ''"></span>
-                    </div>
-                    <span x-show="selectedProduct?.originalPrice" class="text-gray-400 line-through text-sm font-medium mb-1.5" x-text="selectedProduct ? formatPrice(selectedProduct.originalPrice, currentItem?.moneda || 'ARS') : ''"></span>
-                </div>
-
-                <div class="flex flex-col gap-4">
-                    <a :href="selectedProduct?.stock === 0 ? '#' : buildProductWhatsappLink(selectedProduct)"
-                       target="_blank" rel="noopener noreferrer"
-                       :class="selectedProduct?.stock === 0 ? 'opacity-50 cursor-not-allowed' : ''"
-                       class="btn-primary w-full !py-4 flex items-center justify-center gap-2 shadow-lg">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
-                        <span x-text="selectedProduct?.stock === 0 ? 'Agotado' : 'Contactar por este producto'"></span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════
          VISOR DE IMAGEN PANTALLA COMPLETA
     ═══════════════════════════════════════════════════ -->
     <div x-show="fullscreenImage !== null" class="fixed inset-0 z-[100] flex items-center justify-center bg-darkLux/90 backdrop-blur-xl p-4 sm:p-8" x-cloak>
@@ -1144,7 +1102,6 @@
                 currentCategory:  null,    // hub_item que actúa como categoría (nivel 2)
                 currentItem:      null,    // hub_item hoja (nivel 3)
                 linkedProduct:    null,    // producto de tienda asociado al item actual
-                selectedProduct:  null,    // Controla el modal e-commerce
                 fullscreenImage:  null,    // Visor pantalla completa
                 searchQuery:      '',
                 filterTipo:       'todos',
@@ -1321,7 +1278,7 @@
                         try {
                             const { data, error } = await supabaseClient
                                 .from('products')
-                                .select('id, name, description, price, originalPrice, stock, image, images') // Traemos description e images para el Modal
+                                .select('id, name, description, price, originalPrice, stock, image, images')
                                 .eq('id', item.product_id)
                                 .single();
                             if (!error && data) this.linkedProduct = data;
@@ -1394,7 +1351,6 @@
                     return `https://wa.me/${this.settings.whatsapp}?text=${encodeURIComponent(msg)}`;
                 },
 
-                // CTA para el Modal de Producto
                 buildProductWhatsappLink(product) {
                     if (!this.settings.whatsapp) return '#';
                     const msg = `✨ Hola! Me interesa este producto asociado del hub *${this.hub?.nombre || ''}*:\n\n▫️ *${product.name}*\n💰 Precio: ${this.formatPrice(product.price, this.currentItem?.moneda || 'ARS')}\n\nQuedo a la espera. ¡Gracias!`;
