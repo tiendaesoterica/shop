@@ -747,30 +747,14 @@
                 <template x-if="currentItem">
                     <div class="space-y-8">
 
-                        <!-- SECCIÓN DESCRIPCIÓN (del Hub Item) -->
-                        <template x-if="currentItem.secciones_json && currentItem.secciones_json.descripcion && currentItem.descripcion_html">
-                            <div class="glass-panel rounded-2xl p-8 md:p-12">
-                                <h2 class="text-xl font-heading font-bold text-white mb-6 pb-4 border-b border-white/10">Descripción</h2>
-                                <div class="prose prose-invert prose-sm max-w-none text-textMuted/90 leading-relaxed font-light"
-                                     x-html="currentItem.descripcion_html"></div>
-                            </div>
-                        </template>
-
-                        <!-- Fallback si solo hay descripción breve (y no se renderizó la sección anterior) -->
-                        <template x-if="currentItem.descripcion_breve && (!currentItem.secciones_json || !currentItem.secciones_json.descripcion || !currentItem.descripcion_html)">
-                            <div class="glass-panel rounded-2xl p-8 md:p-12">
-                                <p class="text-textMuted/90 leading-relaxed font-light text-sm" x-text="currentItem.descripcion_breve"></p>
-                            </div>
-                        </template>
-
                         <!-- ───────────────────────────────────────────────────────── -->
                         <!-- SECCIÓN PRODUCTO VINCULADO (INLINE E-COMMERCE VIEW)       -->
                         <!-- ───────────────────────────────────────────────────────── -->
                         <template x-if="linkedProduct">
                             <div class="glass-panel rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-[0_8px_32px_rgba(0,0,0,0.5)] border border-white/10">
                                 
-                                <!-- LADO DE LA IMAGEN (Carrusel) -->
-                                <div class="w-full md:w-1/2 relative bg-base/50 min-h-[350px] md:min-h-[450px] flex-shrink-0 group/carousel"
+                                <!-- LADO DE LA IMAGEN (Carrusel Vertical Mejorado) -->
+                                <div class="w-full md:w-5/12 lg:w-1/2 relative bg-base/50 aspect-[4/5] md:aspect-auto md:min-h-[550px] flex-shrink-0 group/carousel"
                                      x-data="{
                                         activeImage: 0,
                                         autoSlide: null,
@@ -824,9 +808,15 @@
 
                                     <div x-ref="inlineImageSlider" @scroll.passive="onScroll" class="flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory w-full h-full absolute inset-0 z-10 scrollbar-hide scroll-smooth">
                                         <template x-for="(img, index) in currentImages" :key="index">
-                                            <div class="w-full h-full flex-shrink-0 snap-center relative cursor-pointer" @click="fullscreenImage = img" title="Ver imagen a pantalla completa">
-                                                <img :src="img" :alt="linkedProduct?.name" class="w-full h-full object-cover opacity-90 transition-transform duration-700 hover:scale-105" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x800/1A112A/A78BFA?text=Img';">
-                                                <div class="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-surface/90 to-transparent pointer-events-none"></div>
+                                            <div class="w-full h-full flex-shrink-0 snap-center relative cursor-pointer overflow-hidden bg-base/80" @click="fullscreenImage = img" title="Ver imagen a pantalla completa">
+                                                
+                                                <!-- Fondo difuminado para rellenar aspect ratio sin bordes negros -->
+                                                <img :src="img" class="absolute inset-0 w-full h-full object-cover blur-2xl opacity-40 scale-110 pointer-events-none" aria-hidden="true" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x800/1A112A/A78BFA?text=Img';">
+                                                
+                                                <!-- Imagen principal contenida (perfecto para cartas/libros verticales) -->
+                                                <img :src="img" :alt="linkedProduct?.name" class="relative z-10 w-full h-full object-contain transition-transform duration-700 hover:scale-105" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x800/1A112A/A78BFA?text=Img';">
+                                                
+                                                <div class="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-surface/90 to-transparent pointer-events-none z-20"></div>
                                             </div>
                                         </template>
                                     </div>
@@ -860,9 +850,9 @@
                                 </div>
 
                                 <!-- LADO DEL CONTENIDO (Detalles) -->
-                                <div class="w-full md:w-1/2 p-6 sm:p-8 flex flex-col md:border-l border-white/10 min-w-0">
+                                <div class="w-full md:w-7/12 lg:w-1/2 p-6 sm:p-8 flex flex-col md:border-l border-white/10 min-w-0">
                                     <span class="text-accent text-[10px] uppercase tracking-[0.3em] font-bold mb-4 flex items-center gap-2">
-                                        ✧ <span x-text="currentItem?.tipo_item || 'Producto'"></span> ✧
+                                        ✧ <span x-text="currentItem?.tipo_item || 'Producto Especial'"></span> ✧
                                     </span>
                                     
                                     <h2 class="text-2xl sm:text-3xl font-heading font-bold text-white mb-6 leading-tight break-words drop-shadow-sm" x-text="linkedProduct.name"></h2>
@@ -891,8 +881,23 @@
                         </template>
                         <!-- ───────────────────────────────────────────────────────── -->
 
+                        <!-- SECCIÓN DESCRIPCIÓN GENERAL (del Hub Item) -->
+                        <template x-if="currentItem.secciones_json && currentItem.secciones_json.descripcion && currentItem.descripcion_html">
+                            <div class="glass-panel rounded-2xl p-8 md:p-12">
+                                <h2 class="text-xl font-heading font-bold text-white mb-6 pb-4 border-b border-white/10" x-text="linkedProduct ? 'Más Información' : 'Descripción'"></h2>
+                                <div class="prose prose-invert prose-sm max-w-none text-textMuted/90 leading-relaxed font-light"
+                                     x-html="currentItem.descripcion_html"></div>
+                            </div>
+                        </template>
 
-                        <!-- SECCIÓN PRECIO + CTA (Fallback si NO hay producto vinculado, pero sí precio manual) -->
+                        <!-- Fallback si solo hay descripción breve -->
+                        <template x-if="currentItem.descripcion_breve && (!currentItem.secciones_json || !currentItem.secciones_json.descripcion || !currentItem.descripcion_html)">
+                            <div class="glass-panel rounded-2xl p-8 md:p-12">
+                                <p class="text-textMuted/90 leading-relaxed font-light text-sm" x-text="currentItem.descripcion_breve"></p>
+                            </div>
+                        </template>
+
+                        <!-- SECCIÓN PRECIO + CTA (Fallback si NO hay producto vinculado, pero sí precio manual en el hub) -->
                         <template x-if="!linkedProduct && currentItem.secciones_json && currentItem.secciones_json.precio_cta">
                             <div class="glass-panel rounded-2xl p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                                 <div>
