@@ -734,15 +734,193 @@
                 <div class="absolute bottom-0 left-0 right-0 h-px z-20 hub-accent-line"></div>
             </section>
 
-            <!-- Contenido del item: secciones habilitadas según secciones_json -->
-            <!-- PARTE 2 se construirá aquí: descripcion, precio_cta, galeria, etc. -->
+            <!-- Contenido del item -->
             <section x-show="currentItem" class="max-w-5xl mx-auto px-4 sm:px-6 py-12 md:py-16">
-
-                <!-- Placeholder indicando que el contenido de secciones viene en la Parte 2 -->
                 <template x-if="currentItem">
                     <div class="space-y-8">
 
-                        <!-- SECCIÓN DESCRIPCIÓN (si está activa en secciones_json) -->
+                        <!-- ── GALERÍA DEL PRODUCTO VINCULADO ── -->
+                        <template x-if="linkedProduct && (linkedProduct.images && linkedProduct.images.length > 0 || linkedProduct.image)">
+                            <div x-data="{
+                                activeIdx: 0,
+                                autoTimer: null,
+                                get imgs() {
+                                    if (!linkedProduct) return [];
+                                    return (linkedProduct.images && linkedProduct.images.length > 0)
+                                        ? linkedProduct.images.slice(0, 3)
+                                        : [linkedProduct.image];
+                                },
+                                next() { this.activeIdx = (this.activeIdx + 1) % this.imgs.length; },
+                                prev() { this.activeIdx = (this.activeIdx - 1 + this.imgs.length) % this.imgs.length; },
+                                startAuto() { this.stopAuto(); if (this.imgs.length > 1) this.autoTimer = setInterval(() => this.next(), 4500); },
+                                stopAuto()  { if (this.autoTimer) { clearInterval(this.autoTimer); this.autoTimer = null; } }
+                            }"
+                            x-init="startAuto()"
+                            @mouseenter="stopAuto()" @mouseleave="startAuto()">
+
+                                <!-- Layout: imagen principal + thumbnails verticales -->
+                                <div class="flex gap-3 h-[420px] sm:h-[500px]">
+
+                                    <!-- Thumbnails verticales (solo si >1 imagen) -->
+                                    <template x-if="imgs.length > 1">
+                                        <div class="flex flex-col gap-2 w-16 sm:w-20 flex-shrink-0">
+                                            <template x-for="(img, i) in imgs" :key="i">
+                                                <button @click="activeIdx = i; stopAuto();"
+                                                        class="relative flex-1 rounded-xl overflow-hidden border-2 transition-all duration-300"
+                                                        :class="activeIdx === i
+                                                            ? 'border-accent/80 shadow-[0_0_12px_rgba(var(--hub-accent),0.4)]'
+                                                            : 'border-white/10 opacity-50 hover:opacity-80 hover:border-white/30'">
+                                                    <img :src="img" class="w-full h-full object-cover">
+                                                    <!-- Indicator activo -->
+                                                    <div x-show="activeIdx === i"
+                                                         class="absolute inset-0"
+                                                         style="background: rgba(var(--hub-accent),0.08)"></div>
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </template>
+
+                                    <!-- Imagen principal -->
+                                    <div class="relative flex-1 rounded-2xl overflow-hidden bg-base/60 group">
+                                        <template x-for="(img, i) in imgs" :key="i">
+                                            <div class="absolute inset-0 transition-opacity duration-700"
+                                                 :class="activeIdx === i ? 'opacity-100' : 'opacity-0'">
+                                                <img :src="img" class="w-full h-full object-cover">
+                                                <div class="absolute inset-0 bg-gradient-to-t from-base/60 via-transparent to-transparent pointer-events-none"></div>
+                                            </div>
+                                        </template>
+
+                                        <!-- Badges stock sobre imagen -->
+                                        <div class="absolute top-4 left-4 z-10 flex flex-col gap-2">
+                                            <template x-if="linkedProduct.stock !== null && linkedProduct.stock <= 5 && linkedProduct.stock > 0">
+                                                <span class="bg-warning/90 backdrop-blur-md text-darkLux text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-sm shadow-lg border border-white/10"
+                                                      x-text="'Últimas ' + linkedProduct.stock + ' unidades'"></span>
+                                            </template>
+                                            <template x-if="linkedProduct.stock === 0">
+                                                <span class="bg-danger/90 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-sm shadow-lg border border-white/10">Agotado</span>
+                                            </template>
+                                        </div>
+
+                                        <!-- Controles prev/next (solo si >1) -->
+                                        <template x-if="imgs.length > 1">
+                                            <div class="absolute inset-x-4 top-1/2 -translate-y-1/2 flex justify-between z-10 pointer-events-none">
+                                                <button @click="prev(); stopAuto();" class="pointer-events-auto w-9 h-9 rounded-full bg-base/60 backdrop-blur-md border border-white/10 text-white hover:text-accent hover:border-accent/50 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shadow-lg">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                                                </button>
+                                                <button @click="next(); stopAuto();" class="pointer-events-auto w-9 h-9 rounded-full bg-base/60 backdrop-blur-md border border-white/10 text-white hover:text-accent hover:border-accent/50 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shadow-lg">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                                </button>
+                                            </div>
+                                        </template>
+
+                                        <!-- Dots bottom (solo si >1) -->
+                                        <template x-if="imgs.length > 1">
+                                            <div class="absolute bottom-4 w-full flex justify-center gap-2 z-10">
+                                                <template x-for="(img, i) in imgs" :key="i">
+                                                    <button @click="activeIdx = i; stopAuto();"
+                                                            class="transition-all duration-300 rounded-full"
+                                                            :class="activeIdx === i
+                                                                ? 'w-5 h-1.5 bg-accent shadow-[0_0_8px_rgba(var(--hub-accent),0.8)]'
+                                                                : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/70'">
+                                                    </button>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        <!-- ── FIN GALERÍA ── -->
+
+                        <!-- ── PRECIO + CTA (producto vinculado o hub_item) ── -->
+                        <template x-if="currentItem.secciones_json && currentItem.secciones_json.precio_cta">
+                            <div class="glass-panel rounded-2xl overflow-hidden">
+                                <div class="flex flex-col md:flex-row">
+
+                                    <!-- Lado izquierdo: precio y detalles -->
+                                    <div class="flex-1 p-8 border-b md:border-b-0 md:border-r border-white/10">
+                                        <p class="text-[9px] uppercase tracking-[0.3em] font-bold text-textMuted mb-4">Intercambio</p>
+
+                                        <!-- Con producto vinculado -->
+                                        <template x-if="linkedProduct">
+                                            <div class="space-y-4">
+                                                <div class="flex items-baseline gap-3 flex-wrap">
+                                                    <template x-if="linkedProduct.price">
+                                                        <span class="text-4xl md:text-5xl font-heading font-bold tracking-tight"
+                                                              style="color: rgb(var(--hub-accent))"
+                                                              x-text="formatPrice(linkedProduct.price, currentItem.moneda)"></span>
+                                                    </template>
+                                                    <template x-if="!linkedProduct.price">
+                                                        <span class="text-2xl font-heading text-textMuted/50 italic font-light">A convenir</span>
+                                                    </template>
+                                                    <span x-show="linkedProduct.originalPrice"
+                                                          class="text-base line-through text-textMuted/40 font-light"
+                                                          x-text="formatPrice(linkedProduct.originalPrice, currentItem.moneda)"></span>
+                                                </div>
+                                                <!-- Stock detalle -->
+                                                <div class="flex items-center gap-3">
+                                                    <template x-if="linkedProduct.stock === null">
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="w-1.5 h-1.5 rounded-full bg-success shadow-[0_0_6px_#10B981]"></span>
+                                                            <span class="text-[10px] uppercase tracking-widest text-success font-bold">Disponible</span>
+                                                        </div>
+                                                    </template>
+                                                    <template x-if="linkedProduct.stock > 0">
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="w-1.5 h-1.5 rounded-full bg-success shadow-[0_0_6px_#10B981]"></span>
+                                                            <span class="text-[10px] uppercase tracking-widest text-success font-bold" x-text="linkedProduct.stock + ' en stock'"></span>
+                                                        </div>
+                                                    </template>
+                                                    <template x-if="linkedProduct.stock === 0">
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="w-1.5 h-1.5 rounded-full bg-danger"></span>
+                                                            <span class="text-[10px] uppercase tracking-widest text-danger font-bold">Sin stock</span>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                        <!-- Sin producto vinculado -->
+                                        <template x-if="!linkedProduct">
+                                            <div class="space-y-2">
+                                                <template x-if="currentItem.precio">
+                                                    <div class="flex items-baseline gap-3 flex-wrap">
+                                                        <span class="text-4xl md:text-5xl font-heading font-bold tracking-tight"
+                                                              style="color: rgb(var(--hub-accent))"
+                                                              x-text="formatPrice(currentItem.precio, currentItem.moneda)"></span>
+                                                        <span x-show="currentItem.precio_oferta"
+                                                              class="text-base line-through text-textMuted/40 font-light"
+                                                              x-text="formatPrice(currentItem.precio_oferta, currentItem.moneda)"></span>
+                                                    </div>
+                                                </template>
+                                                <template x-if="!currentItem.precio">
+                                                    <span class="text-2xl font-heading text-textMuted/50 italic font-light">A convenir</span>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <!-- Lado derecho: CTA -->
+                                    <div class="p-8 flex flex-col justify-center items-stretch md:items-start gap-4 md:w-72 flex-shrink-0">
+                                        <p class="text-[9px] uppercase tracking-[0.3em] font-bold text-textMuted">¿Te interesa?</p>
+                                        <a :href="linkedProduct && linkedProduct.stock === 0 ? '#' : buildWhatsappLink(currentItem)"
+                                           :class="linkedProduct && linkedProduct.stock === 0 ? 'opacity-40 pointer-events-none cursor-not-allowed' : ''"
+                                           target="_blank" rel="noopener noreferrer"
+                                           class="btn-primary flex items-center justify-center gap-3 w-full !py-4">
+                                            <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                                            </svg>
+                                            <span x-text="linkedProduct && linkedProduct.stock === 0 ? 'Sin stock' : 'Consultar por WhatsApp'"></span>
+                                        </a>
+                                        <p class="text-[9px] text-textMuted/30 font-light text-center">Respondemos a la brevedad</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        <!-- ── FIN PRECIO + CTA ── -->
+
+                        <!-- SECCIÓN DESCRIPCIÓN -->
                         <template x-if="currentItem.secciones_json && currentItem.secciones_json.descripcion && currentItem.descripcion_html">
                             <div class="glass-panel rounded-2xl p-8 md:p-12">
                                 <h2 class="text-xl font-heading font-bold text-white mb-6 pb-4 border-b border-white/10">Descripción</h2>
@@ -751,75 +929,17 @@
                             </div>
                         </template>
 
-                        <!-- Fallback si solo hay descripción breve -->
+                        <!-- Fallback descripción breve -->
                         <template x-if="currentItem.descripcion_breve && (!currentItem.secciones_json || !currentItem.secciones_json.descripcion || !currentItem.descripcion_html)">
                             <div class="glass-panel rounded-2xl p-8 md:p-12">
                                 <p class="text-textMuted/90 leading-relaxed font-light text-sm" x-text="currentItem.descripcion_breve"></p>
                             </div>
                         </template>
 
-                        <!-- SECCIÓN PRECIO + CTA (si está activa) -->
-                        <template x-if="currentItem.secciones_json && currentItem.secciones_json.precio_cta">
-                            <div class="glass-panel rounded-2xl p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                                <div>
-                                    <p class="text-[9px] uppercase tracking-[0.3em] font-bold text-textMuted mb-2">Intercambio</p>
-
-                                    <!-- Precio desde producto vinculado (siempre tiene prioridad) -->
-                                    <template x-if="linkedProduct && linkedProduct.price">
-                                        <div class="flex items-baseline gap-3 flex-wrap">
-                                            <span class="text-3xl md:text-4xl font-heading font-bold"
-                                                  style="color: rgb(var(--hub-accent))"
-                                                  x-text="formatPrice(linkedProduct.price, currentItem.moneda)"></span>
-                                            <span x-show="linkedProduct.originalPrice"
-                                                  class="text-sm line-through text-textMuted/50"
-                                                  x-text="formatPrice(linkedProduct.originalPrice, currentItem.moneda)"></span>
-                                            <!-- Badge stock -->
-                                            <template x-if="linkedProduct.stock !== null">
-                                                <span class="text-[9px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full border"
-                                                      :class="linkedProduct.stock > 0 ? 'text-success border-success/30 bg-success/10' : 'text-danger border-danger/30 bg-danger/10'"
-                                                      x-text="linkedProduct.stock > 0 ? linkedProduct.stock + ' disponibles' : 'Sin stock'"></span>
-                                            </template>
-                                        </div>
-                                    </template>
-
-                                    <!-- Precio desde hub_item (sin producto vinculado) -->
-                                    <template x-if="!linkedProduct && currentItem.precio">
-                                        <div class="flex items-baseline gap-3">
-                                            <span class="text-3xl md:text-4xl font-heading font-bold"
-                                                  style="color: rgb(var(--hub-accent))"
-                                                  x-text="formatPrice(currentItem.precio, currentItem.moneda)"></span>
-                                            <span x-show="currentItem.precio_oferta"
-                                                  class="text-sm line-through text-textMuted/50"
-                                                  x-text="formatPrice(currentItem.precio_oferta, currentItem.moneda)"></span>
-                                        </div>
-                                    </template>
-
-                                    <!-- Sin precio -->
-                                    <template x-if="!linkedProduct && !currentItem.precio">
-                                        <p class="text-lg text-textMuted/60 font-light italic">A convenir</p>
-                                    </template>
-                                    <template x-if="linkedProduct && !linkedProduct.price">
-                                        <p class="text-lg text-textMuted/60 font-light italic">A convenir</p>
-                                    </template>
-                                </div>
-
-                                <!-- CTA WhatsApp (deshabilitado si sin stock) -->
-                                <a :href="linkedProduct && linkedProduct.stock === 0 ? '#' : buildWhatsappLink(currentItem)"
-                                   :class="linkedProduct && linkedProduct.stock === 0 ? 'opacity-40 pointer-events-none' : ''"
-                                   target="_blank" rel="noopener noreferrer"
-                                   class="btn-primary flex items-center gap-3 flex-shrink-0">
-                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                                    </svg>
-                                    <span x-text="linkedProduct && linkedProduct.stock === 0 ? 'Sin stock' : (currentItem.precio || linkedProduct?.price ? 'Consultar por este item' : 'Contactar')"></span>
-                                </a>
-                            </div>
-                        </template>
-
-                        <!-- Aviso "más secciones en Parte 2" solo en dev si hay secciones pendientes -->
+                        <!-- Aviso secciones pendientes (dev) -->
                         <template x-if="hasPendingSections(currentItem)">
                             <div class="border border-dashed border-white/10 rounded-xl p-6 text-center text-textMuted/40 text-xs font-light">
-                                Las secciones adicionales de este item (galería, características, planes, testimonios, FAQ, relacionados) se construirán en la Parte 2.
+                                Las secciones adicionales de este item (características, planes, testimonios, FAQ, relacionados) se construirán en la Parte 2.
                             </div>
                         </template>
 
