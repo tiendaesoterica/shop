@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/:hub/:category/:item", "destination": "/hub.html" },
     { "source": "/:hub/:item", "destination": "/hub.html" },
     { "source": "/:hub", "destination": "/hub.html" }
   ]
