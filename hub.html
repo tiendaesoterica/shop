@@ -60,9 +60,8 @@
         .glass-panel {
             @apply bg-surface/40 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)];
         }
-        /* Tarjeta vertical estilo tarot — idéntico al index */
         .hub-item-card {
-            @apply group flex flex-col bg-surface/30 backdrop-blur-xl border border-white/10 p-2 md:p-4 rounded-xl transition-all duration-500 hover:-translate-y-2 hover:border-accent/50 hover:shadow-[0_15px_40px_rgba(0,0,0,0.6)] relative cursor-pointer;
+            @apply bg-surface/30 backdrop-blur-xl border border-white/10 rounded-xl transition-all duration-500 hover:-translate-y-2 hover:border-accent/50 hover:shadow-[0_15px_40px_rgba(0,0,0,0.6)] relative overflow-hidden cursor-pointer;
         }
         .store-input {
             @apply w-full bg-surface/30 backdrop-blur-md border border-white/10 text-sm text-textMain px-4 py-3.5 rounded-lg focus:outline-none focus:border-accent/80 focus:ring-1 focus:ring-accent/80 transition-all duration-300 placeholder-textMuted/50 shadow-inner;
@@ -89,10 +88,6 @@
         ::-webkit-scrollbar-thumb:hover { background: rgb(var(--color-accent)); }
         [x-cloak] { display: none !important; }
 
-        /* scrollbar-hide util */
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-
         body {
             background-color: rgb(var(--color-base));
             background-image: radial-gradient(circle at 50% 0%, rgba(var(--color-surface), 0.8) 0%, rgba(var(--color-base), 1) 100%);
@@ -113,17 +108,14 @@
             box-shadow: 0 0 40px 0 rgba(var(--hub-accent), 0.25);
         }
 
-        /* Grid de tarjetas verticales — igual al index */
+        /* Grid masonry-style para items */
         .items-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.75rem;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1.5rem;
         }
-        @media (min-width: 768px) {
-            .items-grid { grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
-        }
-        @media (min-width: 1024px) {
-            .items-grid { grid-template-columns: repeat(4, 1fr); gap: 2rem; }
+        @media (max-width: 640px) {
+            .items-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
         }
 
         /* Skeleton loader */
@@ -136,10 +128,6 @@
 
         /* Precio tachado */
         .price-original { text-decoration: line-through; opacity: 0.5; }
-
-        /* Carrusel de imágenes en modal */
-        .img-slider { scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
-        .img-slider > * { scroll-snap-align: center; }
     </style>
 
     <!-- Anti-flash de tema -->
@@ -444,10 +432,12 @@
                 <template x-if="isLoadingItems">
                     <div class="items-grid">
                         <template x-for="n in 8" :key="n">
-                            <div class="rounded-xl overflow-hidden border border-white/5 bg-surface/20 p-2 md:p-4">
-                                <div class="w-full aspect-square md:aspect-[4/5] rounded-lg skeleton mb-3"></div>
-                                <div class="h-3 rounded skeleton w-3/4 mb-2"></div>
-                                <div class="h-2 rounded skeleton w-1/2"></div>
+                            <div class="rounded-xl overflow-hidden border border-white/5">
+                                <div class="aspect-square skeleton"></div>
+                                <div class="p-4 space-y-2">
+                                    <div class="h-3 rounded skeleton w-3/4"></div>
+                                    <div class="h-2 rounded skeleton w-1/2"></div>
+                                </div>
                             </div>
                         </template>
                     </div>
@@ -462,60 +452,63 @@
                     </div>
                 </template>
 
-                <!-- Grid real — tarjetas verticales premium -->
+                <!-- Grid real -->
                 <template x-if="!isLoadingItems && filteredItems.length > 0">
                     <div class="items-grid">
                         <template x-for="item in filteredItems" :key="item.id">
-                            <div class="hub-item-card" @click="item.is_category ? openCategoryView(item) : openItemModal(item)">
+                            <div class="hub-item-card" @click="item.is_category ? openCategoryView(item) : openItemView(item)">
 
-                                <!-- Imagen vertical 4/5 igual al index -->
-                                <div class="w-full aspect-square md:aspect-[4/5] mb-3 md:mb-4 relative overflow-hidden rounded-lg bg-base/50 border border-white/5">
+                                <!-- Imagen -->
+                                <div class="relative aspect-square overflow-hidden bg-base/60">
                                     <img x-show="item.portada_url" :src="item.portada_url"
-                                         class="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
+                                         class="w-full h-full object-cover opacity-85 group-hover:opacity-100 transition-all duration-500"
                                          onerror="this.style.display='none'">
                                     <div x-show="!item.portada_url"
                                          class="absolute inset-0 flex items-center justify-center">
-                                        <svg class="w-12 h-12 text-white/10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-10 h-10 text-white/10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                         </svg>
                                     </div>
 
-                                    <!-- Marco interior sutil igual al index -->
-                                    <div class="absolute inset-1.5 border border-white/10 pointer-events-none rounded-sm transition-colors group-hover:border-accent/30"></div>
+                                    <!-- Gradiente inferior -->
+                                    <div class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-base/90 to-transparent pointer-events-none"></div>
 
-                                    <!-- Badge tipo centrado abajo -->
-                                    <template x-if="item.is_category">
-                                        <span class="absolute bottom-2 md:bottom-3 left-1/2 -translate-x-1/2 text-[7px] md:text-[8px] uppercase tracking-widest text-accent font-bold bg-base/70 backdrop-blur-md px-2 md:px-3 py-1 md:py-1.5 rounded-sm border border-accent/30 whitespace-nowrap">Categoría</span>
-                                    </template>
-                                    <template x-if="!item.is_category">
-                                        <span class="absolute bottom-2 md:bottom-3 left-1/2 -translate-x-1/2 text-[7px] md:text-[8px] uppercase tracking-widest text-white font-bold bg-base/60 backdrop-blur-md px-2 md:px-3 py-1 md:py-1.5 rounded-sm border border-white/10 whitespace-nowrap" x-text="item.tipo_item"></span>
+                                    <!-- Precio en imagen -->
+                                    <template x-if="item.precio">
+                                        <div class="absolute bottom-3 left-3 z-10">
+                                            <span class="text-xs font-heading font-bold"
+                                                  style="color: rgb(var(--hub-accent))"
+                                                  x-text="formatPrice(item.precio, item.moneda)"></span>
+                                            <span x-show="item.precio_oferta"
+                                                  class="ml-2 text-[10px] price-original text-textMuted"
+                                                  x-text="formatPrice(item.precio_oferta, item.moneda)"></span>
+                                        </div>
                                     </template>
 
-                                    <!-- Stock badge top -->
-                                    <div class="absolute top-2 left-0 w-full flex justify-center z-20 pointer-events-none">
-                                        <span x-show="item.is_category" style="color: rgba(var(--hub-accent),0.8)" class="hidden"></span>
+                                    <!-- Badge: categoría o tipo_item -->
+                                    <div class="absolute top-2.5 right-2.5 z-10">
+                                        <template x-if="item.is_category">
+                                            <span class="badge bg-accent/20 text-accent border-accent/40">Categoría</span>
+                                        </template>
+                                        <template x-if="!item.is_category">
+                                            <span class="badge bg-base/70 text-textMuted border-white/10"
+                                                  x-text="item.tipo_item"></span>
+                                        </template>
                                     </div>
                                 </div>
 
-                                <!-- Info centrada igual al index -->
-                                <div class="flex-grow flex flex-col px-1 text-center mt-1 md:mt-2">
-                                    <h3 class="text-xs md:text-sm font-heading font-bold text-white mb-1.5 line-clamp-2 group-hover:text-accent transition-colors drop-shadow-md"
-                                        x-text="item.nombre"></h3>
+                                <!-- Info -->
+                                <div class="p-4">
+                                    <p class="text-white font-heading font-bold text-sm leading-snug mb-1 line-clamp-2 transition-colors hover:text-accent"
+                                       x-text="item.nombre"></p>
                                     <p x-show="item.subtitulo"
-                                       class="text-gray-200 text-[9px] md:text-[11px] leading-relaxed mb-3 md:mb-4 flex-grow line-clamp-2 font-light"
+                                       class="text-[10px] text-textMuted/60 font-light leading-relaxed line-clamp-1 mb-2"
                                        x-text="item.subtitulo"></p>
-                                    <template x-if="item.precio">
-                                        <span class="font-semibold text-xs md:text-sm mb-3 md:mb-4 block mt-auto drop-shadow-sm"
-                                              style="color: rgb(var(--hub-accent))"
-                                              x-text="formatPrice(item.precio, item.moneda)"></span>
-                                    </template>
-                                    <template x-if="!item.precio && !item.is_category">
-                                        <span class="text-textMuted/40 text-[9px] uppercase tracking-widest font-medium mb-3 block mt-auto">A convenir</span>
-                                    </template>
-                                    <template x-if="item.is_category">
-                                        <span class="text-[9px] uppercase tracking-widest font-bold mb-3 block mt-auto"
-                                              style="color: rgba(var(--hub-accent),0.7)">Ver productos →</span>
-                                    </template>
+                                    <p x-show="!item.precio && !item.is_category"
+                                       class="text-[9px] text-textMuted/40 uppercase tracking-widest font-medium">A convenir</p>
+                                    <p x-show="item.is_category"
+                                       class="text-[9px] uppercase tracking-widest font-bold"
+                                       style="color: rgba(var(--hub-accent), 0.7)">Ver productos →</p>
                                 </div>
                             </div>
                         </template>
@@ -616,10 +609,12 @@
                 <template x-if="isLoadingItems">
                     <div class="items-grid">
                         <template x-for="n in 6" :key="n">
-                            <div class="rounded-xl overflow-hidden border border-white/5 bg-surface/20 p-2 md:p-4">
-                                <div class="w-full aspect-square md:aspect-[4/5] rounded-lg skeleton mb-3"></div>
-                                <div class="h-3 rounded skeleton w-3/4 mb-2"></div>
-                                <div class="h-2 rounded skeleton w-1/2"></div>
+                            <div class="rounded-xl overflow-hidden border border-white/5">
+                                <div class="aspect-square skeleton"></div>
+                                <div class="p-4 space-y-2">
+                                    <div class="h-3 rounded skeleton w-3/4"></div>
+                                    <div class="h-2 rounded skeleton w-1/2"></div>
+                                </div>
                             </div>
                         </template>
                     </div>
@@ -634,36 +629,36 @@
                 <template x-if="!isLoadingItems && filteredItems.length > 0">
                     <div class="items-grid">
                         <template x-for="item in filteredItems" :key="item.id">
-                            <div class="hub-item-card" @click="openItemModal(item)">
-                                <!-- Imagen vertical 4/5 -->
-                                <div class="w-full aspect-square md:aspect-[4/5] mb-3 md:mb-4 relative overflow-hidden rounded-lg bg-base/50 border border-white/5">
+                            <div class="hub-item-card" @click="openItemView(item)">
+                                <div class="relative aspect-square overflow-hidden bg-base/60">
                                     <img x-show="item.portada_url" :src="item.portada_url"
-                                         class="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
+                                         class="w-full h-full object-cover opacity-85 transition-all duration-500"
                                          onerror="this.style.display='none'">
                                     <div x-show="!item.portada_url"
                                          class="absolute inset-0 flex items-center justify-center">
-                                        <svg class="w-12 h-12 text-white/10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-10 h-10 text-white/10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                         </svg>
                                     </div>
-                                    <div class="absolute inset-1.5 border border-white/10 pointer-events-none rounded-sm transition-colors group-hover:border-accent/30"></div>
-                                    <span class="absolute bottom-2 md:bottom-3 left-1/2 -translate-x-1/2 text-[7px] md:text-[8px] uppercase tracking-widest text-white font-bold bg-base/60 backdrop-blur-md px-2 md:px-3 py-1 md:py-1.5 rounded-sm border border-white/10 whitespace-nowrap" x-text="item.tipo_item"></span>
-                                </div>
-                                <!-- Info centrada -->
-                                <div class="flex-grow flex flex-col px-1 text-center mt-1 md:mt-2">
-                                    <h3 class="text-xs md:text-sm font-heading font-bold text-white mb-1.5 line-clamp-2 group-hover:text-accent transition-colors drop-shadow-md"
-                                        x-text="item.nombre"></h3>
-                                    <p x-show="item.subtitulo"
-                                       class="text-gray-200 text-[9px] md:text-[11px] leading-relaxed mb-3 md:mb-4 flex-grow line-clamp-2 font-light"
-                                       x-text="item.subtitulo"></p>
+                                    <div class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-base/90 to-transparent pointer-events-none"></div>
                                     <template x-if="item.precio">
-                                        <span class="font-semibold text-xs md:text-sm mb-3 md:mb-4 block mt-auto drop-shadow-sm"
-                                              style="color: rgb(var(--hub-accent))"
-                                              x-text="formatPrice(item.precio, item.moneda)"></span>
+                                        <div class="absolute bottom-3 left-3 z-10">
+                                            <span class="text-xs font-heading font-bold"
+                                                  style="color: rgb(var(--hub-accent))"
+                                                  x-text="formatPrice(item.precio, item.moneda)"></span>
+                                            <span x-show="item.precio_oferta"
+                                                  class="ml-2 text-[10px] price-original text-textMuted"
+                                                  x-text="formatPrice(item.precio_oferta, item.moneda)"></span>
+                                        </div>
                                     </template>
-                                    <template x-if="!item.precio">
-                                        <span class="text-textMuted/40 text-[9px] uppercase tracking-widest font-medium mb-3 block mt-auto">A convenir</span>
-                                    </template>
+                                    <div class="absolute top-2.5 right-2.5 z-10">
+                                        <span class="badge bg-base/70 text-textMuted border-white/10" x-text="item.tipo_item"></span>
+                                    </div>
+                                </div>
+                                <div class="p-4">
+                                    <p class="text-white font-heading font-bold text-sm leading-snug mb-1 line-clamp-2" x-text="item.nombre"></p>
+                                    <p x-show="item.subtitulo" class="text-[10px] text-textMuted/60 font-light leading-relaxed line-clamp-1 mb-2" x-text="item.subtitulo"></p>
+                                    <p x-show="!item.precio" class="text-[9px] text-textMuted/40 uppercase tracking-widest font-medium">A convenir</p>
                                 </div>
                             </div>
                         </template>
@@ -739,13 +734,15 @@
                 <div class="absolute bottom-0 left-0 right-0 h-px z-20 hub-accent-line"></div>
             </section>
 
-            <!-- Contenido del item -->
+            <!-- Contenido del item: secciones habilitadas según secciones_json -->
+            <!-- PARTE 2 se construirá aquí: descripcion, precio_cta, galeria, etc. -->
             <section x-show="currentItem" class="max-w-5xl mx-auto px-4 sm:px-6 py-12 md:py-16">
 
+                <!-- Placeholder indicando que el contenido de secciones viene en la Parte 2 -->
                 <template x-if="currentItem">
                     <div class="space-y-8">
 
-                        <!-- SECCIÓN DESCRIPCIÓN -->
+                        <!-- SECCIÓN DESCRIPCIÓN (si está activa en secciones_json) -->
                         <template x-if="currentItem.secciones_json && currentItem.secciones_json.descripcion && currentItem.descripcion_html">
                             <div class="glass-panel rounded-2xl p-8 md:p-12">
                                 <h2 class="text-xl font-heading font-bold text-white mb-6 pb-4 border-b border-white/10">Descripción</h2>
@@ -754,19 +751,20 @@
                             </div>
                         </template>
 
-                        <!-- Fallback descripción breve -->
+                        <!-- Fallback si solo hay descripción breve -->
                         <template x-if="currentItem.descripcion_breve && (!currentItem.secciones_json || !currentItem.secciones_json.descripcion || !currentItem.descripcion_html)">
                             <div class="glass-panel rounded-2xl p-8 md:p-12">
                                 <p class="text-textMuted/90 leading-relaxed font-light text-sm" x-text="currentItem.descripcion_breve"></p>
                             </div>
                         </template>
 
-                        <!-- SECCIÓN PRECIO + CTA -->
+                        <!-- SECCIÓN PRECIO + CTA (si está activa) -->
                         <template x-if="currentItem.secciones_json && currentItem.secciones_json.precio_cta">
                             <div class="glass-panel rounded-2xl p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                                 <div>
                                     <p class="text-[9px] uppercase tracking-[0.3em] font-bold text-textMuted mb-2">Intercambio</p>
 
+                                    <!-- Precio desde producto vinculado (siempre tiene prioridad) -->
                                     <template x-if="linkedProduct && linkedProduct.price">
                                         <div class="flex items-baseline gap-3 flex-wrap">
                                             <span class="text-3xl md:text-4xl font-heading font-bold"
@@ -775,6 +773,7 @@
                                             <span x-show="linkedProduct.originalPrice"
                                                   class="text-sm line-through text-textMuted/50"
                                                   x-text="formatPrice(linkedProduct.originalPrice, currentItem.moneda)"></span>
+                                            <!-- Badge stock -->
                                             <template x-if="linkedProduct.stock !== null">
                                                 <span class="text-[9px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full border"
                                                       :class="linkedProduct.stock > 0 ? 'text-success border-success/30 bg-success/10' : 'text-danger border-danger/30 bg-danger/10'"
@@ -783,6 +782,7 @@
                                         </div>
                                     </template>
 
+                                    <!-- Precio desde hub_item (sin producto vinculado) -->
                                     <template x-if="!linkedProduct && currentItem.precio">
                                         <div class="flex items-baseline gap-3">
                                             <span class="text-3xl md:text-4xl font-heading font-bold"
@@ -794,6 +794,7 @@
                                         </div>
                                     </template>
 
+                                    <!-- Sin precio -->
                                     <template x-if="!linkedProduct && !currentItem.precio">
                                         <p class="text-lg text-textMuted/60 font-light italic">A convenir</p>
                                     </template>
@@ -802,7 +803,7 @@
                                     </template>
                                 </div>
 
-                                <!-- CTA WhatsApp -->
+                                <!-- CTA WhatsApp (deshabilitado si sin stock) -->
                                 <a :href="linkedProduct && linkedProduct.stock === 0 ? '#' : buildWhatsappLink(currentItem)"
                                    :class="linkedProduct && linkedProduct.stock === 0 ? 'opacity-40 pointer-events-none' : ''"
                                    target="_blank" rel="noopener noreferrer"
@@ -815,7 +816,7 @@
                             </div>
                         </template>
 
-                        <!-- Secciones pendientes placeholder -->
+                        <!-- Aviso "más secciones en Parte 2" solo en dev si hay secciones pendientes -->
                         <template x-if="hasPendingSections(currentItem)">
                             <div class="border border-dashed border-white/10 rounded-xl p-6 text-center text-textMuted/40 text-xs font-light">
                                 Las secciones adicionales de este item (galería, características, planes, testimonios, FAQ, relacionados) se construirán en la Parte 2.
@@ -897,225 +898,6 @@
             </p>
         </div>
     </footer>
-
-    <!-- ═══════════════════════════════════════════════════
-         MODAL DE ITEM — carrusel de imágenes igual al index
-    ═══════════════════════════════════════════════════ -->
-    <div x-show="isItemModalOpen" class="fixed inset-0 z-[80] flex items-center justify-center p-2 sm:p-6" x-cloak
-         x-effect="document.body.style.overflow = isItemModalOpen ? 'hidden' : ''">
-        <div x-show="isItemModalOpen" x-transition.opacity @click="isItemModalOpen = false" class="fixed inset-0 bg-darkLux/80 backdrop-blur-md"></div>
-
-        <div x-show="isItemModalOpen"
-             x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-8 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-             x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-8 sm:scale-95"
-             class="relative bg-surface/80 backdrop-blur-2xl sm:rounded-2xl text-left shadow-[0_0_50px_rgba(var(--hub-accent),0.15)] transform transition-all w-full h-full sm:h-auto sm:max-h-[90vh] max-w-4xl z-10 flex flex-col md:flex-row border border-white/10 overflow-y-auto md:overflow-hidden custom-scrollbar">
-
-            <button @click="isItemModalOpen = false" aria-label="Cerrar"
-                    class="fixed sm:absolute top-3 right-3 sm:top-4 sm:right-4 text-textMuted hover:text-white z-50 transition-colors bg-surface/50 p-2.5 rounded-full border border-white/10 backdrop-blur-sm shadow-md">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-
-            <!-- ── LADO IMAGEN con carrusel ── -->
-            <div class="w-full md:w-1/2 relative bg-base/50 h-[50vh] md:h-auto md:min-h-[500px] flex-shrink-0 group/carousel"
-                 x-data="{
-                    activeImage: 0,
-                    autoSlide: null,
-                    get currentImages() {
-                        if (!modalItem) return [];
-                        const prod = modalLinkedProduct;
-                        const imgs = (prod && prod.images && prod.images.length > 0)
-                            ? prod.images.slice(0, 3)
-                            : (prod && prod.image ? [prod.image] : null);
-                        if (imgs) return imgs;
-                        return modalItem.portada_url ? [modalItem.portada_url] : [];
-                    },
-                    startAutoSlide() {
-                        this.stopAutoSlide();
-                        if (this.currentImages.length > 1) {
-                            this.autoSlide = setInterval(() => { this.nextImage(true); }, 4000);
-                        }
-                    },
-                    stopAutoSlide() { if (this.autoSlide) { clearInterval(this.autoSlide); this.autoSlide = null; } },
-                    nextImage(auto = false) {
-                        if (this.currentImages.length <= 1) return;
-                        let slider = this.$refs.hubImgSlider;
-                        if (!slider) return;
-                        let maxScroll = slider.scrollWidth - slider.clientWidth;
-                        if (slider.scrollLeft >= maxScroll - 10) {
-                            if (auto) slider.scrollTo({ left: 0, behavior: 'smooth' });
-                        } else {
-                            slider.scrollBy({ left: slider.clientWidth, behavior: 'smooth' });
-                        }
-                    },
-                    prevImage() {
-                        if (this.currentImages.length <= 1) return;
-                        let slider = this.$refs.hubImgSlider;
-                        if (slider) slider.scrollBy({ left: -slider.clientWidth, behavior: 'smooth' });
-                    },
-                    scrollToImage() {
-                        let slider = this.$refs.hubImgSlider;
-                        if (slider) slider.scrollTo({ left: slider.clientWidth * this.activeImage, behavior: 'smooth' });
-                    },
-                    onScroll() {
-                        let slider = this.$refs.hubImgSlider;
-                        if (slider) this.activeImage = Math.round(slider.scrollLeft / slider.clientWidth);
-                    }
-                 }"
-                 x-init="$watch('isItemModalOpen', v => { if(v) { activeImage = 0; $nextTick(() => { if($refs.hubImgSlider) $refs.hubImgSlider.scrollLeft = 0; startAutoSlide(); }); } else { stopAutoSlide(); } })"
-                 @mouseenter="stopAutoSlide()" @mouseleave="startAutoSlide()"
-                 @touchstart="stopAutoSlide()" @touchend="startAutoSlide()">
-
-                <!-- Slider horizontal -->
-                <div x-ref="hubImgSlider" @scroll.passive="onScroll()"
-                     class="flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory w-full h-full z-10 scrollbar-hide scroll-smooth">
-                    <template x-if="currentImages.length === 0">
-                        <div class="w-full h-full flex-shrink-0 flex items-center justify-center bg-base/80">
-                            <svg class="w-16 h-16 text-white/10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                        </div>
-                    </template>
-                    <template x-for="(img, idx) in currentImages" :key="idx">
-                        <div class="w-full h-full flex-shrink-0 snap-center relative cursor-pointer" @click="hubFullscreenImage = img" title="Ver a pantalla completa">
-                            <img :src="img" :alt="modalItem?.nombre"
-                                 class="w-full h-full object-cover opacity-90"
-                                 onerror="this.onerror=null; this.src='https://via.placeholder.com/600x800/1A112A/A78BFA?text=✧';">
-                            <div class="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-surface/90 to-transparent pointer-events-none"></div>
-                        </div>
-                    </template>
-                </div>
-
-                <!-- Flechas (solo si hay más de 1 imagen) -->
-                <template x-if="currentImages.length > 1">
-                    <div class="absolute inset-x-6 sm:inset-x-8 top-1/2 -translate-y-1/2 flex justify-between z-20 pointer-events-none">
-                        <button @click.stop="prevImage()" class="w-8 h-8 rounded-full bg-surface/60 backdrop-blur-md border border-white/10 text-white hover:text-accent flex items-center justify-center pointer-events-auto shadow-md transition-transform hover:scale-110 opacity-0 group-hover/carousel:opacity-100">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                        </button>
-                        <button @click.stop="nextImage()" class="w-8 h-8 rounded-full bg-surface/60 backdrop-blur-md border border-white/10 text-white hover:text-accent flex items-center justify-center pointer-events-auto shadow-md transition-transform hover:scale-110 opacity-0 group-hover/carousel:opacity-100">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                        </button>
-                    </div>
-                </template>
-
-                <!-- Dots indicadores -->
-                <template x-if="currentImages.length > 1">
-                    <div class="absolute bottom-5 w-full flex justify-center gap-2 z-20">
-                        <template x-for="(img, idx) in currentImages" :key="idx">
-                            <button @click.stop="activeImage = idx; scrollToImage()"
-                                    class="transition-all duration-300 rounded-full"
-                                    :class="activeImage === idx ? 'w-2 h-2 shadow-[0_0_8px_rgba(var(--hub-accent),0.8)]' : 'w-1.5 h-1.5 bg-white/50 hover:bg-white'"
-                                    :style="activeImage === idx ? 'background: rgb(var(--hub-accent))' : ''">
-                            </button>
-                        </template>
-                    </div>
-                </template>
-
-                <!-- Stock badge -->
-                <div class="absolute top-4 left-4 z-30 pointer-events-none flex flex-col gap-2">
-                    <span x-show="modalLinkedProduct && modalLinkedProduct.stock !== null && modalLinkedProduct.stock <= 5 && modalLinkedProduct.stock > 0"
-                          class="bg-warning/90 backdrop-blur-md text-darkLux text-[10px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-sm shadow-lg w-max border border-white/10">
-                        Últimas <span x-text="modalLinkedProduct?.stock"></span>
-                    </span>
-                    <span x-show="modalLinkedProduct && modalLinkedProduct.stock === 0"
-                          class="bg-danger/90 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-sm shadow-lg w-max border border-white/10">Sin stock</span>
-                </div>
-            </div>
-
-            <!-- ── LADO CONTENIDO ── -->
-            <div class="w-full md:w-1/2 p-6 sm:p-8 md:p-10 flex flex-col md:border-l border-white/10 min-w-0 md:overflow-y-auto custom-scrollbar">
-
-                <!-- Tipo badge -->
-                <span class="text-[10px] uppercase tracking-[0.3em] font-bold mb-4 flex items-center gap-2"
-                      style="color: rgb(var(--hub-accent))">
-                    ✧ <span x-text="modalItem?.tipo_item"></span> ✧
-                </span>
-
-                <h2 class="text-2xl sm:text-3xl font-heading font-bold text-white mb-4 leading-tight break-words drop-shadow-sm"
-                    x-text="modalItem?.nombre"></h2>
-
-                <!-- Descripción -->
-                <template x-if="modalItem?.descripcion_html">
-                    <div class="text-gray-200 text-sm leading-relaxed mb-6 flex-grow font-light space-y-3 break-words"
-                         x-html="modalItem?.descripcion_html"></div>
-                </template>
-                <template x-if="!modalItem?.descripcion_html && modalItem?.descripcion_breve">
-                    <p class="text-gray-200 text-sm leading-relaxed mb-6 flex-grow font-light break-words"
-                       x-text="modalItem?.descripcion_breve"></p>
-                </template>
-                <template x-if="!modalItem?.descripcion_html && !modalItem?.descripcion_breve && modalItem?.subtitulo">
-                    <p class="text-gray-300 text-sm leading-relaxed mb-6 font-light break-words"
-                       x-text="modalItem?.subtitulo"></p>
-                </template>
-
-                <!-- Precio -->
-                <div class="flex items-end gap-4 mb-8 bg-surfaceHighlight/30 backdrop-blur-sm p-4 rounded-lg border border-white/5 mt-auto shadow-inner">
-                    <div class="flex flex-col">
-                        <span class="text-[9px] uppercase tracking-widest text-textMuted font-bold mb-1">Intercambio</span>
-                        <template x-if="modalLinkedProduct && modalLinkedProduct.price">
-                            <div class="flex items-baseline gap-3">
-                                <span class="font-heading font-bold text-2xl sm:text-3xl drop-shadow-md"
-                                      style="color: rgb(var(--hub-accent))"
-                                      x-text="formatPrice(modalLinkedProduct.price, modalItem?.moneda)"></span>
-                                <span x-show="modalLinkedProduct.originalPrice"
-                                      class="text-gray-400 line-through text-sm font-medium"
-                                      x-text="formatPrice(modalLinkedProduct.originalPrice, modalItem?.moneda)"></span>
-                            </div>
-                        </template>
-                        <template x-if="(!modalLinkedProduct || !modalLinkedProduct.price) && modalItem?.precio">
-                            <div class="flex items-baseline gap-3">
-                                <span class="font-heading font-bold text-2xl sm:text-3xl drop-shadow-md"
-                                      style="color: rgb(var(--hub-accent))"
-                                      x-text="formatPrice(modalItem.precio, modalItem.moneda)"></span>
-                                <span x-show="modalItem?.precio_oferta"
-                                      class="text-gray-400 line-through text-sm font-medium"
-                                      x-text="formatPrice(modalItem.precio_oferta, modalItem.moneda)"></span>
-                            </div>
-                        </template>
-                        <template x-if="(!modalLinkedProduct || !modalLinkedProduct.price) && !modalItem?.precio">
-                            <span class="font-heading font-bold text-2xl text-textMuted/60 italic">A convenir</span>
-                        </template>
-                    </div>
-                    <!-- Stock inline -->
-                    <template x-if="modalLinkedProduct && modalLinkedProduct.stock !== null">
-                        <span class="text-[9px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full border ml-auto"
-                              :class="modalLinkedProduct.stock > 0 ? 'text-success border-success/30 bg-success/10' : 'text-danger border-danger/30 bg-danger/10'"
-                              x-text="modalLinkedProduct.stock > 0 ? modalLinkedProduct.stock + ' disponibles' : 'Sin stock'"></span>
-                    </template>
-                </div>
-
-                <!-- Botones CTA -->
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <!-- Ver detalle completo -->
-                    <button @click="isItemModalOpen = false; openItemView(modalItem)"
-                            class="flex-1 border border-white/10 bg-surface/40 hover:bg-surfaceHighlight/60 text-textMuted hover:text-white text-[10px] uppercase tracking-[0.2em] h-12 rounded-lg transition-all font-bold">
-                        Ver detalle
-                    </button>
-                    <!-- WhatsApp -->
-                    <a :href="modalLinkedProduct && modalLinkedProduct.stock === 0 ? '#' : buildWhatsappLink(modalItem)"
-                       :class="modalLinkedProduct && modalLinkedProduct.stock === 0 ? 'opacity-40 pointer-events-none' : ''"
-                       target="_blank" rel="noopener noreferrer"
-                       class="btn-primary flex-1 !py-0 h-12 flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                        </svg>
-                        <span x-text="modalLinkedProduct && modalLinkedProduct.stock === 0 ? 'Sin stock' : 'Consultar'"></span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════
-         FULLSCREEN IMAGE VIEWER
-    ═══════════════════════════════════════════════════ -->
-    <div x-show="hubFullscreenImage !== null" class="fixed inset-0 z-[100] flex items-center justify-center bg-darkLux/92 backdrop-blur-xl p-4 sm:p-8" x-cloak>
-        <button @click="hubFullscreenImage = null"
-                class="absolute top-4 right-4 sm:top-8 sm:right-8 text-textMuted hover:text-white z-50 transition-transform hover:scale-110 bg-surface/50 p-3 rounded-full border border-white/10 shadow-lg backdrop-blur-md">
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
-        <img :src="hubFullscreenImage" @click.away="hubFullscreenImage = null"
-             class="max-w-full max-h-full object-contain rounded-md shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/10"/>
-    </div>
 
     <!-- ═══════════════════════════════════════════════════
          MODAL AUTH (igual al index)
@@ -1200,12 +982,6 @@
                 linkedProduct:    null,    // producto de tienda asociado al item actual
                 searchQuery:      '',
                 filterTipo:       'todos',
-
-                // ── Modal de item (carrusel de imágenes) ──
-                isItemModalOpen:    false,
-                modalItem:          null,
-                modalLinkedProduct: null,
-                hubFullscreenImage: null,
 
                 // ── Settings del sitio (para navbar/footer) ──
                 settings: {
@@ -1383,29 +1159,8 @@
                     this.isLoadingItems = false;
                 },
 
-                // ── Abre el MODAL de item (carrusel + CTA) ──
-                async openItemModal(item) {
-                    this.modalItem          = item;
-                    this.modalLinkedProduct = null;
-                    this.isItemModalOpen    = true;
-                    document.body.style.overflow = 'hidden';
-
-                    if (item.product_id && supabaseClient) {
-                        try {
-                            const { data, error } = await supabaseClient
-                                .from('products')
-                                .select('id, name, price, originalPrice, stock, image, images')
-                                .eq('id', item.product_id)
-                                .single();
-                            if (!error && data) this.modalLinkedProduct = data;
-                        } catch(e) {}
-                    }
-                },
-
                 // ── Navegación entre vistas ──
                 async openItemView(item, pushState = true) {
-                    this.isItemModalOpen = false;
-                    document.body.style.overflow = '';
                     this.currentItem = item;
                     this.linkedProduct = null;
                     this.currentView = 'item';
